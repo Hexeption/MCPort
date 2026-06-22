@@ -12,6 +12,8 @@ add_executable(MCPort
         Source/port/utils/SDLException.h
         Source/port/lwjgl/Display.cpp
         Source/port/lwjgl/Display.h
+        Source/port/lwjgl/BufferUtils.cpp
+        Source/port/lwjgl/BufferUtils.h
         Source/port/java/Type.h
         Source/port/java/String.cpp
         Source/port/java/String.h
@@ -27,4 +29,3 @@ target_include_directories(MCPort PRIVATE "Source")
 target_include_directories(MCPort PRIVATE "Source/port")
 
 target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad)
-

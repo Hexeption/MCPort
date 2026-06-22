@@ -13,10 +13,42 @@ RubyDung::RubyDung(int_t width, int_t height) {
 }
 
 void RubyDung::init() {
+    int col0 = 16710650;
+    int col1 = 920330;
+    float fr = 0.5F;
+    float fg = 0.8F;
+    float fb = 1.0F;
+
+    this->fogColor0.put({
+        (float) (col0 >> 16 & 255) / 255.0F,
+        (float) (col0 >> 8 & 255) / 255.0F,
+        (float) (col0 & 255) / 255.0F,
+        1.0F
+    });
+    this->fogColor0.flip();
+    this->fogColor1.put({
+        (float) (col1 >> 16 & 255) / 255.0F,
+        (float) (col1 >> 8 & 255) / 255.0F,
+        (float) (col1 & 255) / 255.0F,
+        1.0F
+    });
+    this->fogColor1.flip();
+
     lwjgl::Display::setDisplayMode(lwjgl::DisplayMode(width, height));
     lwjgl::Display::setTitle(u"RubyDung");
     lwjgl::Display::create();
-    printf("RubyDung initialized\n");
+
+    glEnable(GL_TEXTURE_2D);
+    glShadeModel(GL_SMOOTH);
+    glClearColor(fr, fg, fb, 0.0F);
+    glClearDepth(1.0F);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.1F);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void RubyDung::run() {

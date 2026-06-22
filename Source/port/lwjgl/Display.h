@@ -6,6 +6,8 @@
 #define MCPORT_DISPLAY_H
 #include "java/String.h"
 #include "java/Type.h"
+#include <SDL3/SDL.h>
+#include <glad/glad.h>
 
 namespace lwjgl {
     struct DisplayMode {
