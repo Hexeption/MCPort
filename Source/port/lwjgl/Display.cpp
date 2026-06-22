@@ -9,6 +9,7 @@
 
 #include "java/String.h"
 #include "GLContext.h"
+#include "Keyboard.h"
 
 namespace lwjgl {
     namespace Display {
@@ -45,6 +46,11 @@ namespace lwjgl {
                 switch (event.type) {
                     case SDL_EVENT_QUIT:
                         closeRequested = true;
+                        break;
+                    case SDL_EVENT_KEY_DOWN:
+                    case SDL_EVENT_KEY_UP:
+                    case SDL_EVENT_TEXT_INPUT:
+                        Keyboard::detail::pushEvent(event);
                         break;
                 }
             }

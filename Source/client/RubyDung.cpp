@@ -4,8 +4,10 @@
 
 #include "RubyDung.h"
 
+#include "java/String.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
+#include "lwjgl/Keyboard.h"
 
 RubyDung::RubyDung(int_t width, int_t height) {
     this->width = width;
@@ -57,7 +59,7 @@ void RubyDung::run() {
     long_t lastTime = System::currentTimeMillis();
     int_t frames = 0;
     try {
-        while (!lwjgl::Display::isCloseRequested()) {
+        while (!lwjgl::Keyboard::isKeyDown(1) && !lwjgl::Display::isCloseRequested()) {
             this->timer.advanceTime();
 
             for (int i = 0; i < this->timer.ticks; ++i) {
@@ -82,6 +84,12 @@ void RubyDung::run() {
 }
 
 void RubyDung::tick() {
+    while (lwjgl::Keyboard::next()) {
+        const std::string keyName = String::toUtf8(
+            lwjgl::Keyboard::getKeyName(lwjgl::Keyboard::getEventKey())
+        );
+        printf("Key pressed: %s\n", keyName.c_str());
+    }
 }
 
 void RubyDung::render(float a) {

@@ -23,6 +23,8 @@ add_executable(MCPort
         Source/port/java/System.h
         Source/client/Timer.cpp
         Source/client/Timer.h
+        Source/port/lwjgl/Keyboard.cpp
+        Source/port/lwjgl/Keyboard.h
 )
 
 target_include_directories(MCPort PRIVATE "Source")
