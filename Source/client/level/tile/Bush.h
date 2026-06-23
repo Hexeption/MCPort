@@ -11,6 +11,12 @@ class Bush : public Tile {
 public:
     explicit Bush(int id);
 
+    void render(Tesselator &t, Level &level, int_t layer, int_t x, int_t y, int_t z) override;
+
+    void tick(Level *level, int_t x, int_t y, int_t z, Random &random) override;
+
+    AABB *getAABB(int_t x, int_t y, int_t z) override;
+
     bool blocksLight() override;
 
     bool isSolid() override;

@@ -14,6 +14,7 @@
 #include "lwjgl/Keyboard.h"
 #include "Player.h"
 #include "level/Frustum.h"
+#include "lwjgl/Mouse.h"
 #include "utils/GLU.h"
 
 RubyDung::RubyDung(int_t width, int_t height)
@@ -46,7 +47,6 @@ void RubyDung::init() {
     lwjgl::Display::setDisplayMode(lwjgl::DisplayMode(width, height));
     lwjgl::Display::setTitle(u"RubyDung");
     lwjgl::Display::create();
-    SDL_SetWindowRelativeMouseMode(lwjgl::GLContext::detail::getWindow(), true);
 
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_SMOOTH);
@@ -62,7 +62,13 @@ void RubyDung::init() {
 
     this->level = std::make_unique<Level>(256, 256, 64);
     this->player = std::make_unique<Player>(*this->level);
+    this->player->setSpawnPosition(
+        static_cast<float>(this->level->width) * 0.5F,
+        static_cast<float>(this->level->depth + 10),
+        static_cast<float>(this->level->height) * 0.5F
+    );
     this->levelRenderer = std::make_unique<LevelRenderer>(*this->level);
+    lwjgl::Mouse::setGrabbed(true);
 }
 
 void RubyDung::run() {
@@ -135,21 +141,17 @@ void RubyDung::setupCamera(float a) {
 }
 
 void RubyDung::render(float a) {
-    float dx = 0.0F;
-    float dy = 0.0F;
-    SDL_GetRelativeMouseState(&dx, &dy);
-    this->player->turn(static_cast<float>(dx), static_cast<float>(dy));
+    float xo = static_cast<float>(lwjgl::Mouse::getDX());
+    float yo = static_cast<float>(lwjgl::Mouse::getDY());
+    this->player->turn(xo, yo);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     this->setupCamera(a);
 
     glEnable(GL_CULL_FACE);
 
-    Frustum frustum = Frustum::getFrustum();
-
     this->levelRenderer->updateDirtyChunks(*this->player);
     this->levelRenderer->render(*this->player, 0);
-    
     this->levelRenderer->render(*this->player, 1);
 
     lwjgl::Display::update();

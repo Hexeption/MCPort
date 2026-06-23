@@ -64,7 +64,7 @@ void Tile::render(Tesselator &t, Level &level, int_t layer, int_t x, int_t y, in
     }
 }
 
-bool Tile::shouldRenderFace(Level level, int x, int y, int z, int layer) {
+bool Tile::shouldRenderFace(Level &level, int x, int y, int z, int layer) {
     return !level.isSolidTile(x, y, z) && level.isLit(x, y, z) ^ (layer == 1);
 }
 
@@ -182,9 +182,9 @@ AABB Tile::getTileAABB(int x, int y, int z) {
                 static_cast<float>(y + 1), static_cast<float>(z + 1));
 }
 
-AABB Tile::getAABB(int_t x, int_t y, int_t z) {
-    return AABB(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z),
-                static_cast<float>(x + 1), static_cast<float>(y + 1), static_cast<float>(z + 1));
+AABB *Tile::getAABB(int_t x, int_t y, int_t z) {
+    return new AABB(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z),
+                    static_cast<float>(x + 1), static_cast<float>(y + 1), static_cast<float>(z + 1));
 }
 
 bool Tile::blocksLight() {
@@ -198,5 +198,5 @@ bool Tile::isSolid() {
 void Tile::tick(Level *level, int_t x, int_t y, int_t z, Random &random) {
 }
 
-void Tile::destroy(Level level, int x, int y, int z) {
+void Tile::destroy(Level &level, int x, int y, int z) {
 }

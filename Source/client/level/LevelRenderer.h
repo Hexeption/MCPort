@@ -14,6 +14,7 @@
 
 class Level;
 class Player;
+class DirtyChunkSorter;
 
 class LevelRenderer : public LevelListener {
 public:

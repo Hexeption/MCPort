@@ -10,6 +10,7 @@
 
 #include "client/Player.h"
 #include "client/Textures.h"
+#include "client/level/DirtyChunkSorter.h"
 #include "client/level/Frustum.h"
 #include "client/level/Level.h"
 #include "java/System.h"
@@ -39,7 +40,7 @@ LevelRenderer::LevelRenderer(Level &level)
 
 std::vector<Chunk *> LevelRenderer::getAllDirtyChunks() {
     std::vector<Chunk *> dirty;
-    for (const auto &chunk : this->chunks) {
+    for (const auto &chunk: this->chunks) {
         if (chunk->isDirty()) {
             dirty.push_back(chunk.get());
         }
@@ -54,7 +55,7 @@ void LevelRenderer::render(Player &player, int_t layer) {
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(id));
     Frustum &frustum = Frustum::getFrustum();
 
-    for (const auto &chunk : this->chunks) {
+    for (const auto &chunk: this->chunks) {
         if (frustum.isVisible(chunk->aabb)) {
             chunk->render(layer);
         }
@@ -70,30 +71,7 @@ void LevelRenderer::updateDirtyChunks(Player &player) {
     }
 
     Frustum &frustum = Frustum::getFrustum();
-    const long_t now = System::currentTimeMillis();
-    std::sort(dirty.begin(), dirty.end(), [&player, &frustum, now](Chunk *c0, Chunk *c1) {
-        bool i0 = frustum.isVisible(c0->aabb);
-        bool i1 = frustum.isVisible(c1->aabb);
-        if (i0 && !i1) {
-            return true;
-        }
-
-        if (i1 && !i0) {
-            return false;
-        }
-
-        int_t t0 = static_cast<int_t>((now - c0->dirtiedTime) / 2000L);
-        int_t t1 = static_cast<int_t>((now - c1->dirtiedTime) / 2000L);
-        if (t0 < t1) {
-            return true;
-        }
-
-        if (t0 > t1) {
-            return false;
-        }
-
-        return c0->distanceToSqr(player) < c1->distanceToSqr(player);
-    });
+    std::sort(dirty.begin(), dirty.end(), DirtyChunkSorter(player, frustum));
 
     for (int_t i = 0; i < MAX_REBUILDS_PER_FRAME && i < static_cast<int_t>(dirty.size()); ++i) {
         dirty[i]->rebuild();

@@ -11,6 +11,8 @@ class Player : public Entity {
 public:
     explicit Player(Level &level);
 
+    void setSpawnPosition(float x, float y, float z);
+
     void tick() override;
 };
 

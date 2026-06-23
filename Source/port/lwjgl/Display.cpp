@@ -9,6 +9,7 @@
 
 #include "java/String.h"
 #include "GLContext.h"
+#include "Mouse.h"
 #include "Keyboard.h"
 
 namespace lwjgl {
@@ -40,6 +41,14 @@ namespace lwjgl {
             return (windowFlags & SDL_WINDOW_HIDDEN) == 0;
         }
 
+        int_t getWidth() {
+            return currentDisplayMode.getWidth();
+        }
+
+        int_t getHeight() {
+            return currentDisplayMode.getHeight();
+        }
+
         void processMessages() {
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
@@ -51,6 +60,12 @@ namespace lwjgl {
                     case SDL_EVENT_KEY_UP:
                     case SDL_EVENT_TEXT_INPUT:
                         Keyboard::detail::pushEvent(event);
+                        break;
+                    case SDL_EVENT_MOUSE_MOTION:
+                    case SDL_EVENT_MOUSE_WHEEL:
+                    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    case SDL_EVENT_MOUSE_BUTTON_UP:
+                        Mouse::detail::pushEvent(event);
                         break;
                 }
             }

@@ -9,6 +9,8 @@
 #include "tile/DirtTile.h"
 #include "tile/Tile.h"
 
+#include <zlib.h>
+
 Level::Level(int_t width, int_t height, int_t depth) {
     this->width = width;
     this->height = height;
@@ -24,13 +26,35 @@ Level::Level(int_t width, int_t height, int_t depth) {
 }
 
 bool Level::load() {
-    // todo: add loading
-    return false;
+    gzFile file = gzopen("level.dat", "rb");
+    if (file == nullptr) {
+        return false;
+    }
+
+    int expected = static_cast<int>(this->blocks.size());
+    int readBytes = gzread(file, this->blocks.data(), expected);
+    gzclose(file);
+    if (readBytes != expected) {
+        return false;
+    }
+
+    this->calcLightDepths(0, 0, this->width, this->height);
+    for (LevelListener *listener: this->levelListeners) {
+        listener->allChanged();
+    }
+    return true;
 }
 
 bool Level::save() {
-    // todo: add saving
-    return false;
+    gzFile file = gzopen("level.dat", "wb");
+    if (file == nullptr) {
+        return false;
+    }
+
+    int expected = static_cast<int>(this->blocks.size());
+    int written = gzwrite(file, this->blocks.data(), expected);
+    gzclose(file);
+    return written == expected;
 }
 
 void Level::calcLightDepths(int_t x0, int_t y0, int_t x1, int_t y1) {
@@ -109,8 +133,10 @@ std::vector<AABB *> &Level::getCubes(AABB aABB) {
             for (int_t z = z0; z < z1; ++z) {
                 Tile *tile = Tile::tiles[this->getTile(x, y, z)];
                 if (tile != nullptr) {
-                    AABB aabb = tile->getAABB(x, y, z);
-                    cubes.push_back(new AABB(aabb));
+                    AABB *aabb = tile->getAABB(x, y, z);
+                    if (aabb != nullptr) {
+                        cubes.push_back(aabb);
+                    }
                 }
             }
         }
@@ -129,7 +155,7 @@ bool Level::setTile(int_t x, int_t y, int_t z, int_t type) {
         this->blocks[index] = static_cast<byte_t>(type);
         this->calcLightDepths(x, z, 1, 1);
 
-        for (LevelListener *listener : this->levelListeners) {
+        for (LevelListener *listener: this->levelListeners) {
             listener->tileChanged(x, y, z);
         }
 

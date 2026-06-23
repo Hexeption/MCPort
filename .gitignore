@@ -1,6 +1,8 @@
-/build
-/out
-/cmake-build-debug
-/bin
-/.idea
+build/
+out/
+cmake-build-debug/
+cmake-build-release/
+bin/
+.idea/
 .DS_Store
+java/

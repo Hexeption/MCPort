@@ -11,6 +11,8 @@ class GrassTile : public Tile {
 public:
     explicit GrassTile(int id);
 
+    void tick(Level *level, int_t x, int_t y, int_t z, Random &random) override;
+
 protected:
     int_t getTexture(int_t face) override;
 };

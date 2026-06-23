@@ -11,6 +11,10 @@ Player::Player(Level &level)
     this->heightOffset = 1.62F;
 }
 
+void Player::setSpawnPosition(float x, float y, float z) {
+    this->setPos(x, y, z);
+}
+
 void Player::tick() {
     this->xo = this->x;
     this->yo = this->y;

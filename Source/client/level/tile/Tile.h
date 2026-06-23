@@ -45,7 +45,7 @@ public:
 
     virtual AABB getTileAABB(int x, int y, int z);
 
-    virtual AABB getAABB(int_t x, int_t y, int_t z);
+    virtual AABB *getAABB(int_t x, int_t y, int_t z);
 
     virtual bool blocksLight();
 
@@ -53,10 +53,10 @@ public:
 
     virtual void tick(Level *level, int_t x, int_t y, int_t z, Random &random);
 
-    virtual void destroy(Level level, int x, int y, int z);
+    virtual void destroy(Level &level, int x, int y, int z);
 
 private:
-    virtual bool shouldRenderFace(Level level, int x, int y, int z, int layer);
+    virtual bool shouldRenderFace(Level &level, int x, int y, int z, int layer);
 
 protected:
     virtual int_t getTexture(int_t face);

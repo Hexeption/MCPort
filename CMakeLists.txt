@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 4.2)
 project(MCPort)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_OSX_ARCHITECTURES "arm64")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 
 add_subdirectory(External)
 
@@ -29,6 +32,8 @@ add_executable(MCPort
         Source/client/level/Frustum.h
         Source/client/level/LevelRenderer.cpp
         Source/client/level/LevelRenderer.h
+        Source/client/level/DirtyChunkSorter.cpp
+        Source/client/level/DirtyChunkSorter.h
         Source/client/level/LevelListener.h
         Source/client/level/Level.cpp
         Source/client/level/Level.h
@@ -62,12 +67,14 @@ add_executable(MCPort
         Source/client/Player.h
         Source/port/utils/GLU.cpp
         Source/port/utils/GLU.h
+        Source/port/lwjgl/Mouse.cpp
+        Source/port/lwjgl/Mouse.h
 )
 
 target_include_directories(MCPort PRIVATE "Source")
 target_include_directories(MCPort PRIVATE "Source/port")
 
-target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad stb)
+target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad stb ZLIB::ZLIB)
 
 add_custom_command(
         TARGET MCPort POST_BUILD
