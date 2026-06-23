@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(MCPORT_BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 
 if (APPLE)
-        set(CMAKE_OSX_ARCHITECTURES "arm64")
+    set(CMAKE_OSX_ARCHITECTURES "arm64")
 endif ()
 
 option(MCPORT_ENABLE_EDGE_BARRIER "Enable invisible collision barriers at the edge of the level" ON)
@@ -15,86 +15,33 @@ option(MCPORT_MODERN_BLOCK_CONTROLS "Use modern Minecraft block controls: left c
 add_subdirectory(External)
 
 add_executable(MCPort
-        Source/client/RubyDung.cpp
-        Source/client/RubyDung.h
-        Source/client/HitResult.cpp
-        Source/client/HitResult.h
+        Source/game/client/Minecraft.cpp
+        Source/game/client/Minecraft.h
         Source/port/Main.cpp
-        Source/port/utils/SDLException.h
-        Source/port/lwjgl/Display.cpp
-        Source/port/lwjgl/Display.h
-        Source/port/lwjgl/BufferUtils.cpp
-        Source/port/lwjgl/BufferUtils.h
-        Source/port/java/Type.h
-        Source/port/java/String.cpp
-        Source/port/java/String.h
-        Source/port/lwjgl/GLContext.cpp
-        Source/port/lwjgl/GLContext.h
-        Source/port/java/System.cpp
-        Source/port/java/System.h
-        Source/client/Timer.cpp
-        Source/client/Timer.h
-        Source/client/Textures.cpp
-        Source/client/Textures.h
-        Source/client/level/Frustum.cpp
-        Source/client/level/Frustum.h
-        Source/client/level/LevelRenderer.cpp
-        Source/client/level/LevelRenderer.h
-        Source/client/level/DirtyChunkSorter.cpp
-        Source/client/level/DirtyChunkSorter.h
-        Source/client/level/LevelListener.h
-        Source/client/level/Level.cpp
-        Source/client/level/Level.h
-        Source/client/level/Tesselator.cpp
-        Source/client/level/Tesselator.h
-        Source/client/level/Chunk.cpp
-        Source/client/level/Chunk.h
-        Source/port/lwjgl/Keyboard.cpp
-        Source/port/lwjgl/Keyboard.h
-        Source/port/java/Random.cpp
-        Source/port/java/Random.h
-        Source/client/phys/AABB.cpp
-        Source/client/phys/AABB.h
-        Source/client/level/PerlinNoiseFilter.cpp
-        Source/client/level/PerlinNoiseFilter.h
-        Source/client/level/Tesselator.cpp
-        Source/client/level/Tesselator.h
-        Source/client/level/Chunk.cpp
-        Source/client/level/Chunk.h
-        Source/client/level/tile/Tile.cpp
-        Source/client/level/tile/Tile.h
-        Source/client/level/tile/GrassTile.cpp
-        Source/client/level/tile/GrassTile.h
-        Source/client/level/tile/DirtTile.cpp
-        Source/client/level/tile/DirtTile.h
-        Source/client/level/tile/Bush.cpp
-        Source/client/level/tile/Bush.h
-        Source/client/Entity.cpp
-        Source/client/Entity.h
-        Source/client/Player.cpp
-        Source/client/Player.h
-        Source/client/particle/Particle.cpp
-        Source/client/particle/Particle.h
-        Source/client/particle/ParticleEngine.cpp
-        Source/client/particle/ParticleEngine.h
-        Source/port/utils/GLU.cpp
-        Source/port/utils/GLU.h
-        Source/port/lwjgl/Mouse.cpp
-        Source/port/lwjgl/Mouse.h
-        Source/client/character/Vertex.cpp
-        Source/client/character/Vertex.h
-        Source/client/character/Vec3.cpp
-        Source/client/character/Vec3.h
-        Source/client/character/Polygon.cpp
-        Source/client/character/Polygon.h
-        Source/client/character/Cube.cpp
-        Source/client/character/Cube.h
-        Source/client/character/ZombieModel.cpp
-        Source/client/character/ZombieModel.h
-        Source/client/character/Zombie.cpp
-        Source/client/character/Zombie.h
         Source/port/java/Math.cpp
         Source/port/java/Math.h
+        Source/port/java/Random.cpp
+        Source/port/java/Random.h
+        Source/port/java/String.cpp
+        Source/port/java/String.h
+        Source/port/java/System.cpp
+        Source/port/java/System.h
+        Source/port/java/Type.h
+        Source/port/lwjgl/BufferUtils.cpp
+        Source/port/lwjgl/BufferUtils.h
+        Source/port/lwjgl/Display.cpp
+        Source/port/lwjgl/Display.h
+        Source/port/lwjgl/GLContext.cpp
+        Source/port/lwjgl/GLContext.h
+        Source/port/lwjgl/Keyboard.cpp
+        Source/port/lwjgl/Keyboard.h
+        Source/port/lwjgl/Mouse.cpp
+        Source/port/lwjgl/Mouse.h
+        Source/port/utils/GLU.cpp
+        Source/port/utils/GLU.h
+        Source/port/utils/SDLException.h
+        Source/game/client/Timer.cpp
+        Source/game/client/Timer.h
 )
 
 set_target_properties(MCPort PROPERTIES
