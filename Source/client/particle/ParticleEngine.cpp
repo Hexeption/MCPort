@@ -11,17 +11,14 @@
 #include "client/Player.h"
 #include "client/Textures.h"
 #include "client/level/Tesselator.h"
-
-namespace {
-    constexpr float PI = 3.14159265358979323846F;
-}
+#include "java/Math.h"
 
 ParticleEngine::ParticleEngine(Level &level)
     : level(&level) {
 }
 
 ParticleEngine::~ParticleEngine() {
-    for (Particle *particle : this->particles) {
+    for (Particle *particle: this->particles) {
         delete particle;
     }
 }
@@ -45,11 +42,16 @@ void ParticleEngine::render(Player &player, float a, int layer) {
     glEnable(GL_TEXTURE_2D);
     int id = Textures::loadTexture("/terrain.png", GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, id);
-    float xa = -static_cast<float>(std::cos(static_cast<double>(player.yRot) * static_cast<double>(PI) / static_cast<double>(180.0F)));
-    float za = -static_cast<float>(std::sin(static_cast<double>(player.yRot) * static_cast<double>(PI) / static_cast<double>(180.0F)));
-    float xa2 = -za * static_cast<float>(std::sin(static_cast<double>(player.xRot) * static_cast<double>(PI) / static_cast<double>(180.0F)));
-    float za2 = xa * static_cast<float>(std::sin(static_cast<double>(player.xRot) * static_cast<double>(PI) / static_cast<double>(180.0F)));
-    float ya = static_cast<float>(std::cos(static_cast<double>(player.xRot) * static_cast<double>(PI) / static_cast<double>(180.0F)));
+    float xa = -static_cast<float>(std::cos(
+        static_cast<double>(player.yRot) * static_cast<double>(Math::PI) / static_cast<double>(180.0F)));
+    float za = -static_cast<float>(std::sin(
+        static_cast<double>(player.yRot) * static_cast<double>(Math::PI) / static_cast<double>(180.0F)));
+    float xa2 = -za * static_cast<float>(std::sin(
+                    static_cast<double>(player.xRot) * static_cast<double>(Math::PI) / static_cast<double>(180.0F)));
+    float za2 = xa * static_cast<float>(std::sin(
+                    static_cast<double>(player.xRot) * static_cast<double>(Math::PI) / static_cast<double>(180.0F)));
+    float ya = static_cast<float>(std::cos(
+        static_cast<double>(player.xRot) * static_cast<double>(Math::PI) / static_cast<double>(180.0F)));
     Tesselator &t = Tesselator::instance;
     glColor4f(0.8F, 0.8F, 0.8F, 1.0F);
     t.init();

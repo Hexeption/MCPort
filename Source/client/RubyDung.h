@@ -8,10 +8,12 @@
 #include <java/Type.h>
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "HitResult.h"
 #include "Player.h"
 #include "Timer.h"
+#include "character/Zombie.h"
 #include "level/Level.h"
 #include "level/LevelRenderer.h"
 #include "lwjgl/BufferUtils.h"
@@ -63,6 +65,7 @@ private:
     std::unique_ptr<Player> player = nullptr;
     int_t paintTexture = 1;
     std::unique_ptr<ParticleEngine> particleEngine = nullptr;
+    std::vector<std::unique_ptr<Zombie> > zombies;
     int_t startupFrames = 0;
 };
 

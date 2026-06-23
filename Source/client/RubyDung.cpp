@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include <SDL3/SDL.h>
+#include <utility>
 
 #include "java/String.h"
 #include "java/System.h"
@@ -73,6 +74,12 @@ void RubyDung::init() {
     this->levelRenderer = std::make_unique<LevelRenderer>(*this->level);
     this->particleEngine = std::make_unique<ParticleEngine>(*this->level);
     lwjgl::Mouse::setGrabbed(true);
+
+    for (int_t i = 0; i < 10; ++i) {
+        std::unique_ptr<Zombie> zombie = std::make_unique<Zombie>(*this->level, 128.0F, 0.0F, 128.0F);
+        zombie->resetPos();
+        this->zombies.push_back(std::move(zombie));
+    }
 }
 
 void RubyDung::run() {
@@ -134,11 +141,25 @@ void RubyDung::tick() {
             if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_6) {
                 this->paintTexture = 6;
             }
+
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_G) {
+                this->zombies.push_back(
+                    std::make_unique<Zombie>(*this->level, this->player->x, this->player->y, this->player->z)
+                );
+            }
         }
     }
 
     this->level->tick();
     this->particleEngine->tick();
+
+    for (int_t i = 0; i < static_cast<int_t>(this->zombies.size()); ++i) {
+        this->zombies[i]->tick();
+        if (this->zombies[i]->removed) {
+            this->zombies.erase(this->zombies.begin() + i--);
+        }
+    }
+
     this->player->tick();
 }
 
@@ -282,9 +303,24 @@ void RubyDung::render(float a) {
     this->setupFog(0);
     glEnable(GL_FOG);
     this->levelRenderer->render(*this->player, 0);
+
+    Frustum &frustum = Frustum::getFrustum();
+    for (const auto &zombie : this->zombies) {
+        if (zombie->isLit() && frustum.isVisible(zombie->bb)) {
+            zombie->render(a);
+        }
+    }
+
     this->particleEngine->render(*this->player, a, 0);
     this->setupFog(1);
     this->levelRenderer->render(*this->player, 1);
+
+    for (const auto &zombie : this->zombies) {
+        if (!zombie->isLit() && frustum.isVisible(zombie->bb)) {
+            zombie->render(a);
+        }
+    }
+
     this->particleEngine->render(*this->player, a, 1);
 
     glDisable(GL_LIGHTING);

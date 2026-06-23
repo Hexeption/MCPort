@@ -75,6 +75,20 @@ add_executable(MCPort
         Source/port/utils/GLU.h
         Source/port/lwjgl/Mouse.cpp
         Source/port/lwjgl/Mouse.h
+        Source/client/character/Vertex.cpp
+        Source/client/character/Vertex.h
+        Source/client/character/Vec3.cpp
+        Source/client/character/Vec3.h
+        Source/client/character/Polygon.cpp
+        Source/client/character/Polygon.h
+        Source/client/character/Cube.cpp
+        Source/client/character/Cube.h
+        Source/client/character/ZombieModel.cpp
+        Source/client/character/ZombieModel.h
+        Source/client/character/Zombie.cpp
+        Source/client/character/Zombie.h
+        Source/port/java/Math.cpp
+        Source/port/java/Math.h
 )
 
 target_include_directories(MCPort PRIVATE "Source")
