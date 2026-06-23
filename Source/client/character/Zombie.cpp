@@ -10,24 +10,17 @@
 #include <glad/glad.h>
 
 #include "client/Textures.h"
+#include "java/Math.h"
 #include "java/System.h"
-
-namespace {
-    constexpr double PI = 3.14159265358979323846;
-
-    float randomFloat() {
-        return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-    }
-}
 
 ZombieModel Zombie::zombieModel = ZombieModel();
 
 Zombie::Zombie(Level &level, float x, float y, float z)
     : Entity(level),
-      rotA((randomFloat() + 1.0F) * 0.01F) {
+      rotA((Math::random() + 1.0F) * 0.01F) {
     this->setPos(x, y, z);
-    this->timeOffs = randomFloat() * 1239813.0F;
-    this->rot = static_cast<float>(randomFloat() * PI * 2.0);
+    this->timeOffs = Math::random() * 1239813.0F;
+    this->rot = static_cast<float>(Math::random() * Math::PI * 2.0);
     this->speed = 1.0F;
 }
 
@@ -45,14 +38,14 @@ void Zombie::tick() {
     this->rotA = static_cast<float>(static_cast<double>(this->rotA) * 0.99);
     this->rotA = static_cast<float>(
         static_cast<double>(this->rotA) +
-        static_cast<double>(randomFloat() - randomFloat()) *
-        static_cast<double>(randomFloat()) *
-        static_cast<double>(randomFloat()) *
+        static_cast<double>(Math::random() - Math::random()) *
+        static_cast<double>(Math::random()) *
+        static_cast<double>(Math::random()) *
         0.08
     );
     xa = static_cast<float>(std::sin(static_cast<double>(this->rot)));
     ya = static_cast<float>(std::cos(static_cast<double>(this->rot)));
-    if (this->onGround && randomFloat() < 0.08F) {
+    if (this->onGround && Math::random() < 0.08F) {
         this->yd = 0.5F;
     }
 

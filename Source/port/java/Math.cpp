@@ -3,3 +3,10 @@
 //
 
 #include "Math.h"
+
+namespace Math {
+    double random() {
+        auto random = Random();
+        return random.nextDouble();
+    }
+}
