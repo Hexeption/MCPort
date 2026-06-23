@@ -9,7 +9,7 @@
 
 static constexpr long_t MULTIPLIER = 0x5DEECE66DL;
 static constexpr long_t ADDEND = 0xB;
-static constexpr long_t MASK = (1L << 48) - 1;
+static constexpr long_t MASK = (1LL << 48) - 1;
 
 Random::Random()
     : Random(std::chrono::duration_cast<std::chrono::nanoseconds>(

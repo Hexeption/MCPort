@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 4.2)
 project(MCPort)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_OSX_ARCHITECTURES "arm64")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (APPLE)
+        set(CMAKE_OSX_ARCHITECTURES "arm64")
+endif ()
 
 option(MCPORT_ENABLE_EDGE_BARRIER "Enable invisible collision barriers at the edge of the level" ON)
 option(MCPORT_MODERN_BLOCK_CONTROLS "Use modern Minecraft block controls: left click breaks, right click places" ON)
@@ -103,6 +105,12 @@ target_compile_definitions(MCPort PRIVATE
 )
 
 target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad stb ZLIB::ZLIB)
+
+add_custom_command(
+        TARGET MCPort POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:MCPort> $<TARGET_RUNTIME_DLLS:MCPort>
+        COMMAND_EXPAND_LISTS
+)
 
 add_custom_command(
         TARGET MCPort POST_BUILD
