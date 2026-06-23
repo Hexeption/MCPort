@@ -21,6 +21,16 @@
 #include "Textures.h"
 #include "utils/GLU.h"
 
+namespace {
+#if MCPORT_MODERN_BLOCK_CONTROLS
+    constexpr int_t BREAK_BLOCK_BUTTON = 0;
+    constexpr int_t PLACE_BLOCK_BUTTON = 1;
+#else
+    constexpr int_t BREAK_BLOCK_BUTTON = 1;
+    constexpr int_t PLACE_BLOCK_BUTTON = 0;
+#endif
+}
+
 RubyDung::RubyDung(int_t width, int_t height)
     : width(width),
       height(height) {
@@ -253,7 +263,7 @@ void RubyDung::render(float a) {
     this->pick(a);
 
     while (lwjgl::Mouse::next()) {
-        if (lwjgl::Mouse::getEventButton() == 1 && lwjgl::Mouse::getEventButtonState() && this->hitResult.has_value()) {
+        if (lwjgl::Mouse::getEventButton() == BREAK_BLOCK_BUTTON && lwjgl::Mouse::getEventButtonState() && this->hitResult.has_value()) {
             Tile *oldTile = Tile::tiles[this->level->getTile(this->hitResult->x, this->hitResult->y, this->hitResult->z)];
             bool changed = this->level->setTile(this->hitResult->x, this->hitResult->y, this->hitResult->z, 0);
             if (oldTile != nullptr && changed) {
@@ -262,7 +272,7 @@ void RubyDung::render(float a) {
             }
         }
 
-        if (lwjgl::Mouse::getEventButton() == 0 && lwjgl::Mouse::getEventButtonState() && this->hitResult.has_value()) {
+        if (lwjgl::Mouse::getEventButton() == PLACE_BLOCK_BUTTON && lwjgl::Mouse::getEventButtonState() && this->hitResult.has_value()) {
             int_t x = this->hitResult->x;
             int_t y = this->hitResult->y;
             int_t z = this->hitResult->z;

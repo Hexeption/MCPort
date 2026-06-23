@@ -97,6 +97,30 @@ std::vector<AABB *> &Level::getCubes(AABB aABB) {
     static std::vector<AABB *> cubes;
     cubes.clear();
 
+#if MCPORT_ENABLE_EDGE_BARRIER
+    constexpr float barrierThickness = 1.0F;
+    constexpr float barrierBottom = -1024.0F;
+    constexpr float barrierTop = 1024.0F;
+    float levelWidth = static_cast<float>(this->width);
+    float levelHeight = static_cast<float>(this->height);
+
+    if (aABB.x0 < 0.0F) {
+        cubes.push_back(new AABB(-barrierThickness, barrierBottom, 0.0F, 0.0F, barrierTop, levelHeight));
+    }
+
+    if (aABB.x1 > levelWidth) {
+        cubes.push_back(new AABB(levelWidth, barrierBottom, 0.0F, levelWidth + barrierThickness, barrierTop, levelHeight));
+    }
+
+    if (aABB.z0 < 0.0F) {
+        cubes.push_back(new AABB(0.0F, barrierBottom, -barrierThickness, levelWidth, barrierTop, 0.0F));
+    }
+
+    if (aABB.z1 > levelHeight) {
+        cubes.push_back(new AABB(0.0F, barrierBottom, levelHeight, levelWidth, barrierTop, levelHeight + barrierThickness));
+    }
+#endif
+
     int_t x0 = static_cast<int_t>(aABB.x0);
     int_t x1 = static_cast<int_t>(aABB.x1 + 1.0F);
     int_t y0 = static_cast<int_t>(aABB.y0);

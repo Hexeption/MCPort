@@ -19,6 +19,10 @@
 #include "lwjgl/BufferUtils.h"
 #include "particle/ParticleEngine.h"
 
+#ifndef MCPORT_MODERN_BLOCK_CONTROLS
+#define MCPORT_MODERN_BLOCK_CONTROLS 1
+#endif
+
 class RubyDung {
 public:
     RubyDung(int_t width, int_t height);

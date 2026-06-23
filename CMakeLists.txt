@@ -6,6 +6,9 @@ set(CMAKE_OSX_ARCHITECTURES "arm64")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 
+option(MCPORT_ENABLE_EDGE_BARRIER "Enable invisible collision barriers at the edge of the level" ON)
+option(MCPORT_MODERN_BLOCK_CONTROLS "Use modern Minecraft block controls: left click breaks, right click places" ON)
+
 add_subdirectory(External)
 
 add_executable(MCPort
@@ -93,6 +96,11 @@ add_executable(MCPort
 
 target_include_directories(MCPort PRIVATE "Source")
 target_include_directories(MCPort PRIVATE "Source/port")
+
+target_compile_definitions(MCPort PRIVATE
+        MCPORT_ENABLE_EDGE_BARRIER=$<BOOL:${MCPORT_ENABLE_EDGE_BARRIER}>
+        MCPORT_MODERN_BLOCK_CONTROLS=$<BOOL:${MCPORT_MODERN_BLOCK_CONTROLS}>
+)
 
 target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad stb ZLIB::ZLIB)
 

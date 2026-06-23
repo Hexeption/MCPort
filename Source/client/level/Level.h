@@ -13,6 +13,10 @@
 #include "client/phys/AABB.h"
 #include "java/Random.h"
 
+#ifndef MCPORT_ENABLE_EDGE_BARRIER
+#define MCPORT_ENABLE_EDGE_BARRIER 1
+#endif
+
 class Level {
 private:
     static constexpr int_t TILE_UPDATE_INTERVAL = 400;
