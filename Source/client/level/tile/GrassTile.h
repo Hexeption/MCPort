@@ -10,6 +10,9 @@
 class GrassTile : public Tile {
 public:
     explicit GrassTile(int id);
+
+protected:
+    int_t getTexture(int_t face) override;
 };
 
 #endif //MCPORT_GRASSTILE_H

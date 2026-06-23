@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
         lwjgl::GLContext::instantiate();
 
-        RubyDung rubyDung(10, 10);
+        RubyDung rubyDung(854, 480);
         rubyDung.run();
     } catch (const std::exception &e) {
         printf("Exception caught in main: %s\n", e.what());

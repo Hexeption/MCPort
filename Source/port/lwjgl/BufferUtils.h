@@ -19,6 +19,11 @@ namespace lwjgl {
         explicit Buffer(std::size_t capacity) : storage(capacity), positionValue(0), limitValue(capacity) {
         }
 
+        void clear() {
+            positionValue = 0;
+            limitValue = storage.size();
+        }
+
         void put(const T *values, std::size_t count) {
             if (positionValue + count > storage.size()) {
                 throw std::out_of_range("buffer overflow");
@@ -35,9 +40,35 @@ namespace lwjgl {
             put(values.begin(), values.size());
         }
 
-        void flip() {
+        Buffer &flip() {
             limitValue = positionValue;
             positionValue = 0;
+            return *this;
+        }
+
+        void limit(std::size_t newLimit) {
+            if (newLimit > storage.size()) {
+                throw std::out_of_range("buffer limit out of range");
+            }
+
+            limitValue = newLimit;
+            if (positionValue > limitValue) {
+                positionValue = limitValue;
+            }
+        }
+
+        void get(T *dest, std::size_t count) const {
+            if (count > limitValue) {
+                throw std::out_of_range("buffer read out of range");
+            }
+
+            for (std::size_t i = 0; i < count; ++i) {
+                dest[i] = storage[i];
+            }
+        }
+
+        void get(T *dest) const {
+            get(dest, limitValue);
         }
 
         std::size_t capacity() const {

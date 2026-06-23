@@ -7,11 +7,16 @@
 
 class LevelListener {
 public:
-    virtual void tileChanged(int x, int y, int z);
+    virtual ~LevelListener() = default;
 
-    virtual void lightColumnChanged(int var1, int var2, int var3, int var4);
+    virtual void tileChanged(int x, int y, int z) {
+    }
 
-    virtual void allChanged();
+    virtual void lightColumnChanged(int var1, int var2, int var3, int var4) {
+    }
+
+    virtual void allChanged() {
+    }
 };
 
 #endif //MCPORT_LEVELLISTENER_H

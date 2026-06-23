@@ -4,14 +4,21 @@
 
 #include "RubyDung.h"
 
+#include <glad/glad.h>
+#include <SDL3/SDL.h>
+
 #include "java/String.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
+#include "lwjgl/GLContext.h"
 #include "lwjgl/Keyboard.h"
+#include "Player.h"
+#include "level/Frustum.h"
+#include "utils/GLU.h"
 
-RubyDung::RubyDung(int_t width, int_t height) {
-    this->width = width;
-    this->height = height;
+RubyDung::RubyDung(int_t width, int_t height)
+    : width(width),
+      height(height) {
 }
 
 void RubyDung::init() {
@@ -39,6 +46,7 @@ void RubyDung::init() {
     lwjgl::Display::setDisplayMode(lwjgl::DisplayMode(width, height));
     lwjgl::Display::setTitle(u"RubyDung");
     lwjgl::Display::create();
+    SDL_SetWindowRelativeMouseMode(lwjgl::GLContext::detail::getWindow(), true);
 
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_SMOOTH);
@@ -51,14 +59,18 @@ void RubyDung::init() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
+
+    this->level = std::make_unique<Level>(256, 256, 64);
+    this->player = std::make_unique<Player>(*this->level);
+    this->levelRenderer = std::make_unique<LevelRenderer>(*this->level);
 }
 
 void RubyDung::run() {
-    init();
-
-    long_t lastTime = System::currentTimeMillis();
-    int_t frames = 0;
     try {
+        init();
+
+        long_t lastTime = System::currentTimeMillis();
+        int_t frames = 0;
         while (!lwjgl::Keyboard::isKeyDown(1) && !lwjgl::Display::isCloseRequested()) {
             this->timer.advanceTime();
 
@@ -70,8 +82,9 @@ void RubyDung::run() {
             frames++;
 
             while (System::currentTimeMillis() >= lastTime + 1000L) {
-                lwjgl::Display::setTitle(u"RubyDung - FPS: " + String::toString(frames));
-                // chunk updates
+                lwjgl::Display::setTitle(
+                    u"RubyDung - FPS: " + String::toString(frames));
+                Chunk::updates = 0;
                 lastTime += 1000L;
                 frames = 0;
             }
@@ -85,17 +98,66 @@ void RubyDung::run() {
 
 void RubyDung::tick() {
     while (lwjgl::Keyboard::next()) {
+        if (lwjgl::Keyboard::getEventKeyState()) {
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_RETURN) {
+                if (this->level != nullptr) {
+                    this->level->save();
+                }
+            }
+        }
         const std::string keyName = String::toUtf8(
             lwjgl::Keyboard::getKeyName(lwjgl::Keyboard::getEventKey())
         );
         printf("Key pressed: %s\n", keyName.c_str());
     }
+
+    this->level->tick();
+    this->player->tick();
+}
+
+void RubyDung::moveCameraToPlayer(float a) {
+    glTranslatef(0.0F, 0.0F, -0.3F);
+    glRotatef(this->player->xRot, 1.0F, 0.0F, 0.0F);
+    glRotatef(this->player->yRot, 0.0F, 1.0F, 0.0F);
+    float x = this->player->xo + (this->player->x - this->player->xo) * a;
+    float y = this->player->yo + (this->player->y - this->player->yo) * a;
+    float z = this->player->zo + (this->player->z - this->player->zo) * a;
+    glTranslatef(-x, -y, -z);
+}
+
+void RubyDung::setupCamera(float a) {
+    glMatrixMode(5889);
+    glLoadIdentity();
+    GLU::gluPerspective(70.0F, (float) this->width / (float) this->height, 0.05F, 1000.0F);
+    glMatrixMode(5888);
+    glLoadIdentity();
+    this->moveCameraToPlayer(a);
 }
 
 void RubyDung::render(float a) {
+    float dx = 0.0F;
+    float dy = 0.0F;
+    SDL_GetRelativeMouseState(&dx, &dy);
+    this->player->turn(static_cast<float>(dx), static_cast<float>(dy));
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    this->setupCamera(a);
+
+    glEnable(GL_CULL_FACE);
+
+    Frustum frustum = Frustum::getFrustum();
+
+    this->levelRenderer->updateDirtyChunks(*this->player);
+    this->levelRenderer->render(*this->player, 0);
+    
+    this->levelRenderer->render(*this->player, 1);
+
     lwjgl::Display::update();
 }
 
 void RubyDung::destory() {
+    if (this->level != nullptr) {
+        this->level->save();
+    }
     lwjgl::Display::Destory();
 }

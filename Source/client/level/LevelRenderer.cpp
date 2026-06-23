@@ -1,0 +1,137 @@
+//
+// Created by Keir Davis on 23/06/2026.
+//
+
+#include "LevelRenderer.h"
+
+#include <algorithm>
+
+#include <glad/glad.h>
+
+#include "client/Player.h"
+#include "client/Textures.h"
+#include "client/level/Frustum.h"
+#include "client/level/Level.h"
+#include "java/System.h"
+
+LevelRenderer::LevelRenderer(Level &level)
+    : level(&level) {
+    level.addListener(*this);
+    this->xChunks = level.width / CHUNK_SIZE;
+    this->yChunks = level.depth / CHUNK_SIZE;
+    this->zChunks = level.height / CHUNK_SIZE;
+    this->chunks.reserve(this->xChunks * this->yChunks * this->zChunks);
+
+    for (int_t x = 0; x < this->xChunks; ++x) {
+        for (int_t y = 0; y < this->yChunks; ++y) {
+            for (int_t z = 0; z < this->zChunks; ++z) {
+                int_t x0 = x * CHUNK_SIZE;
+                int_t y0 = y * CHUNK_SIZE;
+                int_t z0 = z * CHUNK_SIZE;
+                int_t x1 = std::min((x + 1) * CHUNK_SIZE, level.width);
+                int_t y1 = std::min((y + 1) * CHUNK_SIZE, level.depth);
+                int_t z1 = std::min((z + 1) * CHUNK_SIZE, level.height);
+                this->chunks.push_back(std::make_unique<Chunk>(level, x0, y0, z0, x1, y1, z1));
+            }
+        }
+    }
+}
+
+std::vector<Chunk *> LevelRenderer::getAllDirtyChunks() {
+    std::vector<Chunk *> dirty;
+    for (const auto &chunk : this->chunks) {
+        if (chunk->isDirty()) {
+            dirty.push_back(chunk.get());
+        }
+    }
+
+    return dirty;
+}
+
+void LevelRenderer::render(Player &player, int_t layer) {
+    glEnable(GL_TEXTURE_2D);
+    int id = Textures::loadTexture("/terrain.png", GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(id));
+    Frustum &frustum = Frustum::getFrustum();
+
+    for (const auto &chunk : this->chunks) {
+        if (frustum.isVisible(chunk->aabb)) {
+            chunk->render(layer);
+        }
+    }
+
+    glDisable(GL_TEXTURE_2D);
+}
+
+void LevelRenderer::updateDirtyChunks(Player &player) {
+    std::vector<Chunk *> dirty = this->getAllDirtyChunks();
+    if (dirty.empty()) {
+        return;
+    }
+
+    Frustum &frustum = Frustum::getFrustum();
+    const long_t now = System::currentTimeMillis();
+    std::sort(dirty.begin(), dirty.end(), [&player, &frustum, now](Chunk *c0, Chunk *c1) {
+        bool i0 = frustum.isVisible(c0->aabb);
+        bool i1 = frustum.isVisible(c1->aabb);
+        if (i0 && !i1) {
+            return true;
+        }
+
+        if (i1 && !i0) {
+            return false;
+        }
+
+        int_t t0 = static_cast<int_t>((now - c0->dirtiedTime) / 2000L);
+        int_t t1 = static_cast<int_t>((now - c1->dirtiedTime) / 2000L);
+        if (t0 < t1) {
+            return true;
+        }
+
+        if (t0 > t1) {
+            return false;
+        }
+
+        return c0->distanceToSqr(player) < c1->distanceToSqr(player);
+    });
+
+    for (int_t i = 0; i < MAX_REBUILDS_PER_FRAME && i < static_cast<int_t>(dirty.size()); ++i) {
+        dirty[i]->rebuild();
+    }
+}
+
+void LevelRenderer::setDirty(int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1) {
+    x0 /= CHUNK_SIZE;
+    x1 /= CHUNK_SIZE;
+    y0 /= CHUNK_SIZE;
+    y1 /= CHUNK_SIZE;
+    z0 /= CHUNK_SIZE;
+    z1 /= CHUNK_SIZE;
+
+    if (x0 < 0) x0 = 0;
+    if (y0 < 0) y0 = 0;
+    if (z0 < 0) z0 = 0;
+    if (x1 >= this->xChunks) x1 = this->xChunks - 1;
+    if (y1 >= this->yChunks) y1 = this->yChunks - 1;
+    if (z1 >= this->zChunks) z1 = this->zChunks - 1;
+
+    for (int_t x = x0; x <= x1; ++x) {
+        for (int_t y = y0; y <= y1; ++y) {
+            for (int_t z = z0; z <= z1; ++z) {
+                this->chunks[(x + y * this->xChunks) * this->zChunks + z]->setDirty();
+            }
+        }
+    }
+}
+
+void LevelRenderer::tileChanged(int x, int y, int z) {
+    this->setDirty(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
+}
+
+void LevelRenderer::lightColumnChanged(int x, int z, int y0, int y1) {
+    this->setDirty(x - 1, y0 - 1, z - 1, x + 1, y1 + 1, z + 1);
+}
+
+void LevelRenderer::allChanged() {
+    this->setDirty(0, 0, 0, this->level->width, this->level->depth, this->level->height);
+}
