@@ -132,9 +132,15 @@ void RubyDung::moveCameraToPlayer(float a) {
 }
 
 void RubyDung::setupCamera(float a) {
+    glViewport(0, 0, lwjgl::Display::getWidth(), lwjgl::Display::getHeight());
     glMatrixMode(5889);
     glLoadIdentity();
-    GLU::gluPerspective(70.0F, (float) this->width / (float) this->height, 0.05F, 1000.0F);
+    GLU::gluPerspective(
+        70.0F,
+        (float) lwjgl::Display::getWidth() / (float) lwjgl::Display::getHeight(),
+        0.05F,
+        1000.0F
+    );
     glMatrixMode(5888);
     glLoadIdentity();
     this->moveCameraToPlayer(a);
