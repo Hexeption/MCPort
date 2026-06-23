@@ -89,7 +89,7 @@ void RubyDung::run() {
 
             while (System::currentTimeMillis() >= lastTime + 1000L) {
                 lwjgl::Display::setTitle(
-                    u"RubyDung - FPS: " + String::toString(frames));
+                    u"RubyDung - FPS: " + String::toString(frames) + u", Updates: " + String::toString(Chunk::updates));
                 Chunk::updates = 0;
                 lastTime += 1000L;
                 frames = 0;
