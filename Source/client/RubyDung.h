@@ -40,6 +40,8 @@ private:
 
     void pick(float a);
 
+    void setupFog(int_t i);
+
 public:
     int_t width = 0;
     int_t height = 0;
@@ -47,6 +49,7 @@ public:
 private:
     lwjgl::FloatBuffer fogColor0 = lwjgl::BufferUtils::createFloatBuffer(4);
     lwjgl::FloatBuffer fogColor1 = lwjgl::BufferUtils::createFloatBuffer(4);
+    lwjgl::FloatBuffer lightBrightnessBuffer = lwjgl::BufferUtils::createFloatBuffer(16);
     lwjgl::IntBuffer viewportBuffer = lwjgl::BufferUtils::createIntBuffer(16);
     lwjgl::IntBuffer selectBuffer = lwjgl::BufferUtils::createIntBuffer(2000);
     std::optional<HitResult> hitResult;

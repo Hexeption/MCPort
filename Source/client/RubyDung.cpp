@@ -277,8 +277,11 @@ void RubyDung::render(float a) {
     glEnable(GL_CULL_FACE);
 
     this->levelRenderer->updateDirtyChunks(*this->player);
+    this->setupFog(0);
+    glEnable(GL_FOG);
     this->levelRenderer->render(*this->player, 0);
     this->particleEngine->render(*this->player, a, 0);
+    this->setupFog(1);
     this->levelRenderer->render(*this->player, 1);
     this->particleEngine->render(*this->player, a, 1);
 
@@ -292,6 +295,27 @@ void RubyDung::render(float a) {
     }
 
     lwjgl::Display::update();
+}
+
+void RubyDung::setupFog(int_t i) {
+    if (i == 0) {
+        glFogi(GL_FOG_MODE, GL_EXP);
+        glFogf(GL_FOG_DENSITY, 0.001F);
+        glFogfv(GL_FOG_COLOR, this->fogColor0.data());
+        glDisable(GL_LIGHTING);
+    } else if (i == 1) {
+        glFogi(GL_FOG_MODE, GL_EXP);
+        glFogf(GL_FOG_DENSITY, 0.06F);
+        glFogfv(GL_FOG_COLOR, this->fogColor1.data());
+        glEnable(GL_LIGHTING);
+        glEnable(GL_COLOR_MATERIAL);
+
+        float br = 0.6F;
+        this->lightBrightnessBuffer.clear();
+        this->lightBrightnessBuffer.put({br, br, br, 1.0F});
+        this->lightBrightnessBuffer.flip();
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, this->lightBrightnessBuffer.data());
+    }
 }
 
 void RubyDung::destory() {
