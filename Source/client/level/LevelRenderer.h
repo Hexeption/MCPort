@@ -15,6 +15,8 @@
 class Level;
 class Player;
 class DirtyChunkSorter;
+class Frustum;
+class HitResult;
 
 class LevelRenderer : public LevelListener {
 public:
@@ -36,6 +38,10 @@ public:
     void render(Player &player, int_t layer);
 
     void updateDirtyChunks(Player &player);
+
+    void pick(Player &player, Frustum &frustum);
+
+    void renderHit(HitResult &h);
 
     void setDirty(int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1);
 

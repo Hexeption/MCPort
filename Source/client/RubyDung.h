@@ -7,12 +7,15 @@
 
 #include <java/Type.h>
 #include <memory>
+#include <optional>
 
+#include "HitResult.h"
 #include "Player.h"
 #include "Timer.h"
 #include "level/Level.h"
 #include "level/LevelRenderer.h"
 #include "lwjgl/BufferUtils.h"
+#include "particle/ParticleEngine.h"
 
 class RubyDung {
 public:
@@ -35,6 +38,8 @@ private:
 
     void setupPickCamera(float a, int x, int y);
 
+    void pick(float a);
+
 public:
     int_t width = 0;
     int_t height = 0;
@@ -44,12 +49,15 @@ private:
     lwjgl::FloatBuffer fogColor1 = lwjgl::BufferUtils::createFloatBuffer(4);
     lwjgl::IntBuffer viewportBuffer = lwjgl::BufferUtils::createIntBuffer(16);
     lwjgl::IntBuffer selectBuffer = lwjgl::BufferUtils::createIntBuffer(2000);
+    std::optional<HitResult> hitResult;
 
     Timer timer = Timer(20.0f);
 
     std::unique_ptr<Level> level = nullptr;
     std::unique_ptr<LevelRenderer> levelRenderer = nullptr;
     std::unique_ptr<Player> player = nullptr;
+    int_t paintTexture = 1;
+    std::unique_ptr<ParticleEngine> particleEngine = nullptr;
     int_t startupFrames = 0;
 };
 

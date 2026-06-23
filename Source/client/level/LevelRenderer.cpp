@@ -5,14 +5,18 @@
 #include "LevelRenderer.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include <glad/glad.h>
 
 #include "client/Player.h"
+#include "client/HitResult.h"
 #include "client/Textures.h"
 #include "client/level/DirtyChunkSorter.h"
 #include "client/level/Frustum.h"
 #include "client/level/Level.h"
+#include "client/level/Tesselator.h"
+#include "client/level/tile/Tile.h"
 #include "java/System.h"
 
 LevelRenderer::LevelRenderer(Level &level)
@@ -76,6 +80,71 @@ void LevelRenderer::updateDirtyChunks(Player &player) {
     for (int_t i = 0; i < MAX_REBUILDS_PER_FRAME && i < static_cast<int_t>(dirty.size()); ++i) {
         dirty[i]->rebuild();
     }
+}
+
+void LevelRenderer::pick(Player &player, Frustum &frustum) {
+    Tesselator &t = Tesselator::instance;
+    float r = 3.0F;
+    AABB box = player.bb.grow(r, r, r);
+    int_t x0 = static_cast<int_t>(box.x0);
+    int_t x1 = static_cast<int_t>(box.x1 + 1.0F);
+    int_t y0 = static_cast<int_t>(box.y0);
+    int_t y1 = static_cast<int_t>(box.y1 + 1.0F);
+    int_t z0 = static_cast<int_t>(box.z0);
+    int_t z1 = static_cast<int_t>(box.z1 + 1.0F);
+    glInitNames();
+    glPushName(0);
+    glPushName(0);
+
+    for (int_t x = x0; x < x1; ++x) {
+        glLoadName(static_cast<GLuint>(x));
+        glPushName(0);
+
+        for (int_t y = y0; y < y1; ++y) {
+            glLoadName(static_cast<GLuint>(y));
+            glPushName(0);
+
+            for (int_t z = z0; z < z1; ++z) {
+                Tile *tile = Tile::tiles[this->level->getTile(x, y, z)];
+                if (tile != nullptr && frustum.isVisible(tile->getTileAABB(x, y, z))) {
+                    glLoadName(static_cast<GLuint>(z));
+                    glPushName(0);
+
+                    for (int_t i = 0; i < 6; ++i) {
+                        glLoadName(static_cast<GLuint>(i));
+                        t.init();
+                        tile->renderFaceNoTexture(t, x, y, z, i);
+                        t.flush();
+                    }
+
+                    glPopName();
+                }
+            }
+
+            glPopName();
+        }
+
+        glPopName();
+    }
+
+    glPopName();
+    glPopName();
+}
+
+void LevelRenderer::renderHit(HitResult &h) {
+    Tesselator &t = Tesselator::instance;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glColor4f(
+        1.0F,
+        1.0F,
+        1.0F,
+        (std::sin(static_cast<double>(System::currentTimeMillis()) / 100.0) * 0.2F + 0.4F) * 0.5F
+    );
+    t.init();
+    Tile::rock.renderFaceNoTexture(t, h.x, h.y, h.z, h.f);
+    t.flush();
+    glDisable(GL_BLEND);
 }
 
 void LevelRenderer::setDirty(int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1) {

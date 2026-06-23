@@ -71,6 +71,14 @@ namespace lwjgl {
             get(dest, limitValue);
         }
 
+        T get() {
+            if (positionValue >= limitValue) {
+                throw std::out_of_range("buffer underflow");
+            }
+
+            return storage[positionValue++];
+        }
+
         std::size_t capacity() const {
             return storage.size();
         }

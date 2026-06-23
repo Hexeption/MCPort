@@ -15,6 +15,20 @@
 
 namespace lwjgl {
 	namespace Mouse {
+		static int_t toLwjglButton(int_t button) {
+			if (button == SDL_BUTTON_LEFT) {
+				return 0;
+			}
+			if (button == SDL_BUTTON_RIGHT) {
+				return 1;
+			}
+			if (button == SDL_BUTTON_MIDDLE) {
+				return 2;
+			}
+
+			return button - 1;
+		}
+
 		static int_t staging_dx = 0;
 		static int_t staging_dy = 0;
 		static int_t staging_dz = 0;
@@ -49,11 +63,11 @@ namespace lwjgl {
 						                    e.wheel.y);
 						break;
 					case SDL_EVENT_MOUSE_BUTTON_DOWN:
-						event_queue.emplace(e.button.button - 1, 1, e.button.x, Display::getHeight() - e.button.y - 1,
+						event_queue.emplace(toLwjglButton(e.button.button), 1, e.button.x, Display::getHeight() - e.button.y - 1,
 						                    0, 0, 0);
 						break;
 					case SDL_EVENT_MOUSE_BUTTON_UP:
-						event_queue.emplace(e.button.button - 1, 0, e.button.x, Display::getHeight() - e.button.y - 1,
+						event_queue.emplace(toLwjglButton(e.button.button), 0, e.button.x, Display::getHeight() - e.button.y - 1,
 						                    0, 0, 0);
 						break;
 				}
@@ -133,7 +147,13 @@ namespace lwjgl {
 		}
 
 		bool isButtonDown(int_t button) {
-			return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(1 + button)) != 0;
+			int_t sdlButton = button + 1;
+			if (button == 1) {
+				sdlButton = SDL_BUTTON_RIGHT;
+			} else if (button == 2) {
+				sdlButton = SDL_BUTTON_MIDDLE;
+			}
+			return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(sdlButton)) != 0;
 		}
 
 		bool isGrabbed() {

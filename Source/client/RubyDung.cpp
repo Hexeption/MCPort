@@ -14,6 +14,7 @@
 #include "lwjgl/Keyboard.h"
 #include "Player.h"
 #include "level/Frustum.h"
+#include "level/tile/Tile.h"
 #include "lwjgl/Mouse.h"
 #include "utils/GLU.h"
 
@@ -68,6 +69,7 @@ void RubyDung::init() {
         static_cast<float>(this->level->height) * 0.5F
     );
     this->levelRenderer = std::make_unique<LevelRenderer>(*this->level);
+    this->particleEngine = std::make_unique<ParticleEngine>(*this->level);
     lwjgl::Mouse::setGrabbed(true);
 }
 
@@ -110,14 +112,31 @@ void RubyDung::tick() {
                     this->level->save();
                 }
             }
+
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_1) {
+                this->paintTexture = 1;
+            }
+
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_2) {
+                this->paintTexture = 3;
+            }
+
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_3) {
+                this->paintTexture = 4;
+            }
+
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_4) {
+                this->paintTexture = 5;
+            }
+
+            if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_6) {
+                this->paintTexture = 6;
+            }
         }
-        const std::string keyName = String::toUtf8(
-            lwjgl::Keyboard::getKeyName(lwjgl::Keyboard::getEventKey())
-        );
-        printf("Key pressed: %s\n", keyName.c_str());
     }
 
     this->level->tick();
+    this->particleEngine->tick();
     this->player->tick();
 }
 
@@ -146,10 +165,111 @@ void RubyDung::setupCamera(float a) {
     this->moveCameraToPlayer(a);
 }
 
+void RubyDung::setupPickCamera(float a, int x, int y) {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    this->viewportBuffer.clear();
+    glGetIntegerv(GL_VIEWPORT, this->viewportBuffer.data());
+    this->viewportBuffer.flip();
+    this->viewportBuffer.limit(16);
+    GLU::gluPickMatrix(static_cast<float>(x), static_cast<float>(y), 5.0F, 5.0F, this->viewportBuffer.data());
+    GLU::gluPerspective(
+        70.0F,
+        static_cast<float>(this->width) / static_cast<float>(this->height),
+        0.05F,
+        1000.0F
+    );
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    this->moveCameraToPlayer(a);
+}
+
+void RubyDung::pick(float a) {
+    this->selectBuffer.clear();
+    glSelectBuffer(static_cast<GLsizei>(this->selectBuffer.capacity()),
+                   reinterpret_cast<GLuint *>(this->selectBuffer.data()));
+    glRenderMode(GL_SELECT);
+    this->setupPickCamera(a, this->width / 2, this->height / 2);
+    this->levelRenderer->pick(*this->player, Frustum::getFrustum());
+    int_t hits = glRenderMode(GL_RENDER);
+    this->selectBuffer.flip();
+    this->selectBuffer.limit(this->selectBuffer.capacity());
+    long_t closest = 0L;
+    int_t names[10] = {};
+    int_t hitNameCount = 0;
+
+    for (int_t i = 0; i < hits; ++i) {
+        int_t nameCount = this->selectBuffer.get();
+        long_t minZ = this->selectBuffer.get();
+        this->selectBuffer.get();
+        if (minZ >= closest && i != 0) {
+            for (int_t j = 0; j < nameCount; ++j) {
+                this->selectBuffer.get();
+            }
+        } else {
+            closest = minZ;
+            hitNameCount = nameCount;
+
+            for (int_t j = 0; j < nameCount; ++j) {
+                names[j] = this->selectBuffer.get();
+            }
+        }
+    }
+
+    if (hitNameCount > 0) {
+        this->hitResult = HitResult(names[0], names[1], names[2], names[3], names[4]);
+    } else {
+        this->hitResult.reset();
+    }
+}
+
 void RubyDung::render(float a) {
     float xo = static_cast<float>(lwjgl::Mouse::getDX());
     float yo = static_cast<float>(lwjgl::Mouse::getDY());
     this->player->turn(xo, yo);
+    this->pick(a);
+
+    while (lwjgl::Mouse::next()) {
+        if (lwjgl::Mouse::getEventButton() == 1 && lwjgl::Mouse::getEventButtonState() && this->hitResult.has_value()) {
+            Tile *oldTile = Tile::tiles[this->level->getTile(this->hitResult->x, this->hitResult->y, this->hitResult->z)];
+            bool changed = this->level->setTile(this->hitResult->x, this->hitResult->y, this->hitResult->z, 0);
+            if (oldTile != nullptr && changed) {
+                oldTile->destroy(*this->level, this->hitResult->x, this->hitResult->y, this->hitResult->z,
+                                 *this->particleEngine);
+            }
+        }
+
+        if (lwjgl::Mouse::getEventButton() == 0 && lwjgl::Mouse::getEventButtonState() && this->hitResult.has_value()) {
+            int_t x = this->hitResult->x;
+            int_t y = this->hitResult->y;
+            int_t z = this->hitResult->z;
+            if (this->hitResult->f == 0) {
+                --y;
+            }
+
+            if (this->hitResult->f == 1) {
+                ++y;
+            }
+
+            if (this->hitResult->f == 2) {
+                --z;
+            }
+
+            if (this->hitResult->f == 3) {
+                ++z;
+            }
+
+            if (this->hitResult->f == 4) {
+                --x;
+            }
+
+            if (this->hitResult->f == 5) {
+                ++x;
+            }
+
+            this->level->setTile(x, y, z, this->paintTexture);
+        }
+    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     this->setupCamera(a);
@@ -158,7 +278,18 @@ void RubyDung::render(float a) {
 
     this->levelRenderer->updateDirtyChunks(*this->player);
     this->levelRenderer->render(*this->player, 0);
+    this->particleEngine->render(*this->player, a, 0);
     this->levelRenderer->render(*this->player, 1);
+    this->particleEngine->render(*this->player, a, 1);
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
+    if (this->hitResult.has_value()) {
+        glDisable(GL_ALPHA_TEST);
+        this->levelRenderer->renderHit(*this->hitResult);
+        glEnable(GL_ALPHA_TEST);
+    }
 
     lwjgl::Display::update();
 }

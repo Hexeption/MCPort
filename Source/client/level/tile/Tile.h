@@ -14,6 +14,7 @@ class Tesselator;
 class GrassTile;
 class DirtTile;
 class Bush;
+class ParticleEngine;
 
 class Tile {
 public:
@@ -53,7 +54,7 @@ public:
 
     virtual void tick(Level *level, int_t x, int_t y, int_t z, Random &random);
 
-    virtual void destroy(Level &level, int x, int y, int z);
+    virtual void destroy(Level &level, int x, int y, int z, ParticleEngine &particleEngine);
 
 private:
     virtual bool shouldRenderFace(Level &level, int x, int y, int z, int layer);

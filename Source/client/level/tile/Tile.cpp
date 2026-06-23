@@ -9,6 +9,8 @@
 #include "Bush.h"
 #include "client/level/Level.h"
 #include "client/level/Tesselator.h"
+#include "client/particle/Particle.h"
+#include "client/particle/ParticleEngine.h"
 
 Tile *Tile::tiles[256] = {};
 Tile *Tile::empty = nullptr;
@@ -198,5 +200,26 @@ bool Tile::isSolid() {
 void Tile::tick(Level *level, int_t x, int_t y, int_t z, Random &random) {
 }
 
-void Tile::destroy(Level &level, int x, int y, int z) {
+void Tile::destroy(Level &level, int x, int y, int z, ParticleEngine &particleEngine) {
+    int_t SD = 4;
+
+    for (int_t xx = 0; xx < SD; ++xx) {
+        for (int_t yy = 0; yy < SD; ++yy) {
+            for (int_t zz = 0; zz < SD; ++zz) {
+                float xp = static_cast<float>(x) + (static_cast<float>(xx) + 0.5F) / static_cast<float>(SD);
+                float yp = static_cast<float>(y) + (static_cast<float>(yy) + 0.5F) / static_cast<float>(SD);
+                float zp = static_cast<float>(z) + (static_cast<float>(zz) + 0.5F) / static_cast<float>(SD);
+                particleEngine.add(new Particle(
+                    level,
+                    xp,
+                    yp,
+                    zp,
+                    xp - static_cast<float>(x) - 0.5F,
+                    yp - static_cast<float>(y) - 0.5F,
+                    zp - static_cast<float>(z) - 0.5F,
+                    this->tex
+                ));
+            }
+        }
+    }
 }
