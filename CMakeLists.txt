@@ -3,6 +3,7 @@ project(MCPort)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(MCPORT_BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 
 if (APPLE)
         set(CMAKE_OSX_ARCHITECTURES "arm64")
@@ -94,6 +95,14 @@ add_executable(MCPort
         Source/client/character/Zombie.h
         Source/port/java/Math.cpp
         Source/port/java/Math.h
+)
+
+set_target_properties(MCPort PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${MCPORT_BIN_DIR}/$<LOWER_CASE:$<CONFIG>>"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${MCPORT_BIN_DIR}/debug"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${MCPORT_BIN_DIR}/release"
+        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${MCPORT_BIN_DIR}/relwithdebinfo"
+        RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${MCPORT_BIN_DIR}/minsizerel"
 )
 
 target_include_directories(MCPort PRIVATE "Source")
