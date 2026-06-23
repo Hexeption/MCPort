@@ -25,7 +25,7 @@ LevelRenderer::LevelRenderer(Level &level)
     this->xChunks = level.width / CHUNK_SIZE;
     this->yChunks = level.depth / CHUNK_SIZE;
     this->zChunks = level.height / CHUNK_SIZE;
-    this->chunks.reserve(this->xChunks * this->yChunks * this->zChunks);
+    this->chunks.resize(this->xChunks * this->yChunks * this->zChunks);
 
     for (int_t x = 0; x < this->xChunks; ++x) {
         for (int_t y = 0; y < this->yChunks; ++y) {
@@ -36,7 +36,8 @@ LevelRenderer::LevelRenderer(Level &level)
                 int_t x1 = std::min((x + 1) * CHUNK_SIZE, level.width);
                 int_t y1 = std::min((y + 1) * CHUNK_SIZE, level.depth);
                 int_t z1 = std::min((z + 1) * CHUNK_SIZE, level.height);
-                this->chunks.push_back(std::make_unique<Chunk>(level, x0, y0, z0, x1, y1, z1));
+                this->chunks[(x + y * this->xChunks) * this->zChunks + z] = std::make_unique<Chunk>(
+                    level, x0, y0, z0, x1, y1, z1);
             }
         }
     }
