@@ -9,6 +9,7 @@
 
 #include "java/String.h"
 #include "java/System.h"
+#include "level/Tesselator.h"
 #include "lwjgl/Display.h"
 #include "lwjgl/GLContext.h"
 #include "lwjgl/Keyboard.h"
@@ -16,6 +17,7 @@
 #include "level/Frustum.h"
 #include "level/tile/Tile.h"
 #include "lwjgl/Mouse.h"
+#include "Textures.h"
 #include "utils/GLU.h"
 
 RubyDung::RubyDung(int_t width, int_t height)
@@ -294,7 +296,53 @@ void RubyDung::render(float a) {
         glEnable(GL_ALPHA_TEST);
     }
 
+    this->drawGui(a);
     lwjgl::Display::update();
+}
+
+void RubyDung::drawGui(float a) {
+    int_t screenWidth = this->width * 240 / this->height;
+    int_t screenHeight = this->height * 240 / this->height;
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0F, screenWidth, screenHeight, 0.0F, 100.0F, 300.0F);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.0F, 0.0F, -200.0F);
+
+    glPushMatrix();
+    glTranslatef(static_cast<float>(screenWidth - 16), 16.0F, 0.0F);
+    Tesselator &t = Tesselator::instance;
+    glScalef(16.0F, 16.0F, 16.0F);
+    glRotatef(30.0F, 1.0F, 0.0F, 0.0F);
+    glRotatef(45.0F, 0.0F, 1.0F, 0.0F);
+    glTranslatef(-1.5F, 0.5F, -0.5F);
+    glScalef(-1.0F, -1.0F, 1.0F);
+
+    int_t id = Textures::loadTexture("/terrain.png", GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(id));
+    glEnable(GL_TEXTURE_2D);
+    t.init();
+    Tile::tiles[this->paintTexture]->render(t, *this->level, 0, -2, 0, 0);
+    t.flush();
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+
+    int_t wc = screenWidth / 2;
+    int_t hc = screenHeight / 2;
+    glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+    t.init();
+    t.vertex(static_cast<float>(wc + 1), static_cast<float>(hc - 4), 0.0F);
+    t.vertex(static_cast<float>(wc), static_cast<float>(hc - 4), 0.0F);
+    t.vertex(static_cast<float>(wc), static_cast<float>(hc + 5), 0.0F);
+    t.vertex(static_cast<float>(wc + 1), static_cast<float>(hc + 5), 0.0F);
+    t.vertex(static_cast<float>(wc + 5), static_cast<float>(hc), 0.0F);
+    t.vertex(static_cast<float>(wc - 4), static_cast<float>(hc), 0.0F);
+    t.vertex(static_cast<float>(wc - 4), static_cast<float>(hc + 1), 0.0F);
+    t.vertex(static_cast<float>(wc + 5), static_cast<float>(hc + 1), 0.0F);
+    t.flush();
 }
 
 void RubyDung::setupFog(int_t i) {

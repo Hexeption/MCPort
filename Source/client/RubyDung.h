@@ -40,6 +40,8 @@ private:
 
     void pick(float a);
 
+    void drawGui(float a);
+
     void setupFog(int_t i);
 
 public:
