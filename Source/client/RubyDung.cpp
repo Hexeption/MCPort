@@ -69,7 +69,10 @@ void RubyDung::init() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.1F);
+    glAlphaFunc(GL_GREATER, 0.5F);
+#ifdef GL_FRAMEBUFFER_SRGB
+    glDisable(GL_FRAMEBUFFER_SRGB);
+#endif
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
