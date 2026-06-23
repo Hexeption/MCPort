@@ -65,6 +65,10 @@ add_executable(MCPort
         Source/client/Entity.h
         Source/client/Player.cpp
         Source/client/Player.h
+        Source/client/particle/Particle.cpp
+        Source/client/particle/Particle.h
+        Source/client/particle/ParticleEngine.cpp
+        Source/client/particle/ParticleEngine.h
         Source/port/utils/GLU.cpp
         Source/port/utils/GLU.h
         Source/port/lwjgl/Mouse.cpp
