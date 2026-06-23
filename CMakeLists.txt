@@ -25,6 +25,23 @@ add_executable(MCPort
         Source/client/Timer.h
         Source/port/lwjgl/Keyboard.cpp
         Source/port/lwjgl/Keyboard.h
+        Source/client/level/LevelListener.h
+        Source/client/level/Level.cpp
+        Source/client/level/Level.h
+        Source/port/java/Random.cpp
+        Source/port/java/Random.h
+        Source/client/phys/AABB.cpp
+        Source/client/phys/AABB.h
+        Source/client/level/PerlinNoiseFilter.cpp
+        Source/client/level/PerlinNoiseFilter.h
+        Source/client/level/tile/Tile.cpp
+        Source/client/level/tile/Tile.h
+        Source/client/level/tile/GrassTile.cpp
+        Source/client/level/tile/GrassTile.h
+        Source/client/level/tile/DirtTile.cpp
+        Source/client/level/tile/DirtTile.h
+        Source/client/level/tile/Bush.cpp
+        Source/client/level/tile/Bush.h
 )
 
 target_include_directories(MCPort PRIVATE "Source")
