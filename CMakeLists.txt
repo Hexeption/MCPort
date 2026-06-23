@@ -42,7 +42,18 @@ add_executable(MCPort
         Source/port/utils/SDLException.h
         Source/game/client/Timer.cpp
         Source/game/client/Timer.h
+        Source/port/java/File.cpp
+        Source/port/java/File.h
+        Source/port/os/FileSystem.h
 )
+
+if (APPLE)
+    target_sources(MCPort PRIVATE Source/port/os/osx/FileSystem.cpp)
+elseif (WIN32)
+    target_sources(MCPort PRIVATE Source/port/os/windows/FileSystem.cpp)
+else ()
+    target_sources(MCPort PRIVATE Source/port/os/linux/FileSystem.cpp)
+endif ()
 
 set_target_properties(MCPort PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${MCPORT_BIN_DIR}/$<LOWER_CASE:$<CONFIG>>"

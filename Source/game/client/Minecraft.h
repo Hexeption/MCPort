@@ -5,11 +5,19 @@
 #ifndef MCPORT_MINECRAFT_H
 #define MCPORT_MINECRAFT_H
 #include <atomic>
+#include <memory>
 
 #include "Timer.h"
+#include "java/File.h"
 #include "java/System.h"
 #include "java/Type.h"
 
+enum EnumOS {
+    UNKNOWN,
+    WINDOWS,
+    LINUX,
+    MACOS,
+};
 
 class Minecraft {
 private:
@@ -17,6 +25,7 @@ private:
     Timer timer = Timer(20.0f);
     int_t ticksRan = 0;
     long_t systemTime = System::currentTimeMillis();
+    std::unique_ptr<File> minecraftDir;
 
 public:
     int_t displayWidth;
@@ -33,6 +42,13 @@ public:
     void shutdown();
 
     void runTick();
+
+    File getMinecraftDir();
+
+    File getAppDir(const jstring &appDir);
+
+private:
+    EnumOS getOs();
 };
 
 
