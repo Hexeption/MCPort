@@ -189,4 +189,17 @@ namespace String {
     jstring toString(double v) {
         return fromUtf8(std::to_string(v));
     }
+
+    jstring lowerCase(jstring value) {
+        for (auto &ch: value) {
+            if (ch >= u'A' && ch <= u'Z') {
+                ch = static_cast<char16_t>(ch - u'A' + u'a');
+            }
+        }
+        return value;
+    }
+
+    bool contains(const jstring &value, const jstring &needle) {
+        return value.find(needle) != jstring::npos;
+    }
 }

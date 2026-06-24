@@ -21,6 +21,9 @@ add_executable(MCPort
         Source/port/java/Math.h
         Source/port/java/Random.cpp
         Source/port/java/Random.h
+        Source/port/java/BufferedImage.cpp
+        Source/port/java/BufferedImage.h
+        Source/game/client/renderer/ImageBuffer.h
         Source/port/java/String.cpp
         Source/port/java/String.h
         Source/port/java/System.cpp
@@ -38,6 +41,8 @@ add_executable(MCPort
         Source/port/lwjgl/Mouse.h
         Source/port/utils/GLU.cpp
         Source/port/utils/GLU.h
+        Source/port/utils/Networking.cpp
+        Source/port/utils/Networking.h
         Source/port/utils/SDLException.h
         Source/game/client/Timer.cpp
         Source/game/client/Timer.h
@@ -47,6 +52,18 @@ add_executable(MCPort
         Source/game/client/options/GameSettings.cpp
         Source/game/client/options/GameSettings.h
         Source/game/client/options/Keybinding.h
+        Source/game/client/renderer/RenderEngine.cpp
+        Source/game/client/renderer/RenderEngine.h
+        Source/game/client/renderer/ScaledResolution.cpp
+        Source/game/client/renderer/ScaledResolution.h
+        Source/game/client/renderer/Tessellator.cpp
+        Source/game/client/renderer/Tessellator.h
+        Source/game/client/renderer/ThreadDownloadImage.cpp
+        Source/game/client/renderer/ThreadDownloadImage.h
+        Source/game/client/renderer/ThreadDownloadImageData.cpp
+        Source/game/client/renderer/ThreadDownloadImageData.h
+        Source/game/client/renderer/TextureFX.cpp
+        Source/game/client/renderer/TextureFX.h
 )
 
 if (APPLE)
@@ -73,6 +90,10 @@ target_compile_definitions(MCPort PRIVATE
 )
 
 target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad stb ZLIB::ZLIB)
+
+if (WIN32)
+    target_link_libraries(MCPort PRIVATE ws2_32)
+endif ()
 
 add_custom_command(
         TARGET MCPort POST_BUILD

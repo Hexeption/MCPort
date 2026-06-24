@@ -5,26 +5,20 @@
 #include "Minecraft.h"
 
 #include <cstdlib>
+#include <filesystem>
 #include <stdexcept>
+#include <thread>
 
 #include "game/client/options/GameSettings.h"
+#include "game/client/renderer/RenderEngine.h"
+#include "game/client/renderer/ScaledResolution.h"
+#include "game/client/renderer/Tessellator.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
 
+#include <glad/glad.h>
+
 namespace {
-    bool contains(const jstring &value, const jstring &needle) {
-        return value.find(needle) != jstring::npos;
-    }
-
-    jstring lowerCase(jstring value) {
-        for (auto &ch: value) {
-            if (ch >= u'A' && ch <= u'Z') {
-                ch = static_cast<char16_t>(ch - u'A' + u'a');
-            }
-        }
-        return value;
-    }
-
     jstring dotAppDir(const jstring &appDir) {
         jstring dir = u".";
         dir += appDir;
@@ -67,6 +61,70 @@ void Minecraft::startGame() {
 #endif
 
     options = std::make_unique<GameSettings>(*this, *mcDataDir);
+    renderEngine = std::make_unique<RenderEngine>(options.get());
+    loadScreen();
+}
+
+void Minecraft::loadScreen() {
+    ScaledResolution scaledResolution(displayWidth, displayHeight);
+    const int_t scaledWidth = scaledResolution.getScaledWidth();
+    const int_t scaledHeight = scaledResolution.getScaledHeight();
+
+    glViewport(0, 0, displayWidth, displayHeight);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, static_cast<double>(scaledWidth), static_cast<double>(scaledHeight), 0.0, 1000.0, 3000.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.0f, 0.0f, -2000.0f);
+
+    Tessellator &tessellator = Tessellator::instance;
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
+
+    glBindTexture(GL_TEXTURE_2D, renderEngine->getTexture(u"/title/mojang.png"));
+    tessellator.startDrawingQuads();
+    tessellator.setColorOpaque_I(16777215);
+    tessellator.addVertexWithUV(0.0, static_cast<double>(scaledHeight), 0.0, 0.0, 0.0);
+    tessellator.addVertexWithUV(static_cast<double>(scaledWidth), static_cast<double>(scaledHeight), 0.0, 0.0, 0.0);
+    tessellator.addVertexWithUV(static_cast<double>(scaledWidth), 0.0, 0.0, 0.0, 0.0);
+    tessellator.addVertexWithUV(0.0, 0.0, 0.0, 0.0, 0.0);
+    tessellator.draw();
+
+    constexpr short_t logoWidth = 256;
+    constexpr short_t logoHeight = 256;
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    tessellator.setColorOpaque_I(16777215);
+    scaledTessellator((scaledWidth - logoWidth) / 2, (scaledHeight - logoHeight) / 2, 0, 0, logoWidth, logoHeight);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_FOG);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.1f);
+    lwjgl::Display::swapBuffers();
+}
+
+void Minecraft::scaledTessellator(const int_t x, const int_t y, const int_t u, const int_t v, const int_t width,
+                                  const int_t height) {
+    constexpr float textureScaleU = 0.00390625f;
+    constexpr float textureScaleV = 0.00390625f;
+    Tessellator &tessellator = Tessellator::instance;
+    tessellator.startDrawingQuads();
+    tessellator.addVertexWithUV(static_cast<double>(x), static_cast<double>(y + height), 0.0,
+                                static_cast<double>(static_cast<float>(u) * textureScaleU),
+                                static_cast<double>(static_cast<float>(v + height) * textureScaleV));
+    tessellator.addVertexWithUV(static_cast<double>(x + width), static_cast<double>(y + height), 0.0,
+                                static_cast<double>(static_cast<float>(u + width) * textureScaleU),
+                                static_cast<double>(static_cast<float>(v + height) * textureScaleV));
+    tessellator.addVertexWithUV(static_cast<double>(x + width), static_cast<double>(y), 0.0,
+                                static_cast<double>(static_cast<float>(u + width) * textureScaleU),
+                                static_cast<double>(static_cast<float>(v) * textureScaleV));
+    tessellator.addVertexWithUV(static_cast<double>(x), static_cast<double>(y), 0.0,
+                                static_cast<double>(static_cast<float>(u) * textureScaleU),
+                                static_cast<double>(static_cast<float>(v) * textureScaleV));
+    tessellator.draw();
 }
 
 void Minecraft::run() {
@@ -106,7 +164,25 @@ void Minecraft::run() {
                 }
             }
 
-            lwjgl::Display::update();
+            if (renderEngine != nullptr) {
+                loadScreen();
+                lwjgl::Display::processMessages();
+            } else {
+                lwjgl::Display::update();
+            }
+
+            displayWidth = lwjgl::Display::getWidth();
+            displayHeight = lwjgl::Display::getHeight();
+            if (displayWidth <= 0) {
+                displayWidth = 1;
+            }
+            if (displayHeight <= 0) {
+                displayHeight = 1;
+            }
+
+            if (options->limitFramerate) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
 
             ++fps;
             if (currentTime + 1000 < System::currentTimeMillis()) {
@@ -165,14 +241,14 @@ File Minecraft::getAppDir(const jstring &appDir) {
 }
 
 EnumOS Minecraft::getOs() {
-    const jstring os = lowerCase(System::getProperty(u"os.name"));
-    if (contains(os, u"win")) {
+    const jstring os = String::lowerCase(System::getProperty(u"os.name"));
+    if (String::contains(os, u"win")) {
         return WINDOWS;
     }
-    if (contains(os, u"mac")) {
+    if (String::contains(os, u"mac")) {
         return MACOS;
     }
-    if (contains(os, u"linux") || contains(os, u"unix")) {
+    if (String::contains(os, u"linux") || String::contains(os, u"unix")) {
         return LINUX;
     }
     return UNKNOWN;

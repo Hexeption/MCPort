@@ -13,6 +13,7 @@
 #include "java/Type.h"
 
 class GameSettings;
+class RenderEngine;
 
 enum EnumOS {
     UNKNOWN,
@@ -35,6 +36,7 @@ public:
     std::atomic<bool> running = false;
     std::atomic<bool> isGamePaused = false;
     std::unique_ptr<GameSettings> options;
+    std::unique_ptr<RenderEngine> renderEngine;
     std::unique_ptr<File> mcDataDir;
 
     Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen);
@@ -42,6 +44,10 @@ public:
     ~Minecraft();
 
     void startGame();
+
+    void loadScreen();
+
+    void scaledTessellator(int_t x, int_t y, int_t u, int_t v, int_t width, int_t height);
 
     void run();
 

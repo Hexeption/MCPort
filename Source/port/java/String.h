@@ -27,6 +27,10 @@ namespace String {
     jstring toString(float v);
 
     jstring toString(double v);
+
+    jstring lowerCase(jstring value);
+
+    bool contains(const jstring &value, const jstring &needle);
 }
 
 
