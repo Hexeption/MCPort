@@ -46,6 +46,10 @@ add_executable(MCPort
         Source/port/utils/SDLException.h
         Source/game/client/Timer.cpp
         Source/game/client/Timer.h
+        Source/game/client/MathHelper.cpp
+        Source/game/client/MathHelper.h
+        Source/game/block/Block.cpp
+        Source/game/block/Block.h
         Source/port/java/File.cpp
         Source/port/java/File.h
         Source/port/os/FileSystem.h
@@ -60,6 +64,8 @@ add_executable(MCPort
         Source/game/client/renderer/ScaledResolution.h
         Source/game/client/renderer/Tessellator.cpp
         Source/game/client/renderer/Tessellator.h
+        Source/game/client/renderer/RenderBlocks.cpp
+        Source/game/client/renderer/RenderBlocks.h
         Source/game/client/renderer/ThreadDownloadImage.cpp
         Source/game/client/renderer/ThreadDownloadImage.h
         Source/game/client/renderer/ThreadDownloadImageData.cpp
@@ -72,6 +78,24 @@ add_executable(MCPort
         Source/game/client/OpenGlCapsChecker.h
         Source/game/client/renderer/RenderGlobal.cpp
         Source/game/client/renderer/RenderGlobal.h
+        Source/game/client/gui/Gui.cpp
+        Source/game/client/gui/Gui.h
+        Source/game/client/gui/GuiButton.cpp
+        Source/game/client/gui/GuiButton.h
+        Source/game/client/gui/GuiSmallButton.cpp
+        Source/game/client/gui/GuiSmallButton.h
+        Source/game/client/gui/GuiScreen.cpp
+        Source/game/client/gui/GuiScreen.h
+        Source/game/client/gui/GuiMainMenu.cpp
+        Source/game/client/gui/GuiMainMenu.h
+        Source/game/client/gui/LogoEffectRandomizer.cpp
+        Source/game/client/gui/LogoEffectRandomizer.h
+        Source/game/client/gui/GuiOptions.cpp
+        Source/game/client/gui/GuiOptions.h
+        Source/game/client/gui/GuiControls.cpp
+        Source/game/client/gui/GuiControls.h
+        Source/game/client/gui/GuiSelectWorld.cpp
+        Source/game/client/gui/GuiSelectWorld.h
 )
 
 if (APPLE)

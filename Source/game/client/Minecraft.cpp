@@ -12,12 +12,15 @@
 #include <thread>
 
 #include "game/client/options/GameSettings.h"
+#include "game/client/gui/GuiMainMenu.h"
+#include "game/client/gui/GuiScreen.h"
 #include "game/client/renderer/FontRenderer.h"
 #include "game/client/renderer/RenderEngine.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
+#include "lwjgl/Mouse.h"
 
 #include <glad/glad.h>
 
@@ -87,6 +90,7 @@ void Minecraft::startGame() {
     glViewport(0, 0, displayWidth, displayHeight);
 
     checkGLError("Post startup");
+    displayGuiScreen(std::make_shared<GuiMainMenu>());
 }
 
 void Minecraft::loadScreen() {
@@ -168,14 +172,15 @@ void Minecraft::run() {
     try {
         long_t currentTime = System::currentTimeMillis();
         int_t fps = 0;
-
         while (running) {
+            lwjgl::Display::processMessages();
+
             if (lwjgl::Display::isCloseRequested()) {
                 shutdown();
             }
 
             // add the world
-            if (isGamePaused) {
+            if (isGamePaused && theWorld != nullptr) {
                 float renderPartialTicks = timer.renderPartialTicks;
                 timer.updateTimer();
                 timer.renderPartialTicks = renderPartialTicks;
@@ -195,20 +200,22 @@ void Minecraft::run() {
 
             checkGLError("Pre render");
 
-            if (renderEngine != nullptr) {
-                loadScreen();
-                lwjgl::Display::processMessages();
-            } else {
-                lwjgl::Display::update();
-            }
+            renderCurrentScreen(timer.renderPartialTicks);
 
-            displayWidth = lwjgl::Display::getWidth();
-            displayHeight = lwjgl::Display::getHeight();
-            if (displayWidth <= 0) {
-                displayWidth = 1;
-            }
-            if (displayHeight <= 0) {
-                displayHeight = 1;
+            lwjgl::Display::update();
+            if (!fullscreen && (lwjgl::Display::getWidth() != displayWidth || lwjgl::Display::getHeight() !=
+                displayHeight)) {
+                displayWidth = lwjgl::Display::getWidth();
+                displayHeight = lwjgl::Display::getHeight();
+                if (displayWidth <= 0) {
+                    displayWidth = 1;
+                }
+
+                if (displayHeight <= 0) {
+                    displayHeight = 1;
+                }
+
+                resize(displayWidth, displayHeight);
             }
 
             if (options->limitFramerate) {
@@ -234,6 +241,84 @@ void Minecraft::shutdown() {
 
 void Minecraft::runTick() {
     systemTime = System::currentTimeMillis();
+    if (currentScreen != nullptr) {
+        std::shared_ptr<GuiScreen> screen = currentScreen;
+        screen->handleInput();
+        if (screen == currentScreen) {
+            screen->updateScreen();
+        }
+    }
+}
+
+void Minecraft::displayGuiScreen(std::shared_ptr<GuiScreen> guiScreen) {
+    if (currentScreen != nullptr) {
+        currentScreen->onGuiClosed();
+    }
+
+    currentScreen = std::move(guiScreen);
+    if (currentScreen == nullptr) {
+        setIngameFocus();
+        return;
+    }
+
+    setIngameNotInFocus();
+    ScaledResolution scaledResolution(displayWidth, displayHeight);
+    currentScreen->setWorldAndResolution(this, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());
+    isGamePaused = currentScreen->doesGuiPauseGame();
+}
+
+void Minecraft::setIngameFocus() {
+    isGamePaused = false;
+}
+
+void Minecraft::setIngameNotInFocus() {
+}
+
+// Temp till Entity renderer
+void Minecraft::renderCurrentScreen(const float partialTicks) {
+    ScaledResolution scaledResolution(displayWidth, displayHeight);
+    const int_t scaledWidth = scaledResolution.getScaledWidth();
+    const int_t scaledHeight = scaledResolution.getScaledHeight();
+
+    glViewport(0, 0, displayWidth, displayHeight);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, static_cast<double>(scaledWidth), static_cast<double>(scaledHeight), 0.0, 1000.0, 3000.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.0f, 0.0f, -2000.0f);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.1f);
+
+    if (currentScreen != nullptr) {
+        const int_t mouseX = lwjgl::Mouse::getX() * scaledWidth / displayWidth;
+        const int_t mouseY = scaledHeight - lwjgl::Mouse::getY() * scaledHeight / displayHeight - 1;
+        currentScreen->drawScreen(mouseX, mouseY, partialTicks);
+    }
+}
+
+void Minecraft::resize(int_t width, int_t height) {
+    if (width <= 0) {
+        width = 1;
+    }
+
+    if (height <= 0) {
+        height = 1;
+    }
+
+    displayWidth = width;
+    displayHeight = height;
+
+    if (currentScreen != nullptr) {
+        ScaledResolution scaledResolution(width, height);
+        currentScreen->setWorldAndResolution(this, scaledResolution.getScaledWidth(),
+                                             scaledResolution.getScaledHeight());
+    }
 }
 
 void Minecraft::checkGLError(const std::string &message) {

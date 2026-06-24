@@ -25,6 +25,10 @@ public:
 
     void setColorOpaque_I(int_t color);
 
+    void setColorOpaque_F(float red, float green, float blue);
+
+    void setColorRGBA_F(float red, float green, float blue, float alpha);
+
     void addVertexWithUV(double x, double y, double z, double u, double v);
 
     void addVertex(double x, double y, double z);
@@ -40,6 +44,7 @@ private:
         int_t red;
         int_t green;
         int_t blue;
+        int_t alpha;
         bool hasColor;
     };
 
@@ -49,6 +54,7 @@ private:
     int_t red = 255;
     int_t green = 255;
     int_t blue = 255;
+    int_t alpha = 255;
     bool hasTexture = false;
     bool hasColor = false;
     bool isDrawing = false;

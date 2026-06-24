@@ -13,6 +13,7 @@
 #include "java/Type.h"
 #include "MouseHelper.h"
 #include "OpenGlCapsChecker.h"
+#include "gui/GuiScreen.h"
 #include "options/GameSettings.h"
 #include "renderer/FontRenderer.h"
 #include "renderer/RenderEngine.h"
@@ -37,6 +38,7 @@ private:
 public:
     int_t displayWidth;
     int_t displayHeight;
+    void *theWorld = nullptr; // stub
     std::atomic<bool> running = false;
     std::atomic<bool> isGamePaused = false;
     std::unique_ptr<GameSettings> options;
@@ -45,6 +47,7 @@ public:
     std::unique_ptr<RenderGlobal> renderGlobal;
     MouseHelper mouseHelper = MouseHelper(*this);
     std::unique_ptr<File> mcDataDir;
+    std::shared_ptr<GuiScreen> currentScreen = nullptr;
 
     Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen);
 
@@ -62,12 +65,22 @@ public:
 
     void runTick();
 
+    void displayGuiScreen(std::shared_ptr<GuiScreen> guiScreen);
+
+    void setIngameFocus();
+
+    void setIngameNotInFocus();
+
     File getMinecraftDir();
 
     File getAppDir(const jstring &appDir);
 
 private:
     void checkGLError(const std::string &message);
+
+    void renderCurrentScreen(float partialTicks);
+
+    void resize(int_t width, int_t height);
 
     EnumOS getOs();
 };

@@ -19,8 +19,8 @@ void Tessellator::draw() {
     glBegin(static_cast<GLenum>(drawMode));
     for (const Vertex &vertex: vertices) {
         if (vertex.hasColor) {
-            glColor3ub(static_cast<GLubyte>(vertex.red), static_cast<GLubyte>(vertex.green),
-                       static_cast<GLubyte>(vertex.blue));
+            glColor4ub(static_cast<GLubyte>(vertex.red), static_cast<GLubyte>(vertex.green),
+                       static_cast<GLubyte>(vertex.blue), static_cast<GLubyte>(vertex.alpha));
         }
         if (vertex.hasTexture) {
             glTexCoord2d(vertex.u, vertex.v);
@@ -61,10 +61,24 @@ void Tessellator::setColorOpaque(const int_t red, const int_t green, const int_t
     this->red = red;
     this->green = green;
     this->blue = blue;
+    this->alpha = 255;
 }
 
 void Tessellator::setColorOpaque_I(const int_t color) {
     setColorOpaque(color >> 16 & 255, color >> 8 & 255, color & 255);
+}
+
+void Tessellator::setColorOpaque_F(const float red, const float green, const float blue) {
+    setColorOpaque(static_cast<int_t>(red * 255.0f), static_cast<int_t>(green * 255.0f),
+                   static_cast<int_t>(blue * 255.0f));
+}
+
+void Tessellator::setColorRGBA_F(const float red, const float green, const float blue, const float alpha) {
+    hasColor = true;
+    this->red = static_cast<int_t>(red * 255.0f);
+    this->green = static_cast<int_t>(green * 255.0f);
+    this->blue = static_cast<int_t>(blue * 255.0f);
+    this->alpha = static_cast<int_t>(alpha * 255.0f);
 }
 
 void Tessellator::addVertexWithUV(const double x, const double y, const double z, const double u, const double v) {
@@ -87,6 +101,7 @@ void Tessellator::addVertex(const double x, const double y, const double z) {
         red,
         green,
         blue,
+        alpha,
         hasColor
     });
 }
