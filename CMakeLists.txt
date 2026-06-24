@@ -29,6 +29,10 @@ add_executable(MCPort
         Source/port/java/System.cpp
         Source/port/java/System.h
         Source/port/java/Type.h
+        Source/port/java/DataInput.cpp
+        Source/port/java/DataInput.h
+        Source/port/java/DataOutput.cpp
+        Source/port/java/DataOutput.h
         Source/port/lwjgl/BufferUtils.cpp
         Source/port/lwjgl/BufferUtils.h
         Source/port/lwjgl/Display.cpp
@@ -96,6 +100,30 @@ add_executable(MCPort
         Source/game/client/gui/GuiControls.h
         Source/game/client/gui/GuiSelectWorld.cpp
         Source/game/client/gui/GuiSelectWorld.h
+        Source/game/nbt/NBTBase.cpp
+        Source/game/nbt/NBTBase.h
+        Source/game/nbt/NBTTagByte.cpp
+        Source/game/nbt/NBTTagByte.h
+        Source/game/nbt/NBTTagByteArray.cpp
+        Source/game/nbt/NBTTagByteArray.h
+        Source/game/nbt/NBTTagCompound.cpp
+        Source/game/nbt/NBTTagCompound.h
+        Source/game/nbt/NBTTagDouble.cpp
+        Source/game/nbt/NBTTagDouble.h
+        Source/game/nbt/NBTTagEnd.cpp
+        Source/game/nbt/NBTTagEnd.h
+        Source/game/nbt/NBTTagFloat.cpp
+        Source/game/nbt/NBTTagFloat.h
+        Source/game/nbt/NBTTagInt.cpp
+        Source/game/nbt/NBTTagInt.h
+        Source/game/nbt/NBTTagList.cpp
+        Source/game/nbt/NBTTagList.h
+        Source/game/nbt/NBTTagLong.cpp
+        Source/game/nbt/NBTTagLong.h
+        Source/game/nbt/NBTTagShort.cpp
+        Source/game/nbt/NBTTagShort.h
+        Source/game/nbt/NBTTagString.cpp
+        Source/game/nbt/NBTTagString.h
 )
 
 if (APPLE)

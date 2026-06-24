@@ -5,4 +5,4 @@ cmake-build-release/
 bin/
 .idea/
 .DS_Store
-java/
+decomp/
