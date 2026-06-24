@@ -13,6 +13,7 @@
 #include "java/Type.h"
 
 class GameSettings;
+class FontRenderer;
 class RenderEngine;
 
 enum EnumOS {
@@ -37,6 +38,7 @@ public:
     std::atomic<bool> isGamePaused = false;
     std::unique_ptr<GameSettings> options;
     std::unique_ptr<RenderEngine> renderEngine;
+    std::unique_ptr<FontRenderer> fontRenderer;
     std::unique_ptr<File> mcDataDir;
 
     Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen);

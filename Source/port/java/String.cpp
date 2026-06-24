@@ -202,4 +202,14 @@ namespace String {
     bool contains(const jstring &value, const jstring &needle) {
         return value.find(needle) != jstring::npos;
     }
+
+    int_t indexOf(const jstring &value, const char16_t ch) {
+        const std::size_t index = value.find(ch);
+        return index == jstring::npos ? -1 : static_cast<int_t>(index);
+    }
+
+    int_t indexOf(const jstring &value, const jstring &needle) {
+        const std::size_t index = value.find(needle);
+        return index == jstring::npos ? -1 : static_cast<int_t>(index);
+    }
 }

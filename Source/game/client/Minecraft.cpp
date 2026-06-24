@@ -6,10 +6,12 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <algorithm>
 #include <stdexcept>
 #include <thread>
 
 #include "game/client/options/GameSettings.h"
+#include "game/client/renderer/FontRenderer.h"
 #include "game/client/renderer/RenderEngine.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
@@ -62,6 +64,7 @@ void Minecraft::startGame() {
 
     options = std::make_unique<GameSettings>(*this, *mcDataDir);
     renderEngine = std::make_unique<RenderEngine>(options.get());
+    fontRenderer = std::make_unique<FontRenderer>(options.get(), u"/default.png", *renderEngine);
     loadScreen();
 }
 
@@ -99,6 +102,11 @@ void Minecraft::loadScreen() {
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     tessellator.setColorOpaque_I(16777215);
     scaledTessellator((scaledWidth - logoWidth) / 2, (scaledHeight - logoHeight) / 2, 0, 0, logoWidth, logoHeight);
+    const jstring demoText = u"FontRenderer demo: \u00A7aMinecraft Alpha";
+    const int_t demoTextY = std::min<int_t>((scaledHeight + logoHeight) / 2 + 12, scaledHeight - 18);
+    fontRenderer->drawStringWithShadow(demoText, (scaledWidth - fontRenderer->getStringWidth(demoText)) / 2,
+                                       demoTextY, 16777215);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glDisable(GL_LIGHTING);
     glDisable(GL_FOG);
     glEnable(GL_ALPHA_TEST);

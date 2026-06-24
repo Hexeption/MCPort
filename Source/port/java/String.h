@@ -31,6 +31,10 @@ namespace String {
     jstring lowerCase(jstring value);
 
     bool contains(const jstring &value, const jstring &needle);
+
+    int_t indexOf(const jstring &value, char16_t ch);
+
+    int_t indexOf(const jstring &value, const jstring &needle);
 }
 
 
