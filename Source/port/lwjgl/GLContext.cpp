@@ -18,11 +18,36 @@
 namespace lwjgl {
     namespace GLContext {
         namespace detail {
+            static void parseExtensions(GLCapabilities &capabilities, const GLubyte *extensionList) {
+                if (extensionList == nullptr) {
+                    return;
+                }
+
+                const char *extensionStart = reinterpret_cast<const char *>(extensionList);
+                while (*extensionStart != '\0') {
+                    while (*extensionStart == ' ') {
+                        extensionStart++;
+                    }
+
+                    const char *extensionEnd = extensionStart;
+                    while (*extensionEnd != '\0' && *extensionEnd != ' ') {
+                        extensionEnd++;
+                    }
+
+                    if (extensionEnd != extensionStart) {
+                        std::string capability(extensionStart, extensionEnd);
+                        capabilities.add(capability);
+                    }
+
+                    extensionStart = extensionEnd;
+                }
+            }
+
             class GLContext {
             private:
                 SDL_Window *window = nullptr;
                 SDL_GLContext gl_context = nullptr;
-                GLCapabilities capabilties;
+                GLCapabilities capabilities;
 
             public:
                 GLContext() {
@@ -53,6 +78,14 @@ namespace lwjgl {
 
                     if (!SDL_GL_SetSwapInterval(0))
                         throw SDLException("disabling VSync");
+
+                    const GLubyte *extensions = glGetString(GL_EXTENSIONS);
+                    parseExtensions(capabilities, extensions);
+
+                    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+                    std::cout << "OpenGL extensions: " << extensions << std::endl;
+                    std::cout << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
+                    std::cout << "OpenGL renderer: " << glGetString(GL_RENDERER) << std::endl;
                 }
 
                 ~GLContext() {
@@ -69,7 +102,7 @@ namespace lwjgl {
 
                 SDL_Window *getWindow() const { return window; }
                 SDL_GLContext getGLContext() const { return gl_context; }
-                const GLCapabilities &getCapabilities() const { return capabilties; }
+                const GLCapabilities &getCapabilities() const { return capabilities; }
             };
 
             static std::unique_ptr<GLContext> &getContextStorage() {

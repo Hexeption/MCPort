@@ -68,6 +68,10 @@ add_executable(MCPort
         Source/game/client/renderer/TextureFX.h
         Source/game/client/MouseHelper.cpp
         Source/game/client/MouseHelper.h
+        Source/game/client/OpenGlCapsChecker.cpp
+        Source/game/client/OpenGlCapsChecker.h
+        Source/game/client/renderer/RenderGlobal.cpp
+        Source/game/client/renderer/RenderGlobal.h
 )
 
 if (APPLE)

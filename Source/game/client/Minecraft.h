@@ -12,9 +12,11 @@
 #include "java/System.h"
 #include "java/Type.h"
 #include "MouseHelper.h"
+#include "OpenGlCapsChecker.h"
 #include "options/GameSettings.h"
 #include "renderer/FontRenderer.h"
 #include "renderer/RenderEngine.h"
+#include "renderer/RenderGlobal.h"
 
 enum EnumOS {
     UNKNOWN,
@@ -26,6 +28,7 @@ enum EnumOS {
 class Minecraft {
 private:
     bool fullscreen = false;
+    OpenGlCapsChecker glCapabilities;
     Timer timer = Timer(20.0f);
     int_t ticksRan = 0;
     long_t systemTime = System::currentTimeMillis();
@@ -39,6 +42,7 @@ public:
     std::unique_ptr<GameSettings> options;
     std::unique_ptr<RenderEngine> renderEngine;
     std::unique_ptr<FontRenderer> fontRenderer;
+    std::unique_ptr<RenderGlobal> renderGlobal;
     MouseHelper mouseHelper = MouseHelper(*this);
     std::unique_ptr<File> mcDataDir;
 

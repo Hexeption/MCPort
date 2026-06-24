@@ -81,6 +81,12 @@ void Minecraft::startGame() {
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     checkGLError("Startup");
+
+    glCapabilities = OpenGlCapsChecker();
+    renderGlobal = std::make_unique<RenderGlobal>(*this, *renderEngine);
+    glViewport(0, 0, displayWidth, displayHeight);
+
+    checkGLError("Post startup");
 }
 
 void Minecraft::loadScreen() {
