@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <algorithm>
+#include <iostream>
 #include <stdexcept>
 #include <thread>
 
@@ -66,6 +67,20 @@ void Minecraft::startGame() {
     renderEngine = std::make_unique<RenderEngine>(options.get());
     fontRenderer = std::make_unique<FontRenderer>(options.get(), u"/default.png", *renderEngine);
     loadScreen();
+
+    checkGLError("Pre startup");
+    glEnable(GL_TEXTURE_2D);
+    glShadeModel(GL_SMOOTH);
+    glClearDepth(1.0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.1F);
+    glCullFace(GL_BACK);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    checkGLError("Startup");
 }
 
 void Minecraft::loadScreen() {
@@ -172,6 +187,8 @@ void Minecraft::run() {
                 }
             }
 
+            checkGLError("Pre render");
+
             if (renderEngine != nullptr) {
                 loadScreen();
                 lwjgl::Display::processMessages();
@@ -192,6 +209,7 @@ void Minecraft::run() {
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
 
+            checkGLError("Post render");
             ++fps;
             if (currentTime + 1000 < System::currentTimeMillis()) {
                 printf("FPS: %d\n", fps);
@@ -210,6 +228,49 @@ void Minecraft::shutdown() {
 
 void Minecraft::runTick() {
     systemTime = System::currentTimeMillis();
+}
+
+void Minecraft::checkGLError(const std::string &message) {
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::string errorString;
+        switch (error) {
+            case GL_NO_ERROR:
+                errorString = "No error";
+                break;
+            case GL_INVALID_ENUM:
+                errorString = "Invalid enum";
+                break;
+            case GL_INVALID_VALUE:
+                errorString = "Invalid value";
+                break;
+            case GL_INVALID_OPERATION:
+                errorString = "Invalid operation";
+                break;
+            case GL_STACK_OVERFLOW:
+                errorString = "Stack overflow";
+                break;
+            case GL_STACK_UNDERFLOW:
+                errorString = "Stack underflow";
+                break;
+            case GL_OUT_OF_MEMORY:
+                errorString = "Out of memory";
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                errorString = "Invalid framebuffer operation";
+                break;
+            case GL_TABLE_TOO_LARGE:
+                errorString = "Table too large";
+                break;
+            default:
+                errorString = "unknown error code";
+                break;
+        }
+
+        std::cout << "########## GL ERROR ##########\n";
+        std::cout << "@ " << message << '\n';
+        std::cout << error << ": " << errorString << '\n';
+    }
 }
 
 File Minecraft::getMinecraftDir() {

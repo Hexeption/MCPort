@@ -11,10 +11,10 @@
 #include "java/File.h"
 #include "java/System.h"
 #include "java/Type.h"
-
-class GameSettings;
-class FontRenderer;
-class RenderEngine;
+#include "MouseHelper.h"
+#include "options/GameSettings.h"
+#include "renderer/FontRenderer.h"
+#include "renderer/RenderEngine.h"
 
 enum EnumOS {
     UNKNOWN,
@@ -39,6 +39,7 @@ public:
     std::unique_ptr<GameSettings> options;
     std::unique_ptr<RenderEngine> renderEngine;
     std::unique_ptr<FontRenderer> fontRenderer;
+    MouseHelper mouseHelper = MouseHelper(*this);
     std::unique_ptr<File> mcDataDir;
 
     Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen);
@@ -62,6 +63,8 @@ public:
     File getAppDir(const jstring &appDir);
 
 private:
+    void checkGLError(const std::string &message);
+
     EnumOS getOs();
 };
 
