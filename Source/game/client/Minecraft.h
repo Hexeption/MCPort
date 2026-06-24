@@ -12,6 +12,8 @@
 #include "java/System.h"
 #include "java/Type.h"
 
+class GameSettings;
+
 enum EnumOS {
     UNKNOWN,
     WINDOWS,
@@ -32,8 +34,12 @@ public:
     int_t displayHeight;
     std::atomic<bool> running = false;
     std::atomic<bool> isGamePaused = false;
+    std::unique_ptr<GameSettings> options;
+    std::unique_ptr<File> mcDataDir;
 
     Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen);
+
+    ~Minecraft();
 
     void startGame();
 

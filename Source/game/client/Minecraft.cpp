@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <stdexcept>
 
+#include "game/client/options/GameSettings.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
 
@@ -36,6 +37,8 @@ Minecraft::Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen) :
     displayHeight(displayHeight), fullscreen(fullscreen) {
 }
 
+Minecraft::~Minecraft() = default;
+
 void Minecraft::startGame() {
     if (fullscreen) {
         lwjgl::Display::setFullscreen(true);
@@ -56,6 +59,14 @@ void Minecraft::startGame() {
     lwjgl::Display::setTitle(u"Minecraft Alpha v1.1.0");
 
     lwjgl::Display::create();
+
+#if MCPORT_USE_LOCAL_MCDATA_DIR
+    mcDataDir = std::make_unique<File>(u".");
+#else
+    mcDataDir = std::make_unique<File>(getMinecraftDir(), u"mcport");
+#endif
+
+    options = std::make_unique<GameSettings>(*this, *mcDataDir);
 }
 
 void Minecraft::run() {
@@ -115,9 +126,6 @@ void Minecraft::shutdown() {
 
 void Minecraft::runTick() {
     systemTime = System::currentTimeMillis();
-
-    const std::string minecraftDirPath = String::toUtf8(getMinecraftDir().getAbsolutePath());
-    printf("Dir %s\n", minecraftDirPath.c_str());
 }
 
 File Minecraft::getMinecraftDir() {

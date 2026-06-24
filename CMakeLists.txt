@@ -9,8 +9,7 @@ if (APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64")
 endif ()
 
-option(MCPORT_ENABLE_EDGE_BARRIER "Enable invisible collision barriers at the edge of the level" ON)
-option(MCPORT_MODERN_BLOCK_CONTROLS "Use modern Minecraft block controls: left click breaks, right click places" ON)
+option(MCPORT_USE_LOCAL_MCDATA_DIR "Use the process working directory as Minecraft data directory" ON)
 
 add_subdirectory(External)
 
@@ -45,6 +44,9 @@ add_executable(MCPort
         Source/port/java/File.cpp
         Source/port/java/File.h
         Source/port/os/FileSystem.h
+        Source/game/client/options/GameSettings.cpp
+        Source/game/client/options/GameSettings.h
+        Source/game/client/options/Keybinding.h
 )
 
 if (APPLE)
@@ -67,8 +69,7 @@ target_include_directories(MCPort PRIVATE "Source")
 target_include_directories(MCPort PRIVATE "Source/port")
 
 target_compile_definitions(MCPort PRIVATE
-        MCPORT_ENABLE_EDGE_BARRIER=$<BOOL:${MCPORT_ENABLE_EDGE_BARRIER}>
-        MCPORT_MODERN_BLOCK_CONTROLS=$<BOOL:${MCPORT_MODERN_BLOCK_CONTROLS}>
+        MCPORT_USE_LOCAL_MCDATA_DIR=$<BOOL:${MCPORT_USE_LOCAL_MCDATA_DIR}>
 )
 
 target_link_libraries(MCPort PRIVATE SDL3::SDL3 glad stb ZLIB::ZLIB)
