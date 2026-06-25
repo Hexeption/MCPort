@@ -13,11 +13,14 @@ class IBlockAccess;
 class RenderBlocks {
 private:
     IBlockAccess *blockAccess = nullptr;
+    int_t overrideBlockTexture = -1;
 
 public:
     RenderBlocks() = default;
 
     explicit RenderBlocks(IBlockAccess &blockAccess);
+
+    void renderBlockUsingTexture(Block *block, int_t x, int_t y, int_t z, int_t texture);
 
     bool renderBlockByRenderType(Block *block, int_t x, int_t y, int_t z);
 

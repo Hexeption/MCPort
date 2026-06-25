@@ -15,6 +15,7 @@
 #include "game/block/Material.h"
 #include "game/nbt/NBTTagCompound.h"
 #include "game/phys/AxisAlignedBB.h"
+#include "game/phys/MovingObjectPosition.h"
 #include "game/util/Vec3D.h"
 #include "game/world/MetadataChunkBlock.h"
 #include "game/world/NextTickListEntry.h"
@@ -174,15 +175,17 @@ public:
 
     void setRenderGlobal(RenderGlobal *renderer);
 
+    MovingObjectPosition rayTraceBlocks(const Vec3D &start, const Vec3D &end);
+
+    MovingObjectPosition rayTraceBlocks_do(const Vec3D &start, const Vec3D &end, bool ignoreLiquid);
+
 private:
     long_t lockTimestamp;
     std::unordered_map<long_t, int_t> blockOverrides;
     std::unordered_map<long_t, int_t> metadataOverrides;
-    std::unordered_map<long_t, int_t> skyLightOverrides;
-    std::unordered_map<long_t, int_t> blockLightOverrides;
     std::vector<NextTickListEntry> scheduledTickEntries;
     std::vector<MetadataChunkBlock> lightingToUpdate;
-    mutable std::unordered_map<long_t, std::unique_ptr<Chunk>> loadedChunks;
+    mutable std::unordered_map<long_t, std::unique_ptr<Chunk> > loadedChunks;
     std::unique_ptr<ChunkProviderGenerate> chunkProvider;
 
     static void deleteWorldFiles(const std::vector<File> &files);
@@ -207,10 +210,6 @@ private:
 
     static bool isEarlierScheduledTick(const NextTickListEntry &left, const NextTickListEntry &right);
 
-    std::unordered_map<long_t, int_t> &getLightOverrides(EnumSkyBlock skyBlock);
-
-    const std::unordered_map<long_t, int_t> &getLightOverrides(EnumSkyBlock skyBlock) const;
-
     void createSessionLock() const;
 
     void saveLevel();
@@ -224,6 +223,8 @@ private:
     int_t getGeneratedBlockId(int_t x, int_t y, int_t z) const;
 
     void calculateInitialSkylight();
+
+    bool chunkExists(int_t chunkX, int_t chunkZ) const;
 
     Chunk &getChunkFromChunkCoords(int_t chunkX, int_t chunkZ) const;
 

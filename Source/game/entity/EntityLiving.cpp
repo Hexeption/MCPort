@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "game/block/Block.h"
+#include "game/client/MathHelper.h"
 #include "game/world/World.h"
 
 EntityLiving::EntityLiving(World &world) : Entity(world) {
@@ -20,6 +21,46 @@ void EntityLiving::onUpdate() {
 
 float EntityLiving::getEyeHeight() const {
     return height * 0.85f;
+}
+
+std::unique_ptr<Vec3D> EntityLiving::getPosition(const float partialTicks) const {
+    if (partialTicks == 1.0f) {
+        return Vec3D::createVector(posX, posY, posZ);
+    }
+
+    const double x = prevPosX + (posX - prevPosX) * static_cast<double>(partialTicks);
+    const double y = prevPosY + (posY - prevPosY) * static_cast<double>(partialTicks);
+    const double z = prevPosZ + (posZ - prevPosZ) * static_cast<double>(partialTicks);
+    return Vec3D::createVector(x, y, z);
+}
+
+std::unique_ptr<Vec3D> EntityLiving::getLook(const float partialTicks) const {
+    constexpr float degreesToRadians = static_cast<float>(3.14159265358979323846 / 180.0);
+    if (partialTicks == 1.0f) {
+        const float yawCos = MathHelper::cos(-rotationYaw * degreesToRadians - static_cast<float>(std::acos(-1.0)));
+        const float yawSin = MathHelper::sin(-rotationYaw * degreesToRadians - static_cast<float>(std::acos(-1.0)));
+        const float pitchCos = -MathHelper::cos(-rotationPitch * degreesToRadians);
+        const float pitchSin = MathHelper::sin(-rotationPitch * degreesToRadians);
+        return Vec3D::createVector(static_cast<double>(yawSin * pitchCos), static_cast<double>(pitchSin),
+                                   static_cast<double>(yawCos * pitchCos));
+    }
+
+    const float pitch = prevRotationPitch + (rotationPitch - prevRotationPitch) * partialTicks;
+    const float yaw = prevRotationYaw + (rotationYaw - prevRotationYaw) * partialTicks;
+    const float yawCos = MathHelper::cos(-yaw * degreesToRadians - static_cast<float>(std::acos(-1.0)));
+    const float yawSin = MathHelper::sin(-yaw * degreesToRadians - static_cast<float>(std::acos(-1.0)));
+    const float pitchCos = -MathHelper::cos(-pitch * degreesToRadians);
+    const float pitchSin = MathHelper::sin(-pitch * degreesToRadians);
+    return Vec3D::createVector(static_cast<double>(yawSin * pitchCos), static_cast<double>(pitchSin),
+                               static_cast<double>(yawCos * pitchCos));
+}
+
+MovingObjectPosition EntityLiving::rayTrace(const double reachDistance, const float partialTicks) const {
+    std::unique_ptr<Vec3D> start = getPosition(partialTicks);
+    std::unique_ptr<Vec3D> look = getLook(partialTicks);
+    std::unique_ptr<Vec3D> end = start->addVector(look->xCoord * reachDistance, look->yCoord * reachDistance,
+                                                  look->zCoord * reachDistance);
+    return worldObj.rayTraceBlocks(*start, *end);
 }
 
 void EntityLiving::onLivingUpdate() {

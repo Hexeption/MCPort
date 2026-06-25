@@ -22,9 +22,23 @@ static void textureUV(const int_t texture, double &u0, double &u1, double &v0, d
 RenderBlocks::RenderBlocks(IBlockAccess &blockAccess) : blockAccess(&blockAccess) {
 }
 
+void RenderBlocks::renderBlockUsingTexture(Block *block, const int_t x, const int_t y, const int_t z,
+                                           const int_t texture) {
+    if (block == nullptr) {
+        return;
+    }
+
+    overrideBlockTexture = texture;
+    renderBlockByRenderType(block, x, y, z);
+    overrideBlockTexture = -1;
+}
+
 bool RenderBlocks::renderBlockByRenderType(Block *block, const int_t x, const int_t y, const int_t z) {
     if (block == nullptr) {
         return false;
+    }
+    if (blockAccess != nullptr) {
+        block->setBlockBoundsBasedOnState(*blockAccess, x, y, z);
     }
     return block->getRenderType() == 0 && renderStandardBlock(block, x, y, z);
 }
@@ -41,46 +55,49 @@ bool RenderBlocks::renderStandardBlockWithColorMultiplier(Block *block, const in
 
     Tessellator &tessellator = Tessellator::instance;
     bool renderedAny = false;
+    const auto textureForSide = [this, block](const int_t side) {
+        return overrideBlockTexture >= 0 ? overrideBlockTexture : block->getBlockTextureFromSide(side);
+    };
 
     if (block->shouldSideBeRendered(*blockAccess, x, y - 1, z, 0)) {
         const float brightness = block->getBlockBrightness(*blockAccess, x, y - 1, z);
         tessellator.setColorOpaque_F(0.5f * brightness * red, 0.5f * brightness * green,
                                      0.5f * brightness * blue);
-        renderBottomFace(block, x, y, z, block->getBlockTextureFromSide(0));
+        renderBottomFace(block, x, y, z, textureForSide(0));
         renderedAny = true;
     }
     if (block->shouldSideBeRendered(*blockAccess, x, y + 1, z, 1)) {
         const float brightness = block->getBlockBrightness(*blockAccess, x, y + 1, z);
         tessellator.setColorOpaque_F(brightness * red, brightness * green, brightness * blue);
-        renderTopFace(block, x, y, z, block->getBlockTextureFromSide(1));
+        renderTopFace(block, x, y, z, textureForSide(1));
         renderedAny = true;
     }
     if (block->shouldSideBeRendered(*blockAccess, x, y, z - 1, 2)) {
         const float brightness = block->getBlockBrightness(*blockAccess, x, y, z - 1);
         tessellator.setColorOpaque_F(0.6f * brightness * red, 0.6f * brightness * green,
                                      0.6f * brightness * blue);
-        renderEastFace(block, x, y, z, block->getBlockTextureFromSide(2));
+        renderEastFace(block, x, y, z, textureForSide(2));
         renderedAny = true;
     }
     if (block->shouldSideBeRendered(*blockAccess, x, y, z + 1, 3)) {
         const float brightness = block->getBlockBrightness(*blockAccess, x, y, z + 1);
         tessellator.setColorOpaque_F(0.6f * brightness * red, 0.6f * brightness * green,
                                      0.6f * brightness * blue);
-        renderWestFace(block, x, y, z, block->getBlockTextureFromSide(3));
+        renderWestFace(block, x, y, z, textureForSide(3));
         renderedAny = true;
     }
     if (block->shouldSideBeRendered(*blockAccess, x - 1, y, z, 4)) {
         const float brightness = block->getBlockBrightness(*blockAccess, x - 1, y, z);
         tessellator.setColorOpaque_F(0.8f * brightness * red, 0.8f * brightness * green,
                                      0.8f * brightness * blue);
-        renderNorthFace(block, x, y, z, block->getBlockTextureFromSide(4));
+        renderNorthFace(block, x, y, z, textureForSide(4));
         renderedAny = true;
     }
     if (block->shouldSideBeRendered(*blockAccess, x + 1, y, z, 5)) {
         const float brightness = block->getBlockBrightness(*blockAccess, x + 1, y, z);
         tessellator.setColorOpaque_F(0.8f * brightness * red, 0.8f * brightness * green,
                                      0.8f * brightness * blue);
-        renderSouthFace(block, x, y, z, block->getBlockTextureFromSide(5));
+        renderSouthFace(block, x, y, z, textureForSide(5));
         renderedAny = true;
     }
 
@@ -99,15 +116,21 @@ void RenderBlocks::renderBlockAsItem(Block *block, const float alpha) {
         const float var8 = 0.6f;
         var4.startDrawingQuads();
         var4.setColorRGBA_F(var6, var6, var6, alpha);
-        renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(0));
+        renderBottomFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
+                                                                        : block->getBlockTextureFromSide(0));
         var4.setColorRGBA_F(var5, var5, var5, alpha);
-        renderTopFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(1));
+        renderTopFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
+                                                                      : block->getBlockTextureFromSide(1));
         var4.setColorRGBA_F(var7, var7, var7, alpha);
-        renderEastFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(2));
-        renderWestFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(3));
+        renderEastFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
+                                                                       : block->getBlockTextureFromSide(2));
+        renderWestFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
+                                                                       : block->getBlockTextureFromSide(3));
         var4.setColorRGBA_F(var8, var8, var8, alpha);
-        renderNorthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(4));
-        renderSouthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(5));
+        renderNorthFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
+                                                                        : block->getBlockTextureFromSide(4));
+        renderSouthFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
+                                                                        : block->getBlockTextureFromSide(5));
         var4.draw();
         glTranslatef(0.5f, 0.5f, 0.5f);
     }

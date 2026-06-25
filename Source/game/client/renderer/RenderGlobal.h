@@ -11,7 +11,10 @@
 #include "java/Type.h"
 
 class Block;
+class AxisAlignedBB;
+class EntityPlayer;
 class Minecraft;
+class MovingObjectPosition;
 class RenderBlocks;
 class RenderEngine;
 class World;
@@ -23,7 +26,7 @@ private:
     RenderEngine &renderEngine;
     World *theWorld = nullptr;
     std::unique_ptr<RenderBlocks> globalRenderBlocks;
-    std::unordered_map<long_t, std::unique_ptr<WorldRenderer>> worldRenderers;
+    std::unordered_map<long_t, std::unique_ptr<WorldRenderer> > worldRenderers;
 
     int_t getRenderRadius() const;
 
@@ -32,6 +35,8 @@ private:
     static long_t rendererKey(int_t chunkX, int_t chunkY, int_t chunkZ);
 
 public:
+    float damagePartialTime = 0.0f;
+
     RenderGlobal(Minecraft &minecraft, RenderEngine &renderEngine);
 
     ~RenderGlobal();
@@ -40,9 +45,16 @@ public:
 
     void renderWorld(float partialTicks);
 
+    void drawBlockBreaking(EntityPlayer &player, const MovingObjectPosition &hit, int_t mode, float partialTicks);
+
+    void drawSelectionBox(EntityPlayer &player, const MovingObjectPosition &hit, int_t mode, float partialTicks);
+
     void markBlockRangeNeedsUpdate(int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1);
 
     void markAllRenderersNeedsUpdate();
+
+private:
+    static void drawOutlinedBoundingBox(const AxisAlignedBB &box);
 };
 
 

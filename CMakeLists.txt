@@ -58,6 +58,8 @@ add_executable(MCPort
         Source/game/block/Material.h
         Source/game/phys/AxisAlignedBB.cpp
         Source/game/phys/AxisAlignedBB.h
+        Source/game/phys/MovingObjectPosition.cpp
+        Source/game/phys/MovingObjectPosition.h
         Source/game/entity/MovementInput.cpp
         Source/game/entity/MovementInput.h
         Source/game/entity/MovementInputFromOptions.cpp
@@ -111,6 +113,10 @@ add_executable(MCPort
         Source/game/client/MouseHelper.h
         Source/game/client/OpenGlCapsChecker.cpp
         Source/game/client/OpenGlCapsChecker.h
+        Source/game/client/player/PlayerController.cpp
+        Source/game/client/player/PlayerController.h
+        Source/game/client/player/PlayerControllerSP.cpp
+        Source/game/client/player/PlayerControllerSP.h
         Source/game/client/renderer/RenderGlobal.cpp
         Source/game/client/renderer/RenderGlobal.h
         Source/game/client/gui/Gui.cpp

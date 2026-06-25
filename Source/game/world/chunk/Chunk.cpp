@@ -4,19 +4,17 @@
 
 #include "Chunk.h"
 
-#include <algorithm>
-
 #include "game/block/Block.h"
 #include "game/world/World.h"
 
+bool Chunk::isLit = false;
+
 Chunk::Chunk(World &world, const int_t chunkX, const int_t chunkZ) : worldObj(world), xPosition(chunkX),
                                                                      zPosition(chunkZ) {
-    generateSkylightMap();
 }
 
 Chunk::Chunk(World &world, const std::array<int_t, width * height * depth> &blocks, const int_t chunkX,
              const int_t chunkZ) : worldObj(world), blocks(blocks), xPosition(chunkX), zPosition(chunkZ) {
-    generateSkylightMap();
 }
 
 int_t Chunk::getBlockID(const int_t x, const int_t y, const int_t z) const {
@@ -32,6 +30,7 @@ bool Chunk::setBlockID(const int_t x, const int_t y, const int_t z, const int_t 
     }
     blocks[blockIndex(x, y, z)] = blockId;
     relightBlock(x, y, z);
+    updateSkylight_do(x, z);
     return true;
 }
 
@@ -74,7 +73,7 @@ void Chunk::generateHeightMap() {
     for (int_t x = 0; x < width; ++x) {
         for (int_t z = 0; z < depth; ++z) {
             int_t columnHeight = 127;
-            while (columnHeight > 0 && getBlockID(x, columnHeight - 1, z) == 0) {
+            while (columnHeight > 0 && Block::lightOpacity[getBlockID(x, columnHeight - 1, z)] == 0) {
                 --columnHeight;
             }
             heightMap[heightIndex(x, z)] = columnHeight;
@@ -88,104 +87,148 @@ void Chunk::generateHeightMap() {
 }
 
 int_t Chunk::getSavedLightValue(const EnumSkyBlock skyBlock, const int_t x, const int_t y, const int_t z) const {
-    if (!isValidLocalBlock(x, y, z)) {
-        return skyBlock == EnumSkyBlock::Sky ? 15 : 0;
-    }
     return skyBlock == EnumSkyBlock::Sky ? skylightMap[blockIndex(x, y, z)] : blocklightMap[blockIndex(x, y, z)];
 }
 
 void Chunk::setLightValue(const EnumSkyBlock skyBlock, const int_t x, const int_t y, const int_t z,
                           const int_t value) {
-    if (!isValidLocalBlock(x, y, z)) {
-        return;
-    }
-
-    const int_t clampedValue = std::clamp(value, 0, 15);
-    if (skyBlock == EnumSkyBlock::Sky) {
-        skylightMap[blockIndex(x, y, z)] = clampedValue;
-    } else {
-        blocklightMap[blockIndex(x, y, z)] = clampedValue;
-    }
     isModified = true;
+    if (skyBlock == EnumSkyBlock::Sky) {
+        skylightMap[blockIndex(x, y, z)] = value & 15;
+    } else {
+        blocklightMap[blockIndex(x, y, z)] = value & 15;
+    }
 }
 
 int_t Chunk::getBlockLightValue(const int_t x, const int_t y, const int_t z,
                                 const int_t skylightSubtracted) const {
-    if (!isValidLocalBlock(x, y, z)) {
-        return y >= height ? std::max(0, 15 - skylightSubtracted) : 0;
+    int_t skyLight = skylightMap[blockIndex(x, y, z)];
+    if (skyLight > 0) {
+        isLit = true;
     }
 
-    int_t skyLight = skylightMap[blockIndex(x, y, z)] - skylightSubtracted;
-    if (skyLight < 0) {
-        skyLight = 0;
-    }
+    skyLight -= skylightSubtracted;
     const int_t blockLight = blocklightMap[blockIndex(x, y, z)];
-    return blockLight > skyLight ? blockLight : skyLight;
+    if (blockLight > skyLight) {
+        skyLight = blockLight;
+    }
+
+    return skyLight;
 }
 
 void Chunk::generateSkylightMap() {
-    generateHeightMap();
-    skylightMap.fill(0);
-    blocklightMap.fill(0);
+    int_t minHeight = 127;
 
     for (int_t x = 0; x < width; ++x) {
         for (int_t z = 0; z < depth; ++z) {
-            int_t light = 15;
-            const int_t columnHeight = heightMap[heightIndex(x, z)];
-
-            for (int_t y = height - 1; y >= 0; --y) {
-                if (y >= columnHeight) {
-                    light = 15;
-                } else {
-                    int_t opacity = Block::lightOpacity[getBlockID(x, y, z)];
-                    if (opacity == 0) {
-                        opacity = 1;
-                    }
-                    light -= opacity;
-                    if (light < 0) {
-                        light = 0;
-                    }
-                }
-                skylightMap[blockIndex(x, y, z)] = light;
+            heightMap[heightIndex(x, z)] = 128;
+            relightBlock(x, 127, z);
+            if (heightMap[heightIndex(x, z)] < minHeight) {
+                minHeight = heightMap[heightIndex(x, z)];
             }
         }
     }
+
+    heightValue = minHeight;
+
+    for (int_t x = 0; x < width; ++x) {
+        for (int_t z = 0; z < depth; ++z) {
+            updateSkylight_do(x, z);
+        }
+    }
+
+    isModified = true;
+}
+
+void Chunk::updateSkylight_do(const int_t x, const int_t z) {
+    const int_t columnHeight = getHeightValue(x, z);
+    const int_t worldX = xPosition * width + x;
+    const int_t worldZ = zPosition * depth + z;
+    checkSkylightNeighborHeight(worldX - 1, worldZ, columnHeight);
+    checkSkylightNeighborHeight(worldX + 1, worldZ, columnHeight);
+    checkSkylightNeighborHeight(worldX, worldZ - 1, columnHeight);
+    checkSkylightNeighborHeight(worldX, worldZ + 1, columnHeight);
+}
+
+void Chunk::checkSkylightNeighborHeight(const int_t x, const int_t z, const int_t height) {
+    const int_t neighborHeight = worldObj.getHeightValue(x, z);
+    if (neighborHeight > height) {
+        worldObj.scheduleLightingUpdate(EnumSkyBlock::Sky, x, height, z, x, neighborHeight, z);
+    } else if (neighborHeight < height) {
+        worldObj.scheduleLightingUpdate(EnumSkyBlock::Sky, x, neighborHeight, z, x, height, z);
+    }
+    isModified = true;
 }
 
 void Chunk::relightBlock(const int_t x, int_t y, const int_t z) {
     const int_t oldHeight = heightMap[heightIndex(x, z)];
+    int_t newHeight = oldHeight;
     if (y > oldHeight) {
-        y = oldHeight;
+        newHeight = y;
     }
-    int_t newHeight = 127;
-    while (newHeight > 0 && getBlockID(x, newHeight - 1, z) == 0) {
+
+    while (newHeight > 0 && Block::lightOpacity[getBlockID(x, newHeight - 1, z)] == 0) {
         --newHeight;
     }
+
     if (newHeight != oldHeight) {
-        worldObj.markBlocksDirtyVertical(xPosition * 16 + x, zPosition * 16 + z, newHeight, oldHeight);
+        worldObj.markBlocksDirtyVertical(x, z, newHeight, oldHeight);
         heightMap[heightIndex(x, z)] = newHeight;
+
+        if (newHeight < heightValue) {
+            heightValue = newHeight;
+        } else {
+            heightValue = 127;
+            for (int_t localX = 0; localX < width; ++localX) {
+                for (int_t localZ = 0; localZ < depth; ++localZ) {
+                    if (heightMap[heightIndex(localX, localZ)] < heightValue) {
+                        heightValue = heightMap[heightIndex(localX, localZ)];
+                    }
+                }
+            }
+        }
+
+        const int_t worldX = xPosition * width + x;
+        const int_t worldZ = zPosition * depth + z;
+        if (newHeight < oldHeight) {
+            for (int_t localY = newHeight; localY < oldHeight && localY < height; ++localY) {
+                skylightMap[blockIndex(x, localY, z)] = 15;
+            }
+        } else {
+            worldObj.scheduleLightingUpdate(EnumSkyBlock::Sky, worldX, oldHeight, worldZ, worldX, newHeight, worldZ);
+            for (int_t localY = oldHeight; localY < newHeight && localY < height; ++localY) {
+                skylightMap[blockIndex(x, localY, z)] = 0;
+            }
+        }
+
         int_t light = 15;
-        for (int_t localY = height - 1; localY >= 0; --localY) {
-            if (localY >= newHeight) {
-                light = 15;
-            } else {
-                int_t opacity = Block::lightOpacity[getBlockID(x, localY, z)];
-                if (opacity == 0) {
-                    opacity = 1;
-                }
-                light -= opacity;
-                if (light < 0) {
-                    light = 0;
-                }
+        int_t originalNewHeight = newHeight;
+
+        while (newHeight > 0 && light > 0) {
+            --newHeight;
+
+            skylightMap[blockIndex(x, newHeight, z)] = light;
+
+            int_t opacity = Block::lightOpacity[getBlockID(x, newHeight, z)];
+            if (opacity == 0) {
+                opacity = 1;
             }
-            skylightMap[blockIndex(x, localY, z)] = light;
-        }
-        heightValue = 127;
-        for (int_t localX = 0; localX < width; ++localX) {
-            for (int_t localZ = 0; localZ < depth; ++localZ) {
-                heightValue = std::min(heightValue, heightMap[heightIndex(localX, localZ)]);
+
+            light -= opacity;
+            if (light < 0) {
+                light = 0;
             }
         }
+
+        while (newHeight > 0 && Block::lightOpacity[getBlockID(x, newHeight - 1, z)] == 0) {
+            --newHeight;
+        }
+
+        if (newHeight != originalNewHeight) {
+            worldObj.scheduleLightingUpdate(EnumSkyBlock::Sky, worldX - 1, newHeight, worldZ - 1, worldX + 1,
+                                            originalNewHeight, worldZ + 1);
+        }
+
         isModified = true;
     }
 }

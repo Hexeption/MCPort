@@ -41,9 +41,16 @@ void GuiControls::actionPerformed(GuiButton *button) {
 
 void GuiControls::keyTyped(const char_t ch, const int_t key) {
     if (buttonId >= 0) {
+        if (key == 1) {
+            controlList[buttonId]->displayString = options->getKeybindingDescription(buttonId);
+            buttonId = -1;
+            return;
+        }
         options->setKeybinding(buttonId, key);
         controlList[buttonId]->displayString = options->getKeybindingDescription(buttonId);
         buttonId = -1;
+    } else if (key == 1) {
+        mc->displayGuiScreen(parentScreen);
     } else {
         GuiScreen::keyTyped(ch, key);
     }

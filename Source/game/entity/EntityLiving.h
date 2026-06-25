@@ -6,6 +6,7 @@
 #define MCPORT_ENTITYLIVING_H
 
 #include "Entity.h"
+#include "game/phys/MovingObjectPosition.h"
 #include "java/Type.h"
 
 class EntityLiving : public Entity {
@@ -22,6 +23,12 @@ public:
     void onUpdate() override;
 
     float getEyeHeight() const override;
+
+    std::unique_ptr<Vec3D> getPosition(float partialTicks) const;
+
+    std::unique_ptr<Vec3D> getLook(float partialTicks) const;
+
+    MovingObjectPosition rayTrace(double reachDistance, float partialTicks) const;
 
     virtual void onLivingUpdate();
 

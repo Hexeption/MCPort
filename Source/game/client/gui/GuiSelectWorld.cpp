@@ -61,6 +61,15 @@ void GuiSelectWorld::actionPerformed(GuiButton *button) {
     }
 }
 
+void GuiSelectWorld::keyTyped(const char_t ch, const int_t key) {
+    if (key == 1) {
+        mc->displayGuiScreen(parentScreen);
+        return;
+    }
+
+    GuiScreen::keyTyped(ch, key);
+}
+
 void GuiSelectWorld::selectWorld(const int_t id) {
     mc->displayGuiScreen(nullptr);
     if (!selected) {

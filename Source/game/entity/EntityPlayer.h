@@ -8,6 +8,8 @@
 #include "EntityLiving.h"
 #include "java/Type.h"
 
+class Block;
+
 class EntityPlayer : public EntityLiving {
 public:
     int_t score = 0;
@@ -21,6 +23,12 @@ public:
     void preparePlayerToSpawn() override;
 
     void onLivingUpdate() override;
+
+    float getCurrentPlayerStrVsBlock(const Block &block);
+
+    bool canHarvestBlock(const Block &block);
+
+    void swingItem();
 };
 
 #endif //MCPORT_ENTITYPLAYER_H

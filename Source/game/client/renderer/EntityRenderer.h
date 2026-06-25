@@ -22,6 +22,8 @@ private:
 
     void updateFogColor(float partialTicks);
 
+    void getMouseOver(float partialTicks);
+
     void setupCameraTransform(float partialTicks);
 
     void setupFog(int_t mode);

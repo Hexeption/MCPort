@@ -32,6 +32,7 @@ void Tessellator::draw() {
     vertices.clear();
     hasTexture = false;
     hasColor = false;
+    colorDisabled = false;
 }
 
 void Tessellator::startDrawingQuads() {
@@ -48,6 +49,7 @@ void Tessellator::startDrawing(const int_t mode) {
     drawMode = mode;
     hasTexture = false;
     hasColor = false;
+    colorDisabled = false;
 }
 
 void Tessellator::setTextureUV(const double u, const double v) {
@@ -57,6 +59,9 @@ void Tessellator::setTextureUV(const double u, const double v) {
 }
 
 void Tessellator::setColorOpaque(const int_t red, const int_t green, const int_t blue) {
+    if (colorDisabled) {
+        return;
+    }
     hasColor = true;
     this->red = red;
     this->green = green;
@@ -74,11 +79,19 @@ void Tessellator::setColorOpaque_F(const float red, const float green, const flo
 }
 
 void Tessellator::setColorRGBA_F(const float red, const float green, const float blue, const float alpha) {
+    if (colorDisabled) {
+        return;
+    }
     hasColor = true;
     this->red = static_cast<int_t>(red * 255.0f);
     this->green = static_cast<int_t>(green * 255.0f);
     this->blue = static_cast<int_t>(blue * 255.0f);
     this->alpha = static_cast<int_t>(alpha * 255.0f);
+}
+
+void Tessellator::disableColor() {
+    colorDisabled = true;
+    hasColor = false;
 }
 
 void Tessellator::addVertexWithUV(const double x, const double y, const double z, const double u, const double v) {

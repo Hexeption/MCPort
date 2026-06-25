@@ -18,6 +18,8 @@ public:
     static constexpr int_t height = 128;
     static constexpr int_t depth = 16;
 
+    static bool isLit;
+
     World &worldObj;
     std::array<int_t, width * height * depth> blocks{};
     int_t xPosition;
@@ -60,6 +62,10 @@ private:
     static int_t heightIndex(int_t x, int_t z);
 
     static bool isValidLocalBlock(int_t x, int_t y, int_t z);
+
+    void updateSkylight_do(int_t x, int_t z);
+
+    void checkSkylightNeighborHeight(int_t x, int_t z, int_t height);
 
     void relightBlock(int_t x, int_t y, int_t z);
 };

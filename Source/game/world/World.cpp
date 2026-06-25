@@ -154,7 +154,12 @@ int_t World::getBlockId(const int_t x, const int_t y, const int_t z) const {
 }
 
 bool World::blockExists(const int_t x, const int_t y, const int_t z) const {
-    return isValidBlockPosition(x, y, z);
+    if (!isValidBlockPosition(x, y, z)) {
+        return false;
+    }
+
+    const long_t key = chunkKey(blockToChunkCoord(x), blockToChunkCoord(z));
+    return loadedChunks.find(key) != loadedChunks.end();
 }
 
 bool World::checkChunksExist(const int_t x0, const int_t y0, const int_t z0, const int_t x1, const int_t y1,
@@ -431,13 +436,7 @@ std::vector<AxisAlignedBB> World::getCollidingBoundingBoxes(const Entity &, cons
                     continue;
                 }
 
-                AxisAlignedBB blockBox = AxisAlignedBB::getBoundingBox(
-                    static_cast<double>(x) + block->minX,
-                    static_cast<double>(y) + block->minY,
-                    static_cast<double>(z) + block->minZ,
-                    static_cast<double>(x) + block->maxX,
-                    static_cast<double>(y) + block->maxY,
-                    static_cast<double>(z) + block->maxZ);
+                AxisAlignedBB blockBox = block->getCollisionBoundingBoxFromPool(*this, x, y, z);
                 if (blockBox.intersectsWith(box)) {
                     boxes.push_back(blockBox);
                 }
@@ -465,15 +464,19 @@ void World::saveWorldIndirectly(void *progressUpdate) {
 }
 
 bool World::updatingLighting() {
-    if (lightingToUpdate.empty()) {
-        return false;
+    int_t updatesRemaining = 1000;
+    while (!lightingToUpdate.empty()) {
+        --updatesRemaining;
+        if (updatesRemaining <= 0) {
+            return true;
+        }
+
+        MetadataChunkBlock update = lightingToUpdate.back();
+        lightingToUpdate.pop_back();
+        update.updateLight(*this);
     }
 
-    MetadataChunkBlock update = lightingToUpdate.back();
-    lightingToUpdate.pop_back();
-    update.updateLight(*this);
-
-    return !lightingToUpdate.empty();
+    return false;
 }
 
 void World::tick() {
@@ -490,7 +493,11 @@ int_t World::getHeightValue(int_t x, int_t z) const {
         return 0;
     }
 
-    return getChunkFromBlockCoords(x, z).getHeightValue(blockToLocalCoord(x), blockToLocalCoord(z));
+    if (!chunkExists(x >> 4, z >> 4)) {
+        return 0;
+    }
+
+    return getChunkFromChunkCoords(x >> 4, z >> 4).getHeightValue(blockToLocalCoord(x), blockToLocalCoord(z));
 }
 
 void World::neighborLightPropagationChanged(const EnumSkyBlock skyBlock, const int_t x, const int_t y, const int_t z,
@@ -517,27 +524,32 @@ void World::neighborLightPropagationChanged(const EnumSkyBlock skyBlock, const i
 }
 
 int_t World::getSavedLightValue(const EnumSkyBlock skyBlock, const int_t x, const int_t y, const int_t z) const {
-    if (y < 0 || y >= 128 || x < -32000000 || z < -32000000 || x >= 32000000 || z > 32000000) {
-        return getDefaultLightValue(skyBlock);
+    if (y >= 0 && y < 128 && x >= -32000000 && z >= -32000000 && x < 32000000 && z <= 32000000) {
+        const int_t chunkX = x >> 4;
+        const int_t chunkZ = z >> 4;
+        if (!chunkExists(chunkX, chunkZ)) {
+            return 0;
+        }
+
+        return getChunkFromChunkCoords(chunkX, chunkZ).getSavedLightValue(skyBlock, blockToLocalCoord(x), y,
+                                                                          blockToLocalCoord(z));
     }
 
-    const auto &overrides = getLightOverrides(skyBlock);
-    const auto found = overrides.find(blockKey(x, y, z));
-    if (found != overrides.end()) {
-        return found->second;
-    }
-
-    return getChunkFromChunkCoords(x >> 4, z >> 4).getSavedLightValue(skyBlock, blockToLocalCoord(x), y,
-                                                                      blockToLocalCoord(z));
+    return getDefaultLightValue(skyBlock);
 }
 
 void World::setLightValue(const EnumSkyBlock skyBlock, const int_t x, const int_t y, const int_t z,
                           const int_t lightValue) {
-    if (!isValidBlockPosition(x, y, z)) {
+    if (x < -32000000 || z < -32000000 || x >= 32000000 || z > 32000000) {
+        return;
+    }
+    if (y < 0 || y >= 128) {
+        return;
+    }
+    if (!chunkExists(x >> 4, z >> 4)) {
         return;
     }
 
-    getLightOverrides(skyBlock)[blockKey(x, y, z)] = std::clamp(lightValue, 0, 15);
     getChunkFromChunkCoords(x >> 4, z >> 4).setLightValue(skyBlock, blockToLocalCoord(x), y, blockToLocalCoord(z),
                                                           lightValue);
     markBlockNeedsUpdate(x, y, z);
@@ -776,14 +788,6 @@ bool World::isEarlierScheduledTick(const NextTickListEntry &left, const NextTick
     return left.comparer(right) < 0;
 }
 
-std::unordered_map<long_t, int_t> &World::getLightOverrides(const EnumSkyBlock skyBlock) {
-    return skyBlock == EnumSkyBlock::Sky ? skyLightOverrides : blockLightOverrides;
-}
-
-const std::unordered_map<long_t, int_t> &World::getLightOverrides(const EnumSkyBlock skyBlock) const {
-    return skyBlock == EnumSkyBlock::Sky ? skyLightOverrides : blockLightOverrides;
-}
-
 void World::createSessionLock() const {
     const File sessionLock(saveDirectory, u"session.lock");
     std::ofstream out(sessionLock.toUtf8(), std::ios::binary | std::ios::trunc);
@@ -866,6 +870,10 @@ void World::calculateInitialSkylight() {
     }
 }
 
+bool World::chunkExists(const int_t chunkX, const int_t chunkZ) const {
+    return loadedChunks.find(chunkKey(chunkX, chunkZ)) != loadedChunks.end();
+}
+
 Chunk &World::getChunkFromChunkCoords(const int_t chunkX, const int_t chunkZ) const {
     const long_t key = chunkKey(chunkX, chunkZ);
     const auto found = loadedChunks.find(key);
@@ -881,4 +889,133 @@ Chunk &World::getChunkFromChunkCoords(const int_t chunkX, const int_t chunkZ) co
 
 Chunk &World::getChunkFromBlockCoords(const int_t x, const int_t z) const {
     return getChunkFromChunkCoords(blockToChunkCoord(x), blockToChunkCoord(z));
+}
+
+MovingObjectPosition World::rayTraceBlocks(const Vec3D &start, const Vec3D &end) {
+    return rayTraceBlocks_do(start, end, false);
+}
+
+MovingObjectPosition World::rayTraceBlocks_do(const Vec3D &start, const Vec3D &end, bool ignoreLiquid) {
+    Vec3D currentPos = start;
+    Vec3D endPos = end;
+
+    if (std::isnan(currentPos.xCoord) || std::isnan(currentPos.yCoord) || std::isnan(currentPos.zCoord)) {
+        return {};
+    }
+
+    if (std::isnan(endPos.xCoord) || std::isnan(endPos.yCoord) || std::isnan(endPos.zCoord)) {
+        return {};
+    }
+
+    int endX = MathHelper::floor_double(endPos.xCoord);
+    int endY = MathHelper::floor_double(endPos.yCoord);
+    int endZ = MathHelper::floor_double(endPos.zCoord);
+
+    int blockX = MathHelper::floor_double(currentPos.xCoord);
+    int blockY = MathHelper::floor_double(currentPos.yCoord);
+    int blockZ = MathHelper::floor_double(currentPos.zCoord);
+
+
+    int maxSteps = 20;
+
+    while (maxSteps-- >= 0) {
+        if (std::isnan(currentPos.xCoord) || std::isnan(currentPos.yCoord) || std::isnan(currentPos.zCoord)) {
+            return {};
+        }
+
+        if (blockX == endX && blockY == endY && blockZ == endZ) {
+            return {};
+        }
+
+        double nextXBoundary = 999.0;
+        double nextYBoundary = 999.0;
+        double nextZBoundary = 999.0;
+
+        if (endX > blockX) nextXBoundary = blockX + 1.0;
+        if (endX < blockX) nextXBoundary = blockX;
+
+        if (endY > blockY) nextYBoundary = blockY + 1.0;
+        if (endY < blockY) nextYBoundary = blockY;
+
+        if (endZ > blockZ) nextZBoundary = blockZ + 1.0;
+        if (endZ < blockZ) nextZBoundary = blockZ;
+
+        double xScale = 999.0;
+        double yScale = 999.0;
+        double zScale = 999.0;
+
+        double deltaX = endPos.xCoord - currentPos.xCoord;
+        double deltaY = endPos.yCoord - currentPos.yCoord;
+        double deltaZ = endPos.zCoord - currentPos.zCoord;
+
+        if (nextXBoundary != 999.0)
+            xScale = (nextXBoundary - currentPos.xCoord) / deltaX;
+
+        if (nextYBoundary != 999.0)
+            yScale = (nextYBoundary - currentPos.yCoord) / deltaY;
+
+        if (nextZBoundary != 999.0)
+            zScale = (nextZBoundary - currentPos.zCoord) / deltaZ;
+
+        int hitSide;
+
+        if (xScale < yScale && xScale < zScale) {
+            hitSide = (endX > blockX) ? 4 : 5;
+
+            currentPos.xCoord = nextXBoundary;
+            currentPos.yCoord += deltaY * xScale;
+            currentPos.zCoord += deltaZ * xScale;
+        } else if (yScale < zScale) {
+            hitSide = (endY > blockY) ? 0 : 1;
+
+            currentPos.xCoord += deltaX * yScale;
+            currentPos.yCoord = nextYBoundary;
+            currentPos.zCoord += deltaZ * yScale;
+        } else {
+            hitSide = (endZ > blockZ) ? 2 : 3;
+
+            currentPos.xCoord += deltaX * zScale;
+            currentPos.yCoord += deltaY * zScale;
+            currentPos.zCoord = nextZBoundary;
+        }
+
+        std::unique_ptr<Vec3D> hitVec = Vec3D::createVector(currentPos.xCoord, currentPos.yCoord, currentPos.zCoord);
+
+        blockX = MathHelper::floor_double(currentPos.xCoord);
+        hitVec.get()->xCoord = blockX;
+        if (hitSide == 5) {
+            --blockX;
+            ++hitVec.get()->xCoord;
+        }
+
+        blockY = MathHelper::floor_double(currentPos.yCoord);
+        hitVec.get()->yCoord = blockY;
+        if (hitSide == 1) {
+            --blockY;
+            ++hitVec.get()->yCoord;
+        }
+
+        blockZ = MathHelper::floor_double(currentPos.zCoord);
+        hitVec.get()->zCoord = blockZ;
+        if (hitSide == 3) {
+            --blockZ;
+            ++hitVec.get()->zCoord;
+        }
+
+        const int_t blockId = getBlockId(blockX, blockY, blockZ);
+        const int_t metadata = getBlockMetadata(blockX, blockY, blockZ);
+        Block *block = blockId >= 0 && blockId < static_cast<int_t>(Block::blocksList.size())
+                           ? Block::blocksList[blockId]
+                           : nullptr;
+
+        if (blockId > 0 && block != nullptr && block->canCollideCheck(metadata, ignoreLiquid)) {
+            MovingObjectPosition result = block->collisionRayTrace(*this, blockX, blockY, blockZ, currentPos, endPos);
+
+            if (result.hitVec != nullptr) {
+                return result;
+            }
+        }
+    }
+
+    return {};
 }

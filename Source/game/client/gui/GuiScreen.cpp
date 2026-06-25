@@ -7,6 +7,7 @@
 #include <glad/glad.h>
 
 #include "GuiButton.h"
+#include "GuiMainMenu.h"
 #include "game/client/Minecraft.h"
 #include "game/client/renderer/Tessellator.h"
 #include "lwjgl/Keyboard.h"
@@ -20,8 +21,12 @@ void GuiScreen::drawScreen(const int_t mouseX, const int_t mouseY, const float) 
 
 void GuiScreen::keyTyped(char_t, const int_t key) {
     if (key == 1) {
-        mc->displayGuiScreen(nullptr);
-        mc->setIngameFocus();
+        if (mc->theWorld != nullptr) {
+            mc->displayGuiScreen(nullptr);
+            mc->setIngameFocus();
+        } else {
+            mc->displayGuiScreen(std::make_shared<GuiMainMenu>());
+        }
     }
 }
 

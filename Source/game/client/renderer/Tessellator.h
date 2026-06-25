@@ -29,6 +29,8 @@ public:
 
     void setColorRGBA_F(float red, float green, float blue, float alpha);
 
+    void disableColor();
+
     void addVertexWithUV(double x, double y, double z, double u, double v);
 
     void addVertex(double x, double y, double z);
@@ -57,6 +59,7 @@ private:
     int_t alpha = 255;
     bool hasTexture = false;
     bool hasColor = false;
+    bool colorDisabled = false;
     bool isDrawing = false;
     int_t drawMode = 0;
 };

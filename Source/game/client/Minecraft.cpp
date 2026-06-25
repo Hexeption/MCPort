@@ -21,6 +21,7 @@
 #include "game/client/renderer/RenderEngine.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
+#include "game/client/player/PlayerControllerSP.h"
 #include "java/Math.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
@@ -88,6 +89,7 @@ void Minecraft::startGame() {
     glCapabilities = OpenGlCapsChecker();
     renderGlobal = std::make_unique<RenderGlobal>(*this, *renderEngine);
     entityRenderer = std::make_unique<EntityRenderer>(*this);
+    playerController = std::make_unique<PlayerControllerSP>(*this);
     glViewport(0, 0, displayWidth, displayHeight);
 
     checkGLError("Post startup");
@@ -257,6 +259,9 @@ void Minecraft::runTick() {
         if (!isGamePaused || isMultiplayerWorld()) {
             theWorld->tick();
         }
+        if (playerController != nullptr) {
+            playerController->onUpdate();
+        }
         if (entityRenderer != nullptr) {
             entityRenderer->updateRenderer();
         }
@@ -270,6 +275,7 @@ void Minecraft::displayGuiScreen(std::shared_ptr<GuiScreen> guiScreen) {
 
     currentScreen = std::move(guiScreen);
     if (currentScreen == nullptr) {
+        isGamePaused = false;
         setIngameFocus();
         return;
     }
@@ -305,6 +311,9 @@ void Minecraft::changeWorld(std::unique_ptr<World> world, const jstring &) {
     }
     if (renderGlobal != nullptr) {
         renderGlobal->changeWorld(theWorld.get());
+    }
+    if (theWorld != nullptr && playerController != nullptr) {
+        playerController->onWorldChange(*theWorld);
     }
 }
 
@@ -351,6 +360,9 @@ void Minecraft::renderCurrentScreen(const float partialTicks) {
             updatePlayerLook();
         }
 
+        if (playerController != nullptr) {
+            playerController->setPartialTime(partialTicks);
+        }
         entityRenderer->renderWorld(partialTicks);
         if (currentScreen == nullptr) {
             return;
@@ -399,6 +411,10 @@ void Minecraft::resize(int_t width, int_t height) {
 }
 
 void Minecraft::handleIngameInput() {
+    if (leftClickCounter > 0) {
+        --leftClickCounter;
+    }
+
     while (lwjgl::Keyboard::next()) {
         const bool pressed = lwjgl::Keyboard::getEventKeyState();
         const int_t key = lwjgl::Keyboard::getEventKey();
@@ -418,8 +434,62 @@ void Minecraft::handleIngameInput() {
         }
     }
 
+    while (lwjgl::Mouse::next()) {
+        if (currentScreen != nullptr || theWorld == nullptr || thePlayer == nullptr) {
+            continue;
+        }
+
+        const int_t button = lwjgl::Mouse::getEventButton();
+        if (lwjgl::Mouse::getEventButtonState() && (button == 0 || button == 1)) {
+            clickMouse(button);
+        }
+    }
+
+    sendClickBlockToController(0, currentScreen == nullptr && lwjgl::Mouse::isButtonDown(0));
+
     if (thePlayer != nullptr && !isGamePaused) {
         thePlayer->onUpdate();
+    }
+}
+
+void Minecraft::sendClickBlockToController(const int_t button, const bool pressed) {
+    if (playerController == nullptr || playerController->isInTestMode) {
+        return;
+    }
+    if (button != 0 || leftClickCounter <= 0) {
+        if (pressed && objectMouseOver != nullptr && objectMouseOver->typeOfHit == 0 && button == 0) {
+            playerController->sendBlockRemoving(objectMouseOver->blockX, objectMouseOver->blockY,
+                                                objectMouseOver->blockZ, objectMouseOver->sideHit);
+        } else {
+            playerController->resetBlockRemoving();
+        }
+    }
+}
+
+void Minecraft::clickMouse(const int_t button) {
+    if (playerController == nullptr || (button == 0 && leftClickCounter > 0)) {
+        return;
+    }
+
+    if (button == 0 && thePlayer != nullptr) {
+        thePlayer->swingItem();
+    }
+
+    if (objectMouseOver == nullptr) {
+        if (button == 0) {
+            leftClickCounter = 10;
+        }
+        return;
+    }
+
+    if (objectMouseOver->typeOfHit == 0) {
+        const int_t x = objectMouseOver->blockX;
+        const int_t y = objectMouseOver->blockY;
+        const int_t z = objectMouseOver->blockZ;
+        const int_t side = objectMouseOver->sideHit;
+        if (button == 0) {
+            playerController->clickBlock(x, y, z, side);
+        }
     }
 }
 

@@ -13,6 +13,7 @@
 #include "game/block/Material.h"
 #include "game/client/Minecraft.h"
 #include "game/client/options/GameSettings.h"
+#include "game/client/player/PlayerController.h"
 #include "game/entity/EntityPlayerSP.h"
 #include "game/util/Vec3D.h"
 #include "game/world/World.h"
@@ -42,6 +43,7 @@ void EntityRenderer::renderWorld(const float partialTicks) {
         return;
     }
 
+    getMouseOver(partialTicks);
     updateFogColor(partialTicks);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     setupCameraTransform(partialTicks);
@@ -49,6 +51,12 @@ void EntityRenderer::renderWorld(const float partialTicks) {
     setupFog(1);
     setupFog(0);
     mc.renderGlobal->renderWorld(partialTicks);
+    if (mc.objectMouseOver != nullptr) {
+        glDisable(GL_ALPHA_TEST);
+        mc.renderGlobal->drawBlockBreaking(*mc.thePlayer, *mc.objectMouseOver, 0, partialTicks);
+        mc.renderGlobal->drawSelectionBox(*mc.thePlayer, *mc.objectMouseOver, 0, partialTicks);
+        glEnable(GL_ALPHA_TEST);
+    }
     glDisable(GL_FOG);
 }
 
@@ -91,6 +99,22 @@ void EntityRenderer::updateFogColor(const float partialTicks) {
     }
 
     glClearColor(fogColorRed, fogColorGreen, fogColorBlue, 0.0f);
+}
+
+void EntityRenderer::getMouseOver(const float partialTicks) {
+    if (mc.thePlayer == nullptr) {
+        mc.objectMouseOver = nullptr;
+        return;
+    }
+
+    const double reachDistance = mc.playerController != nullptr ? mc.playerController->getBlockReachDistance() : 3.0;
+    MovingObjectPosition hit = mc.thePlayer->rayTrace(reachDistance, partialTicks);
+    if (hit.hitVec == nullptr) {
+        mc.objectMouseOver = nullptr;
+        return;
+    }
+
+    mc.objectMouseOver = std::make_unique<MovingObjectPosition>(std::move(hit));
 }
 
 void EntityRenderer::setupCameraTransform(const float partialTicks) {

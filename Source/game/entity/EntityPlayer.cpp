@@ -39,3 +39,16 @@ void EntityPlayer::onLivingUpdate() {
     cameraYaw += (horizontalMotion - cameraYaw) * 0.4f;
     cameraPitch += (pitchMotion - cameraPitch) * 0.8f;
 }
+
+float EntityPlayer::getCurrentPlayerStrVsBlock(const Block &) {
+    return 1.0f;
+}
+
+bool EntityPlayer::canHarvestBlock(const Block &) {
+    return true;
+}
+
+void EntityPlayer::swingItem() {
+    swingProgressInt = -1;
+    isSwinging = true;
+}

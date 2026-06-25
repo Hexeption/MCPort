@@ -45,6 +45,15 @@ void GuiOptions::actionPerformed(GuiButton *button) {
     }
 }
 
+void GuiOptions::keyTyped(const char_t ch, const int_t key) {
+    if (key == 1) {
+        mc->displayGuiScreen(parentScreen);
+        return;
+    }
+
+    GuiScreen::keyTyped(ch, key);
+}
+
 void GuiOptions::drawScreen(const int_t mouseX, const int_t mouseY, const float partialTicks) {
     drawDefaultBackground();
     drawCenteredString(fontRenderer, screenTitle, width / 2, 20, 16777215);

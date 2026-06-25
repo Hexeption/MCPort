@@ -16,6 +16,8 @@ protected:
 
     void actionPerformed(GuiButton *button) override;
 
+    void keyTyped(char_t ch, int_t key) override;
+
 public:
     bool selected = false;
 

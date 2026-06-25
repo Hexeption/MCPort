@@ -19,6 +19,8 @@ private:
 protected:
     void actionPerformed(GuiButton *button) override;
 
+    void keyTyped(char_t ch, int_t key) override;
+
 public:
     GuiYesNo(std::shared_ptr<GuiScreen> parentScreen, jstring message1, jstring message2, int_t worldNumber);
 

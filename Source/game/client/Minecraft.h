@@ -19,6 +19,7 @@
 #include "renderer/RenderEngine.h"
 #include "renderer/RenderGlobal.h"
 #include "game/entity/EntityPlayerSP.h"
+#include "game/phys/MovingObjectPosition.h"
 #include "game/world/World.h"
 
 enum EnumOS {
@@ -29,6 +30,7 @@ enum EnumOS {
 };
 
 class EntityRenderer;
+class PlayerController;
 
 class Minecraft {
 private:
@@ -36,6 +38,7 @@ private:
     OpenGlCapsChecker glCapabilities;
     Timer timer = Timer(20.0f);
     int_t ticksRan = 0;
+    int_t leftClickCounter = 0;
     long_t systemTime = System::currentTimeMillis();
     std::unique_ptr<File> minecraftDir;
 
@@ -51,6 +54,8 @@ public:
     std::unique_ptr<FontRenderer> fontRenderer;
     std::unique_ptr<RenderGlobal> renderGlobal;
     std::unique_ptr<EntityRenderer> entityRenderer;
+    std::unique_ptr<PlayerController> playerController;
+    std::unique_ptr<MovingObjectPosition> objectMouseOver = nullptr;
     MouseHelper mouseHelper = MouseHelper(*this);
     std::unique_ptr<File> mcDataDir;
     std::shared_ptr<GuiScreen> currentScreen = nullptr;
@@ -103,6 +108,10 @@ private:
     void resize(int_t width, int_t height);
 
     void handleIngameInput();
+
+    void sendClickBlockToController(int_t button, bool pressed);
+
+    void clickMouse(int_t button);
 
     void updatePlayerLook();
 

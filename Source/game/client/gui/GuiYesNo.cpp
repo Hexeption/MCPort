@@ -23,6 +23,15 @@ void GuiYesNo::actionPerformed(GuiButton *button) {
     parentScreen->deleteWorld(button->id == 0, worldNumber);
 }
 
+void GuiYesNo::keyTyped(const char_t ch, const int_t key) {
+    if (key == 1) {
+        parentScreen->deleteWorld(false, worldNumber);
+        return;
+    }
+
+    GuiScreen::keyTyped(ch, key);
+}
+
 void GuiYesNo::drawScreen(const int_t mouseX, const int_t mouseY, const float partialTicks) {
     drawDefaultBackground();
     drawCenteredString(fontRenderer, message1, width / 2, 70, 16777215);
