@@ -48,6 +48,9 @@ public:
     int_t fire = 0;
     int_t maxAir = 300;
     int_t air = 300;
+    double lastTickPosX;
+    double lastTickPosY;
+    double lastTickPosZ;
 
     explicit Entity(World &world);
 

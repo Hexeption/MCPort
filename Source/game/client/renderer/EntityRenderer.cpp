@@ -118,6 +118,7 @@ void EntityRenderer::renderWorld(const float partialTicks) {
     setupFog(1);
     setupFog(0);
     mc.renderGlobal->renderWorld(partialTicks);
+    mc.effectRenderer->renderParticles(*mc.thePlayer, partialTicks);
     if (mc.objectMouseOver != nullptr) {
         glDisable(GL_ALPHA_TEST);
         mc.renderGlobal->drawBlockBreaking(*mc.thePlayer, *mc.objectMouseOver, 0, partialTicks);

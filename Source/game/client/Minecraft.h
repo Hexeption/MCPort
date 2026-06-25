@@ -22,6 +22,7 @@
 #include "game/phys/MovingObjectPosition.h"
 #include "game/world/World.h"
 #include "gui/GuiIngame.h"
+#include "renderer/EffectRenderer.h"
 
 enum EnumOS {
     UNKNOWN,
@@ -49,6 +50,7 @@ public:
     int_t displayHeight;
     std::unique_ptr<World> theWorld = nullptr;
     std::unique_ptr<EntityPlayerSP> thePlayer = nullptr;
+    std::unique_ptr<EffectRenderer> effectRenderer;
     std::atomic<bool> running = false;
     std::atomic<bool> isGamePaused = false;
     std::unique_ptr<GameSettings> options;

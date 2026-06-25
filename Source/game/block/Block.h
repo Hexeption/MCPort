@@ -38,6 +38,7 @@ public:
     static Block *lavaMoving;
     static Block *lavaStill;
 
+    int_t blockIndexInTexture;
     int_t blockID;
     Material *material;
     double minX = 0.0;
@@ -48,6 +49,8 @@ public:
     double maxZ = 1.0;
     float slipperiness = 0.6f;
     float hardness = 0.0f;
+
+    float blockParticleGravity = 1.0f;
 
     Block(int_t blockID, int_t blockIndexInTexture, Material *material);
 
@@ -106,9 +109,6 @@ public:
 
     virtual MovingObjectPosition collisionRayTrace(World &world, int_t x, int_t y, int_t z, const Vec3D &start,
                                                    const Vec3D &end);
-
-protected:
-    int_t blockIndexInTexture;
 
 private:
     std::array<int_t, 6> blockTextures{};

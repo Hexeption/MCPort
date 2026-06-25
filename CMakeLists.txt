@@ -196,6 +196,12 @@ add_executable(MCPort
         Source/game/world/IWorldAccess.h
         Source/game/client/gui/GuiIngame.cpp
         Source/game/client/gui/GuiIngame.h
+        Source/game/client/renderer/EffectRenderer.cpp
+        Source/game/client/renderer/EffectRenderer.h
+        Source/game/entity/fx/EntityFX.cpp
+        Source/game/entity/fx/EntityFX.h
+        Source/game/entity/fx/EntityDiggingFX.cpp
+        Source/game/entity/fx/EntityDiggingFX.h
 )
 
 if (APPLE)

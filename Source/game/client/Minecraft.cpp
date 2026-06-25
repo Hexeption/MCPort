@@ -101,6 +101,7 @@ void Minecraft::startGame() {
     entityRenderer = std::make_unique<EntityRenderer>(*this);
     playerController = std::make_unique<PlayerControllerSP>(*this);
     glViewport(0, 0, displayWidth, displayHeight);
+    effectRenderer = std::make_unique<EffectRenderer>(*theWorld, *renderEngine);
 
     checkGLError("Post startup");
     ingameGui = std::make_unique<GuiIngame>(*this);
@@ -194,18 +195,11 @@ void Minecraft::run() {
             }
 
             // add the world
-            if (isGamePaused &&theWorld
-
-            !=
-            nullptr
-            )
-            {
+            if (isGamePaused && theWorld != nullptr) {
                 float renderPartialTicks = timer.renderPartialTicks;
                 timer.updateTimer();
                 timer.renderPartialTicks = renderPartialTicks;
-            }
-            else
-            {
+            } else {
                 timer.updateTimer();
             }
 
@@ -276,7 +270,12 @@ void Minecraft::shutdown() {
 
 void Minecraft::runTick() {
     ingameGui->updateTick();
-    systemTime = System::currentTimeMillis();
+
+    glBindTexture(GL_TEXTURE_2D, renderEngine->getTexture(u"/terrain.png"));
+    if (!isGamePaused) {
+        renderEngine->updateDynamicTextures();
+    }
+
     if (currentScreen != nullptr) {
         std::shared_ptr<GuiScreen> screen = currentScreen;
         screen->handleInput();
@@ -298,12 +297,13 @@ void Minecraft::runTick() {
         if (entityRenderer != nullptr) {
             entityRenderer->updateRenderer();
         }
+
+        if (!isGamePaused) {
+            effectRenderer->updateEffects();
+        }
     }
 
-    glBindTexture(GL_TEXTURE_2D, renderEngine->getTexture(u"/terrain.png"));
-    if (!isGamePaused) {
-        renderEngine->updateDynamicTextures();
-    }
+    systemTime = System::currentTimeMillis();
 }
 
 void Minecraft::displayGuiScreen(std::shared_ptr<GuiScreen> guiScreen) {
@@ -350,6 +350,11 @@ void Minecraft::changeWorld(std::unique_ptr<World> world, const jstring &) {
     if (renderGlobal != nullptr) {
         renderGlobal->changeWorld(theWorld.get());
     }
+
+    if (effectRenderer != nullptr) {
+        effectRenderer->clearEffects(theWorld.get());
+    }
+
     if (theWorld != nullptr && playerController != nullptr) {
         playerController->onWorldChange(*theWorld);
     }
@@ -470,7 +475,7 @@ jstring Minecraft::getEntityDebug() {
 }
 
 jstring Minecraft::debugInfoEntities() {
-    return u"";
+    return u"P:" + effectRenderer->getStatistics();
 }
 
 void Minecraft::sendClickBlockToController(const int_t button, const bool pressed) {
@@ -481,6 +486,8 @@ void Minecraft::sendClickBlockToController(const int_t button, const bool presse
         if (pressed && objectMouseOver != nullptr && objectMouseOver->typeOfHit == 0 && button == 0) {
             playerController->sendBlockRemoving(objectMouseOver->blockX, objectMouseOver->blockY,
                                                 objectMouseOver->blockZ, objectMouseOver->sideHit);
+            effectRenderer->addBlockHitEffects(objectMouseOver->blockX, objectMouseOver->blockY,
+                                               objectMouseOver->blockZ, objectMouseOver->sideHit);
         } else {
             playerController->resetBlockRemoving();
         }
