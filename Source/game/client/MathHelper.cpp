@@ -8,7 +8,7 @@
 #include <cmath>
 
 static std::array<float, 65536> makeSinTable() {
-    std::array<float, 65536> table{};
+    std::array < float, 65536 > table{};
     for (int_t var0 = 0; var0 < static_cast<int_t>(table.size()); ++var0) {
         table[var0] = static_cast<float>(std::sin(static_cast<double>(var0) * std::acos(-1.0) * 2.0 / 65536.0));
     }

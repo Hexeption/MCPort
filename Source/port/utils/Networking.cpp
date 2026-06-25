@@ -158,7 +158,7 @@ namespace Networking {
         }
 
         std::string response;
-        std::array<char, 4096> buffer{};
+        std::array < char, 4096 > buffer{};
         for (;;) {
             const int received = recv(socketFd, buffer.data(), static_cast<int>(buffer.size()), 0);
             if (received <= 0) {

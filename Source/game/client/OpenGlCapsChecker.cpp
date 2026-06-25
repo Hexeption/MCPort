@@ -10,5 +10,5 @@ bool OpenGlCapsChecker::tryCheckOcclusionCapable = false;
 
 
 bool OpenGlCapsChecker::checkARBOcclusion() {
-   return tryCheckOcclusionCapable && lwjgl::GLContext::getCapabilities()["GL_ARB_occlusion_query"];
+    return tryCheckOcclusionCapable && lwjgl::GLContext::getCapabilities()["GL_ARB_occlusion_query"];
 }

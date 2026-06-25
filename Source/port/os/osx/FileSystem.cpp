@@ -106,7 +106,8 @@ namespace OS::FileSystem {
             return 0;
         }
 
-        return static_cast<long_t>(info.st_mtimespec.tv_sec) * 1000 + static_cast<long_t>(info.st_mtimespec.tv_nsec / 1000000);
+        return static_cast<long_t>(info.st_mtimespec.tv_sec) * 1000 + static_cast<long_t>(
+                   info.st_mtimespec.tv_nsec / 1000000);
     }
 
     std::vector<jstring> listFiles(const jstring &path) {

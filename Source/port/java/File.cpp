@@ -99,7 +99,7 @@ long_t File::lastModified() const {
 }
 
 std::vector<File> File::listFiles() const {
-    std::vector<File> files;
+    std::vector < File > files;
     for (const auto &filePath: OS::FileSystem::listFiles(path)) {
         files.emplace_back(filePath);
     }

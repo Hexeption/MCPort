@@ -21,9 +21,11 @@ void TextureLavaFlowFX::onTick() {
         for (int_t y = 0; y < 16; ++y) {
             float sum = 0.0f;
             const int_t xOffset = static_cast<int_t>(MathHelper::sin(static_cast<float>(y) *
-                static_cast<float>(std::acos(-1.0)) * 2.0f / 16.0f) * 1.2f);
+                                                                     static_cast<float>(std::acos(-1.0)) * 2.0f / 16.0f)
+                                                     * 1.2f);
             const int_t yOffset = static_cast<int_t>(MathHelper::sin(static_cast<float>(x) *
-                static_cast<float>(std::acos(-1.0)) * 2.0f / 16.0f) * 1.2f);
+                                                                     static_cast<float>(std::acos(-1.0)) * 2.0f / 16.0f)
+                                                     * 1.2f);
 
             for (int_t sampleX = x - 1; sampleX <= x + 1; ++sampleX) {
                 for (int_t sampleY = y - 1; sampleY <= y + 1; ++sampleY) {

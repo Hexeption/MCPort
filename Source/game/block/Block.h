@@ -28,9 +28,11 @@ public:
     static Block *stone;
     static Block *grass;
     static Block *dirt;
+    static Block *cobblestone;
     static Block *sand;
     static Block *bedrock;
     static Block *gravel;
+    static Block *obsidian;
     static Block *waterMoving;
     static Block *waterStill;
     static Block *lavaMoving;
@@ -82,6 +84,7 @@ public:
     virtual bool canPlaceBlockAt(World &world, int_t x, int_t y, int_t z) const;
 
     virtual int_t tickRate() const;
+
     void setTickOnLoad(bool value);
 
     virtual int_t getRenderBlockPass() const;

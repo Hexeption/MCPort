@@ -89,7 +89,7 @@ void EntityLiving::moveEntityWithHeading(const float strafe, const float forward
         motionZ *= 0.8;
         motionY -= 0.02;
 
-        if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX, motionY + 0.6, motionZ)) {
+        if (isCollidedHorizontally &&isOffsetPositionInLiquid(motionX, motionY + 0.6, motionZ)) {
             motionY = 0.3;
         }
         return;
@@ -108,7 +108,7 @@ void EntityLiving::moveEntityWithHeading(const float strafe, const float forward
         motionY *= 0.5;
         motionZ *= 0.5;
         motionY -= 0.02;
-        if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX, motionY + 0.6, motionZ)) {
+        if (isCollidedHorizontally &&isOffsetPositionInLiquid(motionX, motionY + 0.6, motionZ)) {
             motionY = 0.3;
         }
         return;

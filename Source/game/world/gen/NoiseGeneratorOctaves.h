@@ -24,7 +24,7 @@ public:
                                              double scaleZ) const;
 
 private:
-    std::vector<std::unique_ptr<NoiseGeneratorPerlin>> generatorCollection;
+    std::vector<std::unique_ptr<NoiseGeneratorPerlin> > generatorCollection;
     int_t octaves;
 };
 

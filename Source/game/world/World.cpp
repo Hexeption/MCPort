@@ -314,7 +314,7 @@ void World::notifyBlocksOfNeighborChange(const int_t x, const int_t y, const int
         {1, 0, 0},
     };
 
-    for (const auto &offset : neighborOffsets) {
+    for (const auto &offset: neighborOffsets) {
         const int_t neighborX = x + offset[0];
         const int_t neighborY = y + offset[1];
         const int_t neighborZ = z + offset[2];
@@ -723,8 +723,10 @@ void World::scheduleLightingUpdate_do(const EnumSkyBlock skyBlock, const int_t x
     }
 
     lightingToUpdate.emplace_back(skyBlock, x0, y0, z0, x1, y1, z1);
-    while (lightingToUpdate.size() > 50000) {
-        updatingLighting();
+    if (lightingToUpdate.size() > 100000) {
+        while (lightingToUpdate.size() > 50000) {
+            updatingLighting();
+        }
     }
 }
 
@@ -911,7 +913,7 @@ long_t World::chunkKey(const int_t chunkX, const int_t chunkZ) {
 }
 
 std::array<float, 16> World::makeLightBrightnessTable() {
-    std::array<float, 16> table{};
+    std::array < float, 16 > table{};
     constexpr float baseBrightness = 0.05f;
     for (int_t i = 0; i <= 15; ++i) {
         const float value = 1.0f - static_cast<float>(i) / 15.0f;

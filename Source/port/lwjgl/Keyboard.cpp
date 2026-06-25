@@ -130,7 +130,7 @@ namespace {
     };
 
     static SDL_Keycode toSDLKeycode(int_t key) {
-        for (const auto &entry : KEY_MAP) {
+        for (const auto &entry: KEY_MAP) {
             if (entry.lwjgl == key)
                 return entry.sdl;
         }
@@ -138,7 +138,7 @@ namespace {
     }
 
     static int_t toLWJGLKey(SDL_Keycode key) {
-        for (const auto &entry : KEY_MAP) {
+        for (const auto &entry: KEY_MAP) {
             if (entry.sdl == key)
                 return entry.lwjgl;
         }
@@ -193,7 +193,7 @@ namespace lwjgl {
                 if (e.type == SDL_EVENT_KEY_DOWN || e.type == SDL_EVENT_KEY_UP) {
                     handleKey(toLWJGLKey(e.key.key), e.key.repeat, e.key.down);
                 } else if (e.type == SDL_EVENT_TEXT_INPUT) {
-                    for (char_t c : String::fromUtf8(e.text.text))
+                    for (char_t c: String::fromUtf8(e.text.text))
                         handleCharacter(c);
                 }
             }

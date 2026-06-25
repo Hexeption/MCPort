@@ -125,21 +125,27 @@ void RenderBlocks::renderBlockAsItem(Block *block, const float alpha) {
         const float var8 = 0.6f;
         var4.startDrawingQuads();
         var4.setColorRGBA_F(var6, var6, var6, alpha);
-        renderBottomFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
-                                                                        : block->getBlockTextureFromSide(0));
+        renderBottomFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0
+                                                   ? overrideBlockTexture
+                                                   : block->getBlockTextureFromSide(0));
         var4.setColorRGBA_F(var5, var5, var5, alpha);
-        renderTopFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
-                                                                      : block->getBlockTextureFromSide(1));
+        renderTopFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0
+                                                ? overrideBlockTexture
+                                                : block->getBlockTextureFromSide(1));
         var4.setColorRGBA_F(var7, var7, var7, alpha);
-        renderEastFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
-                                                                       : block->getBlockTextureFromSide(2));
-        renderWestFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
-                                                                       : block->getBlockTextureFromSide(3));
+        renderEastFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0
+                                                 ? overrideBlockTexture
+                                                 : block->getBlockTextureFromSide(2));
+        renderWestFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0
+                                                 ? overrideBlockTexture
+                                                 : block->getBlockTextureFromSide(3));
         var4.setColorRGBA_F(var8, var8, var8, alpha);
-        renderNorthFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
-                                                                        : block->getBlockTextureFromSide(4));
-        renderSouthFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0 ? overrideBlockTexture
-                                                                        : block->getBlockTextureFromSide(5));
+        renderNorthFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0
+                                                  ? overrideBlockTexture
+                                                  : block->getBlockTextureFromSide(4));
+        renderSouthFace(block, 0.0, 0.0, 0.0, overrideBlockTexture >= 0
+                                                  ? overrideBlockTexture
+                                                  : block->getBlockTextureFromSide(5));
         var4.draw();
         glTranslatef(0.5f, 0.5f, 0.5f);
     }
@@ -177,7 +183,8 @@ bool RenderBlocks::renderBlockFluids(Block *block, const int_t x, const int_t y,
     if (renderTop) {
         renderedAny = true;
         int_t texture = block->getBlockTextureFromSideAndMetadata(1, metadata);
-        const float flowDirection = static_cast<float>(BlockFluid::getFlowDirection(*blockAccess, x, y, z, block->material));
+        const float flowDirection = static_cast<float>(BlockFluid::getFlowDirection(
+            *blockAccess, x, y, z, block->material));
         if (flowDirection > -999.0f) {
             texture = block->getBlockTextureFromSideAndMetadata(2, metadata);
         }
@@ -191,7 +198,8 @@ bool RenderBlocks::renderBlockFluids(Block *block, const int_t x, const int_t y,
             centerV = static_cast<double>(static_cast<float>(textureY + 16) / 256.0f);
         }
         const float brightness = block->getBlockBrightness(*blockAccess, x, y, z);
-        tessellator.setColorOpaque_F(topBrightness * brightness, topBrightness * brightness, topBrightness * brightness);
+        tessellator.setColorOpaque_F(topBrightness * brightness, topBrightness * brightness,
+                                     topBrightness * brightness);
         double uOffset = 0.0;
         double vOffset = 0.0;
         const float topFlowDirection = flowDirection < -999.0f ? 0.0f : flowDirection;

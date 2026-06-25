@@ -194,11 +194,18 @@ void Minecraft::run() {
             }
 
             // add the world
-            if (isGamePaused && theWorld != nullptr) {
+            if (isGamePaused &&theWorld
+
+            !=
+            nullptr
+            )
+            {
                 float renderPartialTicks = timer.renderPartialTicks;
                 timer.updateTimer();
                 timer.renderPartialTicks = renderPartialTicks;
-            } else {
+            }
+            else
+            {
                 timer.updateTimer();
             }
 

@@ -15,6 +15,7 @@ class RenderBlocks {
 private:
     IBlockAccess *blockAccess = nullptr;
     int_t overrideBlockTexture = -1;
+
     float getFluidHeight(int_t x, int_t y, int_t z, const Material *material) const;
 
 public:

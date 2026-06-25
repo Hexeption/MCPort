@@ -15,6 +15,7 @@ public:
     BlockFluid(int_t blockID, Material *material);
 
     static float getFluidHeightPercent(int_t metadata);
+
     static double getFlowDirection(IBlockAccess &blockAccess, int_t x, int_t y, int_t z, Material *material);
 
     int_t getRenderType() const override;
@@ -34,10 +35,17 @@ public:
     void velocityToAddToEntity(World &world, int_t x, int_t y, int_t z, Entity &entity,
                                Vec3D &velocity) const override;
 
+    void onBlockAdded(World &world, int_t x, int_t y, int_t z) override;
+
+    void onNeighborBlockChange(World &world, int_t x, int_t y, int_t z, int_t neighborBlockId) override;
+
     int_t tickRate() const override;
 
 protected:
     int_t fluidType = 1;
+
+private:
+    void checkForHarden(World &world, int_t x, int_t y, int_t z) const;
 };
 
 #endif //MCPORT_BLOCKFLUID_H

@@ -307,7 +307,6 @@ void RenderEngine::refreshTextures() {
             printf("Failed to refresh texture: %s\n", e.what());
         }
     }
-
 }
 
 void RenderEngine::bindTexture(const int_t textureName) {

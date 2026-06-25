@@ -13,8 +13,9 @@ static constexpr long_t MASK = (1LL << 48) - 1;
 
 Random::Random()
     : Random(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                  std::chrono::high_resolution_clock::now().time_since_epoch())
-                  .count()) {}
+            std::chrono::high_resolution_clock::now().time_since_epoch())
+        .count()) {
+}
 
 Random::Random(long_t seed) {
     setSeed(seed);
@@ -26,7 +27,7 @@ void Random::setSeed(long_t seed) {
 
 int_t Random::next(int_t bits) {
     seed = (seed * MULTIPLIER + ADDEND) & MASK;
-    return (int_t) (seed >> (48 - bits));
+    return (int_t)(seed >> (48 - bits));
 }
 
 bool Random::nextBoolean() {
