@@ -1,0 +1,67 @@
+//
+// Created by Keir Davis on 25/06/2026.
+//
+
+#ifndef MCPORT_CHUNK_H
+#define MCPORT_CHUNK_H
+
+#include <array>
+
+#include "game/world/EnumSkyBlock.h"
+#include "java/Type.h"
+
+class World;
+
+class Chunk {
+public:
+    static constexpr int_t width = 16;
+    static constexpr int_t height = 128;
+    static constexpr int_t depth = 16;
+
+    World &worldObj;
+    std::array<int_t, width * height * depth> blocks{};
+    int_t xPosition;
+    int_t zPosition;
+    std::array<int_t, width * depth> heightMap{};
+    int_t heightValue = 0;
+    bool isModified = false;
+
+    Chunk(World &world, int_t chunkX, int_t chunkZ);
+
+    Chunk(World &world, const std::array<int_t, width * height * depth> &blocks, int_t chunkX, int_t chunkZ);
+
+    int_t getBlockID(int_t x, int_t y, int_t z) const;
+
+    bool setBlockID(int_t x, int_t y, int_t z, int_t blockId);
+
+    int_t getBlockMetadata(int_t x, int_t y, int_t z) const;
+
+    bool setBlockMetadata(int_t x, int_t y, int_t z, int_t metadata);
+
+    int_t getHeightValue(int_t x, int_t z) const;
+
+    int_t getSavedLightValue(EnumSkyBlock skyBlock, int_t x, int_t y, int_t z) const;
+
+    void setLightValue(EnumSkyBlock skyBlock, int_t x, int_t y, int_t z, int_t value);
+
+    int_t getBlockLightValue(int_t x, int_t y, int_t z, int_t skylightSubtracted) const;
+
+    void generateHeightMap();
+
+    void generateSkylightMap();
+
+private:
+    std::array<int_t, width * height * depth> metadata{};
+    std::array<int_t, width * height * depth> skylightMap{};
+    std::array<int_t, width * height * depth> blocklightMap{};
+
+    static int_t blockIndex(int_t x, int_t y, int_t z);
+
+    static int_t heightIndex(int_t x, int_t z);
+
+    static bool isValidLocalBlock(int_t x, int_t y, int_t z);
+
+    void relightBlock(int_t x, int_t y, int_t z);
+};
+
+#endif //MCPORT_CHUNK_H

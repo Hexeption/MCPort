@@ -7,20 +7,25 @@
 #include <cstdlib>
 #include <filesystem>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
 
 #include "game/client/options/GameSettings.h"
+#include "game/client/gui/GuiIngameMenu.h"
 #include "game/client/gui/GuiMainMenu.h"
 #include "game/client/gui/GuiScreen.h"
 #include "game/client/renderer/FontRenderer.h"
 #include "game/client/renderer/RenderEngine.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
+#include "game/util/Vec3D.h"
+#include "java/Math.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
 #include "lwjgl/Mouse.h"
+#include "utils/GLU.h"
 
 #include <glad/glad.h>
 
@@ -60,11 +65,7 @@ void Minecraft::startGame() {
 
     lwjgl::Display::create();
 
-#if MCPORT_USE_LOCAL_MCDATA_DIR
-    mcDataDir = std::make_unique<File>(u".");
-#else
-    mcDataDir = std::make_unique<File>(getMinecraftDir(), u"mcport");
-#endif
+    mcDataDir = std::make_unique<File>(getMinecraftDir());
 
     options = std::make_unique<GameSettings>(*this, *mcDataDir);
     renderEngine = std::make_unique<RenderEngine>(options.get());
@@ -247,6 +248,15 @@ void Minecraft::runTick() {
         if (screen == currentScreen) {
             screen->updateScreen();
         }
+    } else if (theWorld != nullptr) {
+        handleIngameInput();
+    }
+
+    if (theWorld != nullptr) {
+        theWorld->difficultySetting = options != nullptr ? options->difficulty : 0;
+        if (!isGamePaused || isMultiplayerWorld()) {
+            theWorld->tick();
+        }
     }
 }
 
@@ -267,11 +277,62 @@ void Minecraft::displayGuiScreen(std::shared_ptr<GuiScreen> guiScreen) {
     isGamePaused = currentScreen->doesGuiPauseGame();
 }
 
+void Minecraft::startWorld(const jstring &levelName) {
+    changeWorld1(nullptr);
+    auto world = std::make_unique<World>(File(getMinecraftDir(), u"saves"), levelName);
+    if (world->isNewWorld) {
+        changeWorld(std::move(world), u"Generating level");
+    } else {
+        changeWorld(std::move(world), u"Loading level");
+    }
+}
+
+void Minecraft::changeWorld1(std::unique_ptr<World> world) {
+    changeWorld(std::move(world), u"");
+}
+
+void Minecraft::changeWorld(std::unique_ptr<World> world, const jstring &) {
+    theWorld = std::move(world);
+    if (theWorld != nullptr) {
+        thePlayer = std::make_unique<EntityPlayerSP>(*theWorld, *options);
+        thePlayer->preparePlayerToSpawn();
+    } else {
+        thePlayer = nullptr;
+        setIngameNotInFocus();
+    }
+    if (renderGlobal != nullptr) {
+        renderGlobal->changeWorld(theWorld.get());
+    }
+}
+
+bool Minecraft::isMultiplayerWorld() const {
+    return theWorld != nullptr && theWorld->multiplayerWorld;
+}
+
+double Minecraft::getPlayerPosX() const {
+    return thePlayer != nullptr ? thePlayer->posX : 0.0;
+}
+
+double Minecraft::getPlayerPosY() const {
+    return thePlayer != nullptr ? thePlayer->posY : 0.0;
+}
+
+double Minecraft::getPlayerPosZ() const {
+    return thePlayer != nullptr ? thePlayer->posZ : 0.0;
+}
+
 void Minecraft::setIngameFocus() {
     isGamePaused = false;
+    if (theWorld != nullptr) {
+        mouseHelper.grabMouseCursor();
+    }
 }
 
 void Minecraft::setIngameNotInFocus() {
+    if (thePlayer != nullptr) {
+        thePlayer->resetPlayerKeyState();
+    }
+    mouseHelper.ungrabMouseCursor();
 }
 
 // Temp till Entity renderer
@@ -281,8 +342,48 @@ void Minecraft::renderCurrentScreen(const float partialTicks) {
     const int_t scaledHeight = scaledResolution.getScaledHeight();
 
     glViewport(0, 0, displayWidth, displayHeight);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (theWorld != nullptr) {
+        if (currentScreen == nullptr && thePlayer != nullptr) {
+            updatePlayerLook();
+        }
+
+        std::unique_ptr<Vec3D> skyColor = theWorld->getSkyColor(partialTicks);
+        glClearColor(static_cast<float>(skyColor->xCoord), static_cast<float>(skyColor->yCoord),
+                     static_cast<float>(skyColor->zCoord), 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        GLU::gluPerspective(70.0f, static_cast<float>(displayWidth) / static_cast<float>(displayHeight), 0.05f,
+                            100.0f);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        double cameraX = 0.0;
+        double cameraY = 0.0;
+        double cameraZ = 0.0;
+        float cameraYaw = 0.0f;
+        float cameraPitch = 0.0f;
+        if (thePlayer != nullptr) {
+            cameraX = thePlayer->prevPosX + (thePlayer->posX - thePlayer->prevPosX) * partialTicks;
+            cameraY = thePlayer->prevPosY + (thePlayer->posY - thePlayer->prevPosY) * partialTicks;
+            cameraZ = thePlayer->prevPosZ + (thePlayer->posZ - thePlayer->prevPosZ) * partialTicks;
+            cameraYaw = thePlayer->prevRotationYaw + (thePlayer->rotationYaw - thePlayer->prevRotationYaw) *
+                        partialTicks;
+            cameraPitch = thePlayer->prevRotationPitch +
+                          (thePlayer->rotationPitch - thePlayer->prevRotationPitch) * partialTicks;
+        }
+        glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
+        glRotatef(cameraYaw + 180.0f, 0.0f, 1.0f, 0.0f);
+        glTranslatef(static_cast<float>(-cameraX), static_cast<float>(-cameraY), static_cast<float>(-cameraZ));
+        renderGlobal->renderWorld(partialTicks);
+        if (currentScreen == nullptr) {
+            return;
+        }
+    } else {
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, static_cast<double>(scaledWidth), static_cast<double>(scaledHeight), 0.0, 1000.0, 3000.0);
@@ -319,6 +420,33 @@ void Minecraft::resize(int_t width, int_t height) {
         currentScreen->setWorldAndResolution(this, scaledResolution.getScaledWidth(),
                                              scaledResolution.getScaledHeight());
     }
+}
+
+void Minecraft::handleIngameInput() {
+    while (lwjgl::Keyboard::next()) {
+        const bool pressed = lwjgl::Keyboard::getEventKeyState();
+        const int_t key = lwjgl::Keyboard::getEventKey();
+        if (thePlayer != nullptr) {
+            thePlayer->handleKeyPress(key, pressed);
+        }
+        if (pressed && key == lwjgl::Keyboard::KEY_ESCAPE) {
+            displayGuiScreen(std::make_shared<GuiIngameMenu>());
+            return;
+        }
+    }
+
+    if (thePlayer != nullptr && !isGamePaused) {
+        thePlayer->onUpdate();
+    }
+}
+
+void Minecraft::updatePlayerLook() {
+    if (thePlayer == nullptr) {
+        return;
+    }
+
+    mouseHelper.mouseXYChange();
+    thePlayer->setAngles(static_cast<float>(mouseHelper.deltaX), static_cast<float>(mouseHelper.deltaY));
 }
 
 void Minecraft::checkGLError(const std::string &message) {
@@ -366,7 +494,11 @@ void Minecraft::checkGLError(const std::string &message) {
 
 File Minecraft::getMinecraftDir() {
     if (minecraftDir == nullptr) {
+#if MCPORT_USE_LOCAL_MCDATA_DIR
+        minecraftDir = std::make_unique<File>(u".");
+#else
         minecraftDir = std::make_unique<File>(getAppDir(u"mcport"));
+#endif
     }
     return *minecraftDir;
 }

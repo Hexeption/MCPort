@@ -18,6 +18,8 @@
 #include "renderer/FontRenderer.h"
 #include "renderer/RenderEngine.h"
 #include "renderer/RenderGlobal.h"
+#include "game/entity/EntityPlayerSP.h"
+#include "game/world/World.h"
 
 enum EnumOS {
     UNKNOWN,
@@ -38,7 +40,8 @@ private:
 public:
     int_t displayWidth;
     int_t displayHeight;
-    void *theWorld = nullptr; // stub
+    std::unique_ptr<World> theWorld = nullptr;
+    std::unique_ptr<EntityPlayerSP> thePlayer = nullptr;
     std::atomic<bool> running = false;
     std::atomic<bool> isGamePaused = false;
     std::unique_ptr<GameSettings> options;
@@ -67,6 +70,20 @@ public:
 
     void displayGuiScreen(std::shared_ptr<GuiScreen> guiScreen);
 
+    void startWorld(const jstring &levelName);
+
+    void changeWorld1(std::unique_ptr<World> world);
+
+    void changeWorld(std::unique_ptr<World> world, const jstring &loadingMessage);
+
+    bool isMultiplayerWorld() const;
+
+    double getPlayerPosX() const;
+
+    double getPlayerPosY() const;
+
+    double getPlayerPosZ() const;
+
     void setIngameFocus();
 
     void setIngameNotInFocus();
@@ -81,6 +98,10 @@ private:
     void renderCurrentScreen(float partialTicks);
 
     void resize(int_t width, int_t height);
+
+    void handleIngameInput();
+
+    void updatePlayerLook();
 
     EnumOS getOs();
 };

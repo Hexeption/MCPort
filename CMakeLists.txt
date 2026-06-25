@@ -54,6 +54,33 @@ add_executable(MCPort
         Source/game/client/MathHelper.h
         Source/game/block/Block.cpp
         Source/game/block/Block.h
+        Source/game/block/Material.cpp
+        Source/game/block/Material.h
+        Source/game/phys/AxisAlignedBB.cpp
+        Source/game/phys/AxisAlignedBB.h
+        Source/game/entity/MovementInput.cpp
+        Source/game/entity/MovementInput.h
+        Source/game/entity/MovementInputFromOptions.cpp
+        Source/game/entity/MovementInputFromOptions.h
+        Source/game/entity/Entity.cpp
+        Source/game/entity/Entity.h
+        Source/game/entity/EntityLiving.cpp
+        Source/game/entity/EntityLiving.h
+        Source/game/entity/EntityPlayer.cpp
+        Source/game/entity/EntityPlayer.h
+        Source/game/entity/EntityPlayerSP.cpp
+        Source/game/entity/EntityPlayerSP.h
+        Source/game/world/chunk/Chunk.cpp
+        Source/game/world/chunk/Chunk.h
+        Source/game/world/chunk/ChunkProviderGenerate.cpp
+        Source/game/world/chunk/ChunkProviderGenerate.h
+        Source/game/world/chunk/ChunkCache.cpp
+        Source/game/world/chunk/ChunkCache.h
+        Source/game/world/gen/NoiseGenerator.h
+        Source/game/world/gen/NoiseGeneratorPerlin.cpp
+        Source/game/world/gen/NoiseGeneratorPerlin.h
+        Source/game/world/gen/NoiseGeneratorOctaves.cpp
+        Source/game/world/gen/NoiseGeneratorOctaves.h
         Source/port/java/File.cpp
         Source/port/java/File.h
         Source/port/os/FileSystem.h
@@ -70,6 +97,8 @@ add_executable(MCPort
         Source/game/client/renderer/Tessellator.h
         Source/game/client/renderer/RenderBlocks.cpp
         Source/game/client/renderer/RenderBlocks.h
+        Source/game/client/renderer/WorldRenderer.cpp
+        Source/game/client/renderer/WorldRenderer.h
         Source/game/client/renderer/ThreadDownloadImage.cpp
         Source/game/client/renderer/ThreadDownloadImage.h
         Source/game/client/renderer/ThreadDownloadImageData.cpp
@@ -92,6 +121,12 @@ add_executable(MCPort
         Source/game/client/gui/GuiScreen.h
         Source/game/client/gui/GuiMainMenu.cpp
         Source/game/client/gui/GuiMainMenu.h
+        Source/game/client/gui/GuiIngameMenu.cpp
+        Source/game/client/gui/GuiIngameMenu.h
+        Source/game/client/gui/GuiDeleteWorld.cpp
+        Source/game/client/gui/GuiDeleteWorld.h
+        Source/game/client/gui/GuiYesNo.cpp
+        Source/game/client/gui/GuiYesNo.h
         Source/game/client/gui/LogoEffectRandomizer.cpp
         Source/game/client/gui/LogoEffectRandomizer.h
         Source/game/client/gui/GuiOptions.cpp
@@ -124,6 +159,18 @@ add_executable(MCPort
         Source/game/nbt/NBTTagShort.h
         Source/game/nbt/NBTTagString.cpp
         Source/game/nbt/NBTTagString.h
+        Source/game/nbt/CompressedStreamTools.cpp
+        Source/game/nbt/CompressedStreamTools.h
+        Source/game/util/Vec3D.cpp
+        Source/game/util/Vec3D.h
+        Source/game/world/NextTickListEntry.cpp
+        Source/game/world/NextTickListEntry.h
+        Source/game/world/MetadataChunkBlock.cpp
+        Source/game/world/MetadataChunkBlock.h
+        Source/game/world/World.cpp
+        Source/game/world/World.h
+        Source/game/world/EnumSkyBlock.h
+        Source/game/world/IBlockAccess.h
 )
 
 if (APPLE)

@@ -42,18 +42,16 @@ int_t Random::nextInt(int_t bound) {
         throw std::invalid_argument("bound must be positive");
     }
 
-    const int_t threshold = -bound % bound;
-    int_t candidate = next(31);
-
-    if ((bound & threshold) == 0) {
-        return static_cast<int_t>((bound * static_cast<long_t>(candidate)) >> 31);
+    if ((bound & -bound) == bound) {
+        return static_cast<int_t>((bound * static_cast<long_t>(next(31))) >> 31);
     }
 
-    int_t result = candidate % bound;
-    while (candidate - result + threshold < 0) {
+    int_t candidate;
+    int_t result;
+    do {
         candidate = next(31);
         result = candidate % bound;
-    }
+    } while (candidate - result + (bound - 1) < 0);
 
     return result;
 }
@@ -67,5 +65,5 @@ float Random::nextFloat() {
 }
 
 double Random::nextDouble() {
-    return ((static_cast<long_t>(next(27)) << 27) + next(27)) / static_cast<double>(1LL << 54);
+    return ((static_cast<long_t>(next(26)) << 27) + next(27)) / static_cast<double>(1LL << 53);
 }

@@ -25,9 +25,9 @@ public:
 
     jstring getSaveName(int_t id);
 
-    void initButtons();
+    virtual void initButtons();
 
-    void selectWorld(int_t id);
+    virtual void selectWorld(int_t id);
 
     void drawScreen(int_t mouseX, int_t mouseY, float partialTicks) override;
 };
