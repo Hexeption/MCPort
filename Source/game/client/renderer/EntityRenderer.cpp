@@ -10,6 +10,7 @@
 #include <glad/glad.h>
 
 #include "RenderGlobal.h"
+#include "ScaledResolution.h"
 #include "game/block/Material.h"
 #include "game/client/Minecraft.h"
 #include "game/client/options/GameSettings.h"
@@ -17,7 +18,9 @@
 #include "game/entity/EntityPlayerSP.h"
 #include "game/util/Vec3D.h"
 #include "game/world/World.h"
+#include "lwjgl/Display.h"
 #include "lwjgl/GLContext.h"
+#include "lwjgl/Mouse.h"
 #include "utils/GLU.h"
 
 EntityRenderer::EntityRenderer(Minecraft &minecraft) : mc(minecraft) {
@@ -36,6 +39,69 @@ void EntityRenderer::updateRenderer() {
     const float distanceFactor = static_cast<float>(3 - mc.options->renderDistance) / 3.0f;
     const float targetFogColor = brightness * (1.0f - distanceFactor) + distanceFactor;
     fogColor += (targetFogColor - fogColor) * 0.1f;
+}
+
+void EntityRenderer::updateCameraAndRender(float partialTicks) {
+    if (!lwjgl::Display::isActive()) {
+        if (System::currentTimeMillis() - prevFrameTime > 500L) {
+            mc.displayInGameMenu();
+        }
+    } else {
+        prevFrameTime = System::currentTimeMillis();
+    }
+
+    int var3;
+    if (mc.inGameHasFocus) {
+        mc.mouseHelper.mouseXYChange();
+        int var2 = mc.mouseHelper.deltaX;
+        var3 = mc.mouseHelper.deltaY;
+        byte_t var4 = 1;
+        if (mc.options->invertMouse) {
+            var4 = -1;
+        }
+
+        mc.thePlayer->setAngles((float) var2, (float) (var3 * var4));
+    }
+
+    if (!mc.skipRenderWorld) {
+        ScaledResolution scaledResolution(mc.displayWidth, mc.displayHeight);
+        const int_t scaledWidth = scaledResolution.getScaledWidth();
+        const int_t scaledHeight = scaledResolution.getScaledHeight();
+        int mouseX = lwjgl::Mouse::getX() * scaledWidth / mc.displayWidth;
+        int mouseY = scaledHeight - lwjgl::Mouse::getY() * scaledHeight / mc.displayHeight - 1;
+
+        if (mc.theWorld != nullptr) {
+            renderWorld(partialTicks);
+            mc.ingameGui->renderGameOverlay(partialTicks, mc.currentScreen != nullptr, mouseX, mouseY);
+        } else {
+            glViewport(0, 0, mc.displayWidth, mc.displayHeight);
+            glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            setupOverlayRendering();
+        }
+
+        if (mc.currentScreen != nullptr) {
+            glClear(GL_DEPTH_BUFFER_BIT);
+            mc.currentScreen->drawScreen(mouseX, mouseY, partialTicks);
+        }
+    }
+}
+
+void EntityRenderer::setupOverlayRendering() {
+    ScaledResolution var1 = ScaledResolution(mc.displayWidth, mc.displayHeight);
+    int var2 = var1.getScaledWidth();
+    int var3 = var1.getScaledHeight();
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, (double) var2, (double) var3, 0.0, 1000.0, 3000.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.0F, 0.0F, -2000.0F);
 }
 
 void EntityRenderer::renderWorld(const float partialTicks) {
@@ -132,7 +198,7 @@ void EntityRenderer::setupCameraTransform(const float partialTicks) {
     const float cameraYaw = mc.thePlayer->prevRotationYaw + (mc.thePlayer->rotationYaw - mc.thePlayer->prevRotationYaw)
                             * partialTicks;
     const float cameraPitch = mc.thePlayer->prevRotationPitch + (mc.thePlayer->rotationPitch -
-                              mc.thePlayer->prevRotationPitch) * partialTicks;
+                                                                 mc.thePlayer->prevRotationPitch) * partialTicks;
     glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
     glRotatef(cameraYaw + 180.0f, 0.0f, 1.0f, 0.0f);
     glTranslatef(static_cast<float>(-cameraX), static_cast<float>(-cameraY), static_cast<float>(-cameraZ));

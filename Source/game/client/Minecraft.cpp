@@ -29,6 +29,8 @@
 
 #include <glad/glad.h>
 
+#include "renderer/WorldRenderer.h"
+
 namespace {
     jstring dotAppDir(const jstring &appDir) {
         jstring dir = u".";
@@ -93,6 +95,7 @@ void Minecraft::startGame() {
     glViewport(0, 0, displayWidth, displayHeight);
 
     checkGLError("Post startup");
+    ingameGui = std::make_unique<GuiIngame>(*this);
     displayGuiScreen(std::make_shared<GuiMainMenu>());
 }
 
@@ -203,7 +206,19 @@ void Minecraft::run() {
 
             checkGLError("Pre render");
 
-            renderCurrentScreen(timer.renderPartialTicks);
+            glEnable(GL_TEXTURE_2D);
+            if (theWorld != nullptr) {
+                while (theWorld->updatingLighting()) {
+                }
+            }
+
+            if (!skipRenderWorld) {
+                if (playerController != nullptr) {
+                    playerController->setPartialTime(timer.renderPartialTicks);
+                }
+
+                entityRenderer->updateCameraAndRender(timer.renderPartialTicks);
+            }
 
             lwjgl::Display::update();
             if (!fullscreen && (lwjgl::Display::getWidth() != displayWidth || lwjgl::Display::getHeight() !=
@@ -227,10 +242,12 @@ void Minecraft::run() {
 
             checkGLError("Post render");
             ++fps;
-            if (currentTime + 1000 < System::currentTimeMillis()) {
-                printf("FPS: %d\n", fps);
-                fps = 0;
-                currentTime = System::currentTimeMillis();
+            for (isGamePaused = !isMultiplayerWorld() && currentScreen != nullptr && currentScreen->doesGuiPauseGame();
+                 System::currentTimeMillis() >= currentTime + 1000L; fps = 0) {
+                debug = String::toString(fps) + u" fps, " + String::toString(WorldRenderer::chunksUpdated) +
+                        u" chunk updates";
+                WorldRenderer::chunksUpdated = 0;
+                currentTime += 1000L;
             }
         }
     } catch (std::exception &e) {
@@ -243,6 +260,7 @@ void Minecraft::shutdown() {
 }
 
 void Minecraft::runTick() {
+    ingameGui->updateTick();
     systemTime = System::currentTimeMillis();
     if (currentScreen != nullptr) {
         std::shared_ptr<GuiScreen> screen = currentScreen;
@@ -336,58 +354,18 @@ double Minecraft::getPlayerPosZ() const {
 void Minecraft::setIngameFocus() {
     isGamePaused = false;
     if (theWorld != nullptr) {
+        inGameHasFocus = true;
         mouseHelper.grabMouseCursor();
     }
 }
 
 void Minecraft::setIngameNotInFocus() {
-    if (thePlayer != nullptr) {
-        thePlayer->resetPlayerKeyState();
-    }
-    mouseHelper.ungrabMouseCursor();
-}
-
-// Temp till Entity renderer
-void Minecraft::renderCurrentScreen(const float partialTicks) {
-    ScaledResolution scaledResolution(displayWidth, displayHeight);
-    const int_t scaledWidth = scaledResolution.getScaledWidth();
-    const int_t scaledHeight = scaledResolution.getScaledHeight();
-
-    glViewport(0, 0, displayWidth, displayHeight);
-
-    if (theWorld != nullptr) {
-        if (currentScreen == nullptr && thePlayer != nullptr) {
-            updatePlayerLook();
+    if (inGameHasFocus) {
+        if (thePlayer != nullptr) {
+            thePlayer->resetPlayerKeyState();
         }
-
-        if (playerController != nullptr) {
-            playerController->setPartialTime(partialTicks);
-        }
-        entityRenderer->renderWorld(partialTicks);
-        if (currentScreen == nullptr) {
-            return;
-        }
-    } else {
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, static_cast<double>(scaledWidth), static_cast<double>(scaledHeight), 0.0, 1000.0, 3000.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0.0f, 0.0f, -2000.0f);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_FOG);
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.1f);
-
-    if (currentScreen != nullptr) {
-        const int_t mouseX = lwjgl::Mouse::getX() * scaledWidth / displayWidth;
-        const int_t mouseY = scaledHeight - lwjgl::Mouse::getY() * scaledHeight / displayHeight - 1;
-        currentScreen->drawScreen(mouseX, mouseY, partialTicks);
+        inGameHasFocus = false;
+        mouseHelper.ungrabMouseCursor();
     }
 }
 
@@ -422,8 +400,7 @@ void Minecraft::handleIngameInput() {
             thePlayer->handleKeyPress(key, pressed);
         }
         if (pressed && key == lwjgl::Keyboard::KEY_ESCAPE) {
-            displayGuiScreen(std::make_shared<GuiIngameMenu>());
-            return;
+            displayInGameMenu();
         }
 
         if (pressed && key == lwjgl::Keyboard::KEY_F8) {
@@ -456,6 +433,24 @@ void Minecraft::handleIngameInput() {
     if (thePlayer != nullptr && !isGamePaused) {
         thePlayer->onUpdate();
     }
+}
+
+void Minecraft::displayInGameMenu() {
+    if (currentScreen == nullptr) {
+        displayGuiScreen(std::make_shared<GuiIngameMenu>());
+    }
+}
+
+jstring Minecraft::debugInfoRenders() {
+    return renderGlobal->getDebugInfoRenders();
+}
+
+jstring Minecraft::getEntityDebug() {
+    return u"";
+}
+
+jstring Minecraft::debugInfoEntities() {
+    return u"";
 }
 
 void Minecraft::sendClickBlockToController(const int_t button, const bool pressed) {

@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "game/world/IWorldAccess.h"
+#include "java/String.h"
 #include "java/Type.h"
 
 class Block;
@@ -28,6 +29,12 @@ private:
     World *theWorld = nullptr;
     std::unique_ptr<RenderBlocks> globalRenderBlocks;
     std::unordered_map<long_t, std::unique_ptr<WorldRenderer> > worldRenderers;
+
+    int_t renderersLoaded;
+    int_t renderersBeingClipped;
+    int_t renderersBeingOccluded;
+    int_t renderersBeingRendered;
+    int_t renderersSkippingRenderPass;
 
     int_t getRenderRadius() const;
 
@@ -53,6 +60,8 @@ public:
     void markBlockRangeNeedsUpdate(int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1);
 
     void updateAllRenderers() override;
+
+    jstring getDebugInfoRenders();
 
 private:
     static void drawOutlinedBoundingBox(const AxisAlignedBB &box);

@@ -14,6 +14,8 @@
 #include "game/world/World.h"
 #include "game/world/chunk/ChunkCache.h"
 
+int_t WorldRenderer::chunksUpdated = 0;
+
 WorldRenderer::WorldRenderer(World *world, const int_t x, const int_t y, const int_t z, const int_t size,
                              const int_t glRenderList)
     : worldObj(world), sizeWidth(size), sizeHeight(size), sizeDepth(size), glRenderList(glRenderList) {
@@ -71,6 +73,7 @@ void WorldRenderer::updateRenderer(RenderBlocks &renderBlocks) {
     if (!needsUpdate || worldObj == nullptr || glRenderList == 0) {
         return;
     }
+    ++chunksUpdated;
 
     needsUpdate = false;
     skipRenderPass = true;

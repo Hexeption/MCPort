@@ -5,6 +5,7 @@
 #include "GuiIngameMenu.h"
 
 #include <cmath>
+#include <iostream>
 #include <memory>
 
 #include "GuiMainMenu.h"

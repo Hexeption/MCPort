@@ -63,6 +63,8 @@ public:
     void moveEntity(double x, double y, double z);
 
     void moveFlying(float strafe, float forward, float speed);
+
+    float getBrightness(float partialTicks);
 };
 
 #endif //MCPORT_ENTITY_H

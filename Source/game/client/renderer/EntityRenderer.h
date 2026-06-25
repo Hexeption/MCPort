@@ -5,6 +5,7 @@
 #ifndef MCPORT_ENTITYRENDERER_H
 #define MCPORT_ENTITYRENDERER_H
 
+#include "java/System.h"
 #include "java/Type.h"
 
 class Material;
@@ -19,6 +20,7 @@ private:
     float fogColorBlue = 0.0f;
     float prevFogColor = 0.0f;
     float fogColor = 0.0f;
+    long_t prevFrameTime = System::currentTimeMillis();
 
     void updateFogColor(float partialTicks);
 
@@ -36,6 +38,10 @@ public:
     void updateRenderer();
 
     void renderWorld(float partialTicks);
+
+    void updateCameraAndRender(float partialTicks);
+
+    void setupOverlayRendering();
 };
 
 #endif //MCPORT_ENTITYRENDERER_H

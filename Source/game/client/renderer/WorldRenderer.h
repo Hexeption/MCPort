@@ -23,6 +23,7 @@ public:
     int_t sizeDepth = 16;
     bool needsUpdate = true;
     bool skipRenderPass = true;
+    static int_t chunksUpdated;
 
     WorldRenderer(World *world, int_t x, int_t y, int_t z, int_t size, int_t glRenderList);
 

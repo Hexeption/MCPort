@@ -21,6 +21,7 @@
 #include "game/entity/EntityPlayerSP.h"
 #include "game/phys/MovingObjectPosition.h"
 #include "game/world/World.h"
+#include "gui/GuiIngame.h"
 
 enum EnumOS {
     UNKNOWN,
@@ -31,6 +32,7 @@ enum EnumOS {
 
 class EntityRenderer;
 class PlayerController;
+class GuiIngame;
 
 class Minecraft {
 private:
@@ -56,9 +58,14 @@ public:
     std::unique_ptr<EntityRenderer> entityRenderer;
     std::unique_ptr<PlayerController> playerController;
     std::unique_ptr<MovingObjectPosition> objectMouseOver = nullptr;
+    std::unique_ptr<GuiIngame> ingameGui;
     MouseHelper mouseHelper = MouseHelper(*this);
     std::unique_ptr<File> mcDataDir;
     std::shared_ptr<GuiScreen> currentScreen = nullptr;
+    bool skipRenderWorld = false;
+    bool inGameHasFocus = false;
+    jstring debug = u"";
+
 
     Minecraft(int_t displayWidth, int_t displayHeight, bool fullscreen);
 
@@ -96,14 +103,20 @@ public:
 
     void setIngameNotInFocus();
 
+    void displayInGameMenu();
+
+    jstring debugInfoRenders();
+
+    jstring getEntityDebug();
+
+    jstring debugInfoEntities();
+
     File getMinecraftDir();
 
     File getAppDir(const jstring &appDir);
 
 private:
     void checkGLError(const std::string &message);
-
-    void renderCurrentScreen(float partialTicks);
 
     void resize(int_t width, int_t height);
 

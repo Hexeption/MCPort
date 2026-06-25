@@ -6,6 +6,7 @@
 
 #include <cmath>
 
+#include "game/client/MathHelper.h"
 #include "game/world/World.h"
 
 Entity::Entity(World &world) : worldObj(world) {
@@ -151,4 +152,12 @@ void Entity::moveFlying(float strafe, float forward, const float speed) {
     const float cosYaw = std::cos(rotationYaw * degreesToRadians);
     motionX += static_cast<double>(strafe * cosYaw - forward * sinYaw);
     motionZ += static_cast<double>(forward * cosYaw + strafe * sinYaw);
+}
+
+float Entity::getBrightness(float partialTicks) {
+    int_t x = MathHelper::floor_double(posX);
+    const double box = (boundingBox.maxY - boundingBox.minY) * 0.66;
+    int_t y = MathHelper::floor_double(posY - yOffset + box);
+    int_t z = MathHelper::floor_double(posZ);
+    return worldObj.getBrightness(x, y, z);
 }
