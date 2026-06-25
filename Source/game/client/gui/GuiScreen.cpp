@@ -57,8 +57,6 @@ void GuiScreen::setWorldAndResolution(Minecraft *minecraft, const int_t screenWi
     width = screenWidth;
     height = screenHeight;
 
-    printf("Screen size: %d x %d\n", width, height);
-
     initGui();
 }
 
