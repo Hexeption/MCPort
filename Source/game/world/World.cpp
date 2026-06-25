@@ -865,7 +865,7 @@ void World::calculateInitialSkylight() {
     if (value != skylightSubtracted) {
         skylightSubtracted = value;
         if (renderGlobal != nullptr) {
-            renderGlobal->markAllRenderersNeedsUpdate();
+            renderGlobal->updateAllRenderers();
         }
     }
 }

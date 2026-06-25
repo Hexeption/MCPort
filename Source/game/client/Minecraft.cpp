@@ -207,7 +207,7 @@ void Minecraft::run() {
 
             lwjgl::Display::update();
             if (!fullscreen && (lwjgl::Display::getWidth() != displayWidth || lwjgl::Display::getHeight() !=
-                displayHeight)) {
+                                displayHeight)) {
                 displayWidth = lwjgl::Display::getWidth();
                 displayHeight = lwjgl::Display::getHeight();
                 if (displayWidth <= 0) {
@@ -425,6 +425,12 @@ void Minecraft::handleIngameInput() {
             displayGuiScreen(std::make_shared<GuiIngameMenu>());
             return;
         }
+
+        if (pressed && key == lwjgl::Keyboard::KEY_F8) {
+            thePlayer->noclip = !thePlayer->noclip;
+            return;
+        }
+
         if (pressed && key == options->keyBindToggleFog.key) {
             const int_t direction = !lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_LSHIFT) &&
                                     !lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_RSHIFT)

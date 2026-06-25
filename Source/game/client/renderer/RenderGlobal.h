@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "game/world/IWorldAccess.h"
 #include "java/Type.h"
 
 class Block;
@@ -20,7 +21,7 @@ class RenderEngine;
 class World;
 class WorldRenderer;
 
-class RenderGlobal {
+class RenderGlobal : public IWorldAccess {
 private:
     Minecraft &minecraft;
     RenderEngine &renderEngine;
@@ -51,7 +52,7 @@ public:
 
     void markBlockRangeNeedsUpdate(int_t x0, int_t y0, int_t z0, int_t x1, int_t y1, int_t z1);
 
-    void markAllRenderersNeedsUpdate();
+    void updateAllRenderers() override;
 
 private:
     static void drawOutlinedBoundingBox(const AxisAlignedBB &box);

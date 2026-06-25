@@ -37,11 +37,11 @@ void RenderGlobal::changeWorld(World *world) {
 	}
 	worldRenderers.clear();
 	theWorld = world;
-    if (theWorld != nullptr) {
-        globalRenderBlocks = std::make_unique<RenderBlocks>(*theWorld);
-    } else {
-        globalRenderBlocks = std::make_unique<RenderBlocks>();
-    }
+	if (theWorld != nullptr) {
+		globalRenderBlocks = std::make_unique<RenderBlocks>(*theWorld);
+	} else {
+		globalRenderBlocks = std::make_unique<RenderBlocks>();
+	}
 	if (theWorld != nullptr) {
 		theWorld->setRenderGlobal(this);
 	}
@@ -121,49 +121,49 @@ void RenderGlobal::renderWorld(float) {
 
 void RenderGlobal::drawBlockBreaking(EntityPlayer &player, const MovingObjectPosition &hit, int_t mode,
                                      float partialTicks) {
-    (void) player;
-    (void) partialTicks;
-    if (theWorld == nullptr || hit.typeOfHit != 0) {
-        return;
-    }
+	(void) player;
+	(void) partialTicks;
+	if (theWorld == nullptr || hit.typeOfHit != 0) {
+		return;
+	}
 
-    Tessellator &tessellator = Tessellator::instance;
-    glEnable(GL_BLEND);
-    glEnable(GL_ALPHA_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glColor4f(1.0f, 1.0f, 1.0f,
-              (MathHelper::sin(static_cast<float>(System::currentTimeMillis()) / 100.0f) * 0.2f + 0.4f) * 0.5f);
+	Tessellator &tessellator = Tessellator::instance;
+	glEnable(GL_BLEND);
+	glEnable(GL_ALPHA_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glColor4f(1.0f, 1.0f, 1.0f,
+	          (MathHelper::sin(static_cast<float>(System::currentTimeMillis()) / 100.0f) * 0.2f + 0.4f) * 0.5f);
 
-    if (mode == 0 && damagePartialTime > 0.0f) {
-        glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-        glBindTexture(GL_TEXTURE_2D, renderEngine.getTexture(u"/terrain.png"));
-        glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-        glPushMatrix();
-        const int_t blockId = theWorld->getBlockId(hit.blockX, hit.blockY, hit.blockZ);
-        Block *block = blockId > 0 && blockId < static_cast<int_t>(Block::blocksList.size())
-                           ? Block::blocksList[blockId]
-                           : nullptr;
-        glDisable(GL_ALPHA_TEST);
-        glPolygonOffset(-3.0f, -3.0f);
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        tessellator.startDrawingQuads();
-        tessellator.disableColor();
-        if (block == nullptr) {
-            block = Block::stone;
-        }
+	if (mode == 0 && damagePartialTime > 0.0f) {
+		glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		glBindTexture(GL_TEXTURE_2D, renderEngine.getTexture(u"/terrain.png"));
+		glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+		glPushMatrix();
+		const int_t blockId = theWorld->getBlockId(hit.blockX, hit.blockY, hit.blockZ);
+		Block *block = blockId > 0 && blockId < static_cast<int_t>(Block::blocksList.size())
+			               ? Block::blocksList[blockId]
+			               : nullptr;
+		glDisable(GL_ALPHA_TEST);
+		glPolygonOffset(-3.0f, -3.0f);
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		tessellator.startDrawingQuads();
+		tessellator.disableColor();
+		if (block == nullptr) {
+			block = Block::stone;
+		}
 
-        globalRenderBlocks->renderBlockUsingTexture(block, hit.blockX, hit.blockY, hit.blockZ,
-                                                    240 + static_cast<int_t>(damagePartialTime * 10.0f));
-        tessellator.draw();
-        glPolygonOffset(0.0f, 0.0f);
-        glDisable(GL_POLYGON_OFFSET_FILL);
-        glEnable(GL_ALPHA_TEST);
-        glDepthMask(true);
-        glPopMatrix();
-    }
+		globalRenderBlocks->renderBlockUsingTexture(block, hit.blockX, hit.blockY, hit.blockZ,
+		                                            240 + static_cast<int_t>(damagePartialTime * 10.0f));
+		tessellator.draw();
+		glPolygonOffset(0.0f, 0.0f);
+		glDisable(GL_POLYGON_OFFSET_FILL);
+		glEnable(GL_ALPHA_TEST);
+		glDepthMask(true);
+		glPopMatrix();
+	}
 
-    glDisable(GL_BLEND);
-    glDisable(GL_ALPHA_TEST);
+	glDisable(GL_BLEND);
+	glDisable(GL_ALPHA_TEST);
 }
 
 void RenderGlobal::drawSelectionBox(EntityPlayer &player, const MovingObjectPosition &hit, const int_t mode,
@@ -262,7 +262,7 @@ void RenderGlobal::markBlockRangeNeedsUpdate(int_t x0, int_t y0, int_t z0, int_t
 	}
 }
 
-void RenderGlobal::markAllRenderersNeedsUpdate() {
+void RenderGlobal::updateAllRenderers() {
 	for (auto &[key, renderer]: worldRenderers) {
 		(void) key;
 		renderer->markDirty();

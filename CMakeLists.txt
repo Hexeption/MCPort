@@ -179,6 +179,7 @@ add_executable(MCPort
         Source/game/world/World.h
         Source/game/world/EnumSkyBlock.h
         Source/game/world/IBlockAccess.h
+        Source/game/world/IWorldAccess.h
 )
 
 if (APPLE)

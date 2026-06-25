@@ -36,6 +36,7 @@ public:
     float height = 1.8f;
     float ySize = 0.0f;
     float stepHeight = 0.0f;
+    bool noclip = false;
 
     explicit Entity(World &world);
 

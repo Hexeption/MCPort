@@ -88,42 +88,49 @@ void Entity::setAngles(const float yawDelta, const float pitchDelta) {
 }
 
 void Entity::moveEntity(double x, double y, double z) {
-    const double originalX = x;
-    const double originalY = y;
-    const double originalZ = z;
-    auto collidingBoxes = worldObj.getCollidingBoundingBoxes(*this, boundingBox.addCoord(x, y, z));
+    if (noclip) {
+        boundingBox.offset(x, y, z);
+        posX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+        posY = boundingBox.minY + yOffset - (double) ySize;
+        posZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+    } else {
+        const double originalX = x;
+        const double originalY = y;
+        const double originalZ = z;
+        auto collidingBoxes = worldObj.getCollidingBoundingBoxes(*this, boundingBox.addCoord(x, y, z));
 
-    for (const AxisAlignedBB &box: collidingBoxes) {
-        y = box.calculateYOffset(boundingBox, y);
-    }
-    boundingBox.offset(0.0, y, 0.0);
+        for (const AxisAlignedBB &box: collidingBoxes) {
+            y = box.calculateYOffset(boundingBox, y);
+        }
+        boundingBox.offset(0.0, y, 0.0);
 
-    for (const AxisAlignedBB &box: collidingBoxes) {
-        x = box.calculateXOffset(boundingBox, x);
-    }
-    boundingBox.offset(x, 0.0, 0.0);
+        for (const AxisAlignedBB &box: collidingBoxes) {
+            x = box.calculateXOffset(boundingBox, x);
+        }
+        boundingBox.offset(x, 0.0, 0.0);
 
-    for (const AxisAlignedBB &box: collidingBoxes) {
-        z = box.calculateZOffset(boundingBox, z);
-    }
-    boundingBox.offset(0.0, 0.0, z);
+        for (const AxisAlignedBB &box: collidingBoxes) {
+            z = box.calculateZOffset(boundingBox, z);
+        }
+        boundingBox.offset(0.0, 0.0, z);
 
-    posX = (boundingBox.minX + boundingBox.maxX) / 2.0;
-    posY = boundingBox.minY + static_cast<double>(yOffset) - ySize;
-    posZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
-    isCollidedHorizontally = originalX != x || originalZ != z;
-    isCollidedVertically = originalY != y;
-    onGround = originalY != y && originalY < 0.0;
-    isCollided = isCollidedHorizontally || isCollidedVertically;
+        posX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+        posY = boundingBox.minY + static_cast<double>(yOffset) - ySize;
+        posZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+        isCollidedHorizontally = originalX != x || originalZ != z;
+        isCollidedVertically = originalY != y;
+        onGround = originalY != y && originalY < 0.0;
+        isCollided = isCollidedHorizontally || isCollidedVertically;
 
-    if (originalX != x) {
-        motionX = 0.0;
-    }
-    if (originalY != y) {
-        motionY = 0.0;
-    }
-    if (originalZ != z) {
-        motionZ = 0.0;
+        if (originalX != x) {
+            motionX = 0.0;
+        }
+        if (originalY != y) {
+            motionY = 0.0;
+        }
+        if (originalZ != z) {
+            motionZ = 0.0;
+        }
     }
 }
 
