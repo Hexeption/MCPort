@@ -6,6 +6,9 @@
 
 #include <cmath>
 
+#include "game/block/Block.h"
+#include "game/block/BlockFluid.h"
+#include "game/block/Material.h"
 #include "game/client/MathHelper.h"
 #include "game/world/World.h"
 
@@ -18,11 +21,44 @@ void Entity::onUpdate() {
 }
 
 void Entity::onEntityUpdate() {
+    if (ridingEntity != nullptr && ridingEntity->isDead) {
+        ridingEntity = nullptr;
+    }
+
+    ++ticksExisted;
     prevPosX = posX;
     prevPosY = posY;
     prevPosZ = posZ;
     prevRotationYaw = rotationYaw;
     prevRotationPitch = rotationPitch;
+
+    if (handleWaterMovement()) {
+        fallDistance = 0.0f;
+        inWater = true;
+        fire = 0;
+    } else {
+        inWater = false;
+    }
+
+    if (isInsideOfMaterial(Material::water)) {
+        --air;
+        if (air < 0) {
+            air = 0;
+        }
+        fire = 0;
+    } else {
+        air = maxAir;
+    }
+
+    if (fire > 0) {
+        --fire;
+    }
+
+    if (handleLavaMovement()) {
+        fire = 600;
+    }
+
+    firstUpdate = false;
 }
 
 float Entity::getEyeHeight() const {
@@ -160,4 +196,46 @@ float Entity::getBrightness(float partialTicks) {
     int_t y = MathHelper::floor_double(posY - yOffset + box);
     int_t z = MathHelper::floor_double(posZ);
     return worldObj.getBrightness(x, y, z);
+}
+
+bool Entity::isInsideOfMaterial(Material *material) const {
+    if (material == nullptr) {
+        return false;
+    }
+
+    const double eyeY = posY + static_cast<double>(getEyeHeight());
+    const int_t x = MathHelper::floor_double(posX);
+    const int_t y = MathHelper::floor_float(static_cast<float>(MathHelper::floor_double(eyeY)));
+    const int_t z = MathHelper::floor_double(posZ);
+    const int_t blockId = worldObj.getBlockId(x, y, z);
+    if (blockId <= 0 || blockId >= static_cast<int_t>(Block::blocksList.size())) {
+        return false;
+    }
+
+    Block *block = Block::blocksList[blockId];
+    if (block == nullptr || block->material != material) {
+        return false;
+    }
+
+    const float fluidHeight = BlockFluid::getFluidHeightPercent(worldObj.getBlockMetadata(x, y, z)) -
+                              (1.0f / 9.0f);
+    const float surface = static_cast<float>(y + 1) - fluidHeight;
+    return eyeY < static_cast<double>(surface);
+}
+
+bool Entity::handleWaterMovement() {
+    return worldObj.handleMaterialAcceleration(boundingBox.expand(0.0, -0.4, 0.0), Material::water, *this);
+}
+
+bool Entity::handleLavaMovement() const {
+    return worldObj.isMaterialInBB(boundingBox.expand(0.0, -0.4, 0.0), Material::lava);
+}
+
+bool Entity::isOffsetPositionInLiquid(const double x, const double y, const double z) const {
+    const AxisAlignedBB offsetBox = boundingBox.getOffsetBoundingBox(x, y, z);
+    return !worldObj.getCollidingBoundingBoxes(*this, offsetBox).empty() ? false : !worldObj.getIsAnyLiquid(offsetBox);
+}
+
+bool Entity::isInWater() const {
+    return inWater;
 }

@@ -11,6 +11,7 @@
 
 #include "RenderGlobal.h"
 #include "ScaledResolution.h"
+#include "Tessellator.h"
 #include "game/block/Material.h"
 #include "game/client/Minecraft.h"
 #include "game/client/options/GameSettings.h"
@@ -123,7 +124,41 @@ void EntityRenderer::renderWorld(const float partialTicks) {
         mc.renderGlobal->drawSelectionBox(*mc.thePlayer, *mc.objectMouseOver, 0, partialTicks);
         glEnable(GL_ALPHA_TEST);
     }
+    glDisable(GL_ALPHA_TEST);
+    if (isPlayerInsideMaterial(Material::water)) {
+        glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/water.png"));
+        renderWarpedTextureOverlay(partialTicks);
+    }
+    glEnable(GL_ALPHA_TEST);
     glDisable(GL_FOG);
+}
+
+void EntityRenderer::renderWarpedTextureOverlay(const float partialTicks) {
+    Tessellator &tessellator = Tessellator::instance;
+    const float brightness = mc.thePlayer->getBrightness(partialTicks);
+    glColor4f(brightness, brightness, brightness, 0.5f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPushMatrix();
+
+    const float textureScale = 4.0f;
+    const float minX = -1.0f;
+    const float maxX = 1.0f;
+    const float minY = -1.0f;
+    const float maxY = 1.0f;
+    const float z = -0.5f;
+    const float uOffset = -mc.thePlayer->rotationYaw / 64.0f;
+    const float vOffset = mc.thePlayer->rotationPitch / 64.0f;
+    tessellator.startDrawingQuads();
+    tessellator.addVertexWithUV(minX, minY, z, textureScale + uOffset, textureScale + vOffset);
+    tessellator.addVertexWithUV(maxX, minY, z, uOffset, textureScale + vOffset);
+    tessellator.addVertexWithUV(maxX, maxY, z, uOffset, vOffset);
+    tessellator.addVertexWithUV(minX, maxY, z, textureScale + uOffset, vOffset);
+    tessellator.draw();
+
+    glPopMatrix();
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glDisable(GL_BLEND);
 }
 
 void EntityRenderer::updateFogColor(const float partialTicks) {
@@ -238,10 +273,5 @@ bool EntityRenderer::isPlayerInsideMaterial(Material *material) const {
     if (mc.theWorld == nullptr || mc.thePlayer == nullptr || material == nullptr) {
         return false;
     }
-
-    const int_t x = static_cast<int_t>(std::floor(mc.thePlayer->posX));
-    const double eyeY = mc.thePlayer->posY + static_cast<double>(mc.thePlayer->getEyeHeight());
-    const int_t y = static_cast<int_t>(std::floor(eyeY));
-    const int_t z = static_cast<int_t>(std::floor(mc.thePlayer->posZ));
-    return mc.theWorld->getBlockMaterial(x, y, z) == material;
+    return mc.thePlayer->isInsideOfMaterial(material);
 }

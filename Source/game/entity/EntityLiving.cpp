@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "game/block/Block.h"
+#include "game/block/Material.h"
 #include "game/client/MathHelper.h"
 #include "game/world/World.h"
 
@@ -74,6 +75,45 @@ void EntityLiving::onLivingUpdate() {
 }
 
 void EntityLiving::moveEntityWithHeading(const float strafe, const float forward) {
+    if (handleWaterMovement()) {
+        const float swimSpeed = 0.02f;
+        moveFlying(strafe, forward, swimSpeed);
+
+        if (isJumping) {
+            motionY += 0.04;
+        }
+
+        moveEntity(motionX, motionY, motionZ);
+        motionX *= 0.8;
+        motionY *= 0.8;
+        motionZ *= 0.8;
+        motionY -= 0.02;
+
+        if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX, motionY + 0.6, motionZ)) {
+            motionY = 0.3;
+        }
+        return;
+    }
+
+    if (handleLavaMovement()) {
+        const float swimSpeed = 0.02f;
+        moveFlying(strafe, forward, swimSpeed);
+
+        if (isJumping) {
+            motionY += 0.04;
+        }
+
+        moveEntity(motionX, motionY, motionZ);
+        motionX *= 0.5;
+        motionY *= 0.5;
+        motionZ *= 0.5;
+        motionY -= 0.02;
+        if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX, motionY + 0.6, motionZ)) {
+            motionY = 0.3;
+        }
+        return;
+    }
+
     float slipperiness = 0.91f;
     if (onGround) {
         slipperiness = 546.0f * 0.1f * 0.1f * 0.1f;

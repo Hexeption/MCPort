@@ -9,11 +9,13 @@
 
 class Block;
 class IBlockAccess;
+class Material;
 
 class RenderBlocks {
 private:
     IBlockAccess *blockAccess = nullptr;
     int_t overrideBlockTexture = -1;
+    float getFluidHeight(int_t x, int_t y, int_t z, const Material *material) const;
 
 public:
     RenderBlocks() = default;
@@ -28,6 +30,8 @@ public:
 
     bool renderStandardBlockWithColorMultiplier(Block *block, int_t x, int_t y, int_t z, float red, float green,
                                                 float blue);
+
+    bool renderBlockFluids(Block *block, int_t x, int_t y, int_t z);
 
     void renderBlockAsItem(Block *block, float alpha);
 

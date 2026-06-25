@@ -5,6 +5,7 @@
 #ifndef MCPORT_WORLDRENDERER_H
 #define MCPORT_WORLDRENDERER_H
 
+#include <array>
 #include <memory>
 
 #include "java/Type.h"
@@ -22,7 +23,7 @@ public:
     int_t sizeHeight = 16;
     int_t sizeDepth = 16;
     bool needsUpdate = true;
-    bool skipRenderPass = true;
+    std::array<bool, 2> skipRenderPass{true, true};
     static int_t chunksUpdated;
 
     WorldRenderer(World *world, int_t x, int_t y, int_t z, int_t size, int_t glRenderList);
@@ -45,7 +46,7 @@ public:
 
     void stopRendering();
 
-    void render() const;
+    void render(int_t pass) const;
 
 private:
     int_t glRenderList = 0;

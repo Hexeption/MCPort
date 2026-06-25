@@ -7,6 +7,8 @@
 #include "game/entity/EntityPlayer.h"
 #include "game/world/IBlockAccess.h"
 #include "game/world/World.h"
+#include "BlockFlowing.h"
+#include "BlockStationary.h"
 
 struct BlockMaterialBootstrap {
     BlockMaterialBootstrap() {
@@ -23,12 +25,17 @@ std::array<int_t, 256> Block::lightOpacity = [] {
     return values;
 }();
 std::array<int_t, 256> Block::lightValue = {};
+std::array<bool, 256> Block::tickOnLoad = {};
 Block *Block::stone = (new Block(1, 1, Material::rock))->setHardness(1.5f);
 Block *Block::grass = (new Block(2, 0, 2, 3, Material::grass))->setHardness(0.6f);
 Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
 Block *Block::sand = (new Block(12, 18, Material::sand))->setHardness(0.5f);
 Block *Block::bedrock = (new Block(7, 17, Material::rock))->setHardness(-1.0F);
 Block *Block::gravel = (new Block(13, 19, Material::sand))->setHardness(0.6F);
+Block *Block::waterMoving = (new BlockFlowing(8, Material::water))->setHardness(100.0f);
+Block *Block::waterStill = (new BlockStationary(9, Material::water))->setHardness(100.0f);
+Block *Block::lavaMoving = (new BlockFlowing(10, Material::lava))->setHardness(0.0f);
+Block *Block::lavaStill = (new BlockStationary(11, Material::lava))->setHardness(100.0f);
 
 Block::Block(const int_t blockID, const int_t blockIndexInTexture, Material *material) : blockID(blockID),
     material(material), blockIndexInTexture(blockIndexInTexture) {
@@ -64,6 +71,10 @@ int_t Block::getBlockTextureFromSide(const int_t side) const {
     return blockIndexInTexture;
 }
 
+int_t Block::getBlockTextureFromSideAndMetadata(const int_t side, const int_t) const {
+    return getBlockTextureFromSide(side);
+}
+
 bool Block::isOpaqueCube() const {
     return material != nullptr && material->isSolid();
 }
@@ -73,7 +84,25 @@ float Block::getBlockBrightness(IBlockAccess &blockAccess, const int_t x, const 
 }
 
 bool Block::shouldSideBeRendered(IBlockAccess &blockAccess, const int_t x, const int_t y, const int_t z,
-                                 int_t) const {
+                                 const int_t side) const {
+    if (side == 0 && minY > 0.0) {
+        return true;
+    }
+    if (side == 1 && maxY < 1.0) {
+        return true;
+    }
+    if (side == 2 && minZ > 0.0) {
+        return true;
+    }
+    if (side == 3 && maxZ < 1.0) {
+        return true;
+    }
+    if (side == 4 && minX > 0.0) {
+        return true;
+    }
+    if (side == 5 && maxX < 1.0) {
+        return true;
+    }
     return !blockAccess.isBlockNormalCube(x, y, z);
 }
 
@@ -121,7 +150,23 @@ int_t Block::tickRate() const {
     return 10;
 }
 
+void Block::setTickOnLoad(const bool value) {
+    if (blockID >= 0 && blockID < static_cast<int_t>(tickOnLoad.size())) {
+        tickOnLoad[blockID] = value;
+    }
+}
+
+int_t Block::getRenderBlockPass() const {
+    return 0;
+}
+
 void Block::onBlockDestroyedByPlayer(World &, int_t, int_t, int_t, int_t) {
+}
+
+void Block::onBlockAdded(World &, int_t, int_t, int_t) {
+}
+
+void Block::onNeighborBlockChange(World &, int_t, int_t, int_t, int_t) {
 }
 
 void Block::onBlockClicked(World &, int_t, int_t, int_t, EntityPlayer &) {
@@ -141,6 +186,9 @@ float Block::blockStrength(EntityPlayer &player) const {
 
 bool Block::canCollideCheck(int_t, bool) const {
     return isOpaqueCube();
+}
+
+void Block::velocityToAddToEntity(World &, int_t, int_t, int_t, Entity &, Vec3D &) const {
 }
 
 MovingObjectPosition Block::collisionRayTrace(World &, const int_t x, const int_t y, const int_t z,

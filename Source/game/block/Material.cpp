@@ -89,8 +89,8 @@ bool MaterialLiquid::isSolid() const {
     return false;
 }
 
-bool MaterialLiquid::getCanBlockGrass() const {
-    return true;
+bool MaterialLiquid::getIsSolid() const {
+    return false;
 }
 
 bool MaterialLogic::isSolid() const {

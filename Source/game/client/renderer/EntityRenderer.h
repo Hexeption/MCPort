@@ -32,6 +32,8 @@ private:
 
     bool isPlayerInsideMaterial(Material *material) const;
 
+    void renderWarpedTextureOverlay(float partialTicks);
+
 public:
     explicit EntityRenderer(Minecraft &minecraft);
 

@@ -40,6 +40,10 @@ void EntityPlayer::onLivingUpdate() {
     cameraPitch += (pitchMotion - cameraPitch) * 0.8f;
 }
 
+float EntityPlayer::getEyeHeight() const {
+    return 0.12f;
+}
+
 float EntityPlayer::getCurrentPlayerStrVsBlock(const Block &) {
     return 1.0f;
 }

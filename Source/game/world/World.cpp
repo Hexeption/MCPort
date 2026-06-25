@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 #include "game/block/Block.h"
+#include "game/block/BlockFluid.h"
 #include "game/client/MathHelper.h"
 #include "game/client/renderer/RenderGlobal.h"
 #include "game/entity/Entity.h"
@@ -173,12 +174,24 @@ bool World::setBlockAndMetadata(const int_t x, const int_t y, const int_t z, con
         return false;
     }
 
+    const int_t oldBlockId = getBlockId(x, y, z);
+    const int_t oldMetadata = getBlockMetadata(x, y, z);
+    if (oldBlockId == blockId && oldMetadata == metadata) {
+        return false;
+    }
+
     const long_t key = blockKey(x, y, z);
     blockOverrides[key] = blockId;
     metadataOverrides[key] = metadata;
     Chunk &chunk = getChunkFromBlockCoords(x, z);
-    chunk.setBlockID(blockToLocalCoord(x), y, blockToLocalCoord(z), blockId);
+    if (oldBlockId != blockId) {
+        chunk.setBlockID(blockToLocalCoord(x), y, blockToLocalCoord(z), blockId);
+    }
     chunk.setBlockMetadata(blockToLocalCoord(x), y, blockToLocalCoord(z), metadata);
+    if (oldBlockId != blockId && blockId > 0 && blockId < static_cast<int_t>(Block::blocksList.size()) &&
+        Block::blocksList[blockId] != nullptr && !multiplayerWorld) {
+        Block::blocksList[blockId]->onBlockAdded(*this, x, y, z);
+    }
     return true;
 }
 
@@ -187,8 +200,18 @@ bool World::setBlock(const int_t x, const int_t y, const int_t z, const int_t bl
         return false;
     }
 
+    const int_t oldBlockId = getBlockId(x, y, z);
+    if (oldBlockId == blockId) {
+        return false;
+    }
+
     blockOverrides[blockKey(x, y, z)] = blockId;
+    metadataOverrides[blockKey(x, y, z)] = 0;
     getChunkFromBlockCoords(x, z).setBlockID(blockToLocalCoord(x), y, blockToLocalCoord(z), blockId);
+    if (blockId > 0 && blockId < static_cast<int_t>(Block::blocksList.size()) &&
+        Block::blocksList[blockId] != nullptr && !multiplayerWorld) {
+        Block::blocksList[blockId]->onBlockAdded(*this, x, y, z);
+    }
     return true;
 }
 
@@ -277,7 +300,36 @@ void World::markBlocksDirty(const int_t x0, const int_t y0, const int_t z0, cons
     }
 }
 
-void World::notifyBlocksOfNeighborChange(int_t, int_t, int_t, int_t) {
+void World::notifyBlocksOfNeighborChange(const int_t x, const int_t y, const int_t z, const int_t blockId) {
+    if (editingBlocks || multiplayerWorld) {
+        return;
+    }
+
+    constexpr int_t neighborOffsets[6][3] = {
+        {0, -1, 0},
+        {0, 1, 0},
+        {0, 0, -1},
+        {0, 0, 1},
+        {-1, 0, 0},
+        {1, 0, 0},
+    };
+
+    for (const auto &offset : neighborOffsets) {
+        const int_t neighborX = x + offset[0];
+        const int_t neighborY = y + offset[1];
+        const int_t neighborZ = z + offset[2];
+        const int_t neighborBlockId = getBlockId(neighborX, neighborY, neighborZ);
+        if (neighborBlockId <= 0 || neighborBlockId >= static_cast<int_t>(Block::blocksList.size())) {
+            continue;
+        }
+
+        Block *neighborBlock = Block::blocksList[neighborBlockId];
+        if (neighborBlock == nullptr) {
+            continue;
+        }
+
+        neighborBlock->onNeighborBlockChange(*this, neighborX, neighborY, neighborZ, blockId);
+    }
 }
 
 bool World::canBlockSeeTheSky(const int_t x, const int_t y, const int_t z) const {
@@ -445,6 +497,98 @@ std::vector<AxisAlignedBB> World::getCollidingBoundingBoxes(const Entity &, cons
     }
 
     return boxes;
+}
+
+bool World::getIsAnyLiquid(const AxisAlignedBB &box) const {
+    int_t minX = MathHelper::floor_double(box.minX);
+    int_t maxX = MathHelper::floor_double(box.maxX + 1.0);
+    int_t minY = MathHelper::floor_double(box.minY);
+    int_t maxY = MathHelper::floor_double(box.maxY + 1.0);
+    int_t minZ = MathHelper::floor_double(box.minZ);
+    int_t maxZ = MathHelper::floor_double(box.maxZ + 1.0);
+
+    if (box.minX < 0.0) {
+        --minX;
+    }
+    if (box.minY < 0.0) {
+        --minY;
+    }
+    if (box.minZ < 0.0) {
+        --minZ;
+    }
+
+    for (int_t x = minX; x < maxX; ++x) {
+        for (int_t y = minY; y < maxY; ++y) {
+            for (int_t z = minZ; z < maxZ; ++z) {
+                Block *block = Block::blocksList[getBlockId(x, y, z)];
+                if (block != nullptr && block->material->getIsLiquid()) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool World::handleMaterialAcceleration(const AxisAlignedBB &box, Material *material, Entity &entity) {
+    int_t minX = MathHelper::floor_double(box.minX);
+    int_t maxX = MathHelper::floor_double(box.maxX + 1.0);
+    int_t minY = MathHelper::floor_double(box.minY);
+    int_t maxY = MathHelper::floor_double(box.maxY + 1.0);
+    int_t minZ = MathHelper::floor_double(box.minZ);
+    int_t maxZ = MathHelper::floor_double(box.maxZ + 1.0);
+    bool inMaterial = false;
+    Vec3D acceleration(0.0, 0.0, 0.0);
+
+    for (int_t x = minX; x < maxX; ++x) {
+        for (int_t y = minY; y < maxY; ++y) {
+            for (int_t z = minZ; z < maxZ; ++z) {
+                Block *block = Block::blocksList[getBlockId(x, y, z)];
+                if (block != nullptr && block->material == material) {
+                    const double fluidHeight = static_cast<double>(y + 1) -
+                                               static_cast<double>(BlockFluid::getFluidHeightPercent(
+                                                   getBlockMetadata(x, y, z)));
+                    if (static_cast<double>(maxY) >= fluidHeight) {
+                        inMaterial = true;
+                        block->velocityToAddToEntity(*this, x, y, z, entity, acceleration);
+                    }
+                }
+            }
+        }
+    }
+
+    if (acceleration.lengthVector() > 0.0) {
+        std::unique_ptr<Vec3D> normalized = acceleration.normalize();
+        constexpr double fluidAcceleration = 0.004;
+        entity.motionX += normalized->xCoord * fluidAcceleration;
+        entity.motionY += normalized->yCoord * fluidAcceleration;
+        entity.motionZ += normalized->zCoord * fluidAcceleration;
+    }
+
+    return inMaterial;
+}
+
+bool World::isMaterialInBB(const AxisAlignedBB &box, Material *material) const {
+    int_t minX = MathHelper::floor_double(box.minX);
+    int_t maxX = MathHelper::floor_double(box.maxX + 1.0);
+    int_t minY = MathHelper::floor_double(box.minY);
+    int_t maxY = MathHelper::floor_double(box.maxY + 1.0);
+    int_t minZ = MathHelper::floor_double(box.minZ);
+    int_t maxZ = MathHelper::floor_double(box.maxZ + 1.0);
+
+    for (int_t x = minX; x < maxX; ++x) {
+        for (int_t y = minY; y < maxY; ++y) {
+            for (int_t z = minZ; z < maxZ; ++z) {
+                Block *block = Block::blocksList[getBlockId(x, y, z)];
+                if (block != nullptr && block->material == material) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 void World::saveWorld(bool saveChunks, void *progressUpdate) {

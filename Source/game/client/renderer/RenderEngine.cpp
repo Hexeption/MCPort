@@ -41,7 +41,11 @@ namespace {
 RenderEngine::RenderEngine(GameSettings *options) : imageData(1048576), options(options) {
 }
 
-RenderEngine::~RenderEngine() = default;
+RenderEngine::~RenderEngine() {
+    for (TextureFX *textureFX: textureList) {
+        delete textureFX;
+    }
+}
 
 int_t RenderEngine::getTexture(const jstring &path) {
     if (const auto found = textureMap.find(path); found != textureMap.end()) {
@@ -303,6 +307,7 @@ void RenderEngine::refreshTextures() {
             printf("Failed to refresh texture: %s\n", e.what());
         }
     }
+
 }
 
 void RenderEngine::bindTexture(const int_t textureName) {

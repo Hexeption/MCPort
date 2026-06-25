@@ -13,21 +13,28 @@
 #include "java/Type.h"
 
 class Random;
+class Entity;
 class EntityPlayer;
 class World;
 class IBlockAccess;
+class Vec3D;
 
 class Block {
 public:
     static std::array<Block *, 256> blocksList;
     static std::array<int_t, 256> lightOpacity;
     static std::array<int_t, 256> lightValue;
+    static std::array<bool, 256> tickOnLoad;
     static Block *stone;
     static Block *grass;
     static Block *dirt;
     static Block *sand;
     static Block *bedrock;
     static Block *gravel;
+    static Block *waterMoving;
+    static Block *waterStill;
+    static Block *lavaMoving;
+    static Block *lavaStill;
 
     int_t blockID;
     Material *material;
@@ -46,17 +53,19 @@ public:
 
     Block *setHardness(float hardness);
 
-    int_t getRenderType() const;
+    virtual int_t getRenderType() const;
 
     void setBlockBoundsForItemRender();
 
-    int_t getBlockTextureFromSide(int_t side) const;
+    virtual int_t getBlockTextureFromSide(int_t side) const;
+
+    virtual int_t getBlockTextureFromSideAndMetadata(int_t side, int_t metadata) const;
 
     bool isOpaqueCube() const;
 
-    float getBlockBrightness(IBlockAccess &blockAccess, int_t x, int_t y, int_t z) const;
+    virtual float getBlockBrightness(IBlockAccess &blockAccess, int_t x, int_t y, int_t z) const;
 
-    bool shouldSideBeRendered(IBlockAccess &blockAccess, int_t x, int_t y, int_t z, int_t side) const;
+    virtual bool shouldSideBeRendered(IBlockAccess &blockAccess, int_t x, int_t y, int_t z, int_t side) const;
 
     void setBlockBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
 
@@ -73,8 +82,15 @@ public:
     virtual bool canPlaceBlockAt(World &world, int_t x, int_t y, int_t z) const;
 
     virtual int_t tickRate() const;
+    void setTickOnLoad(bool value);
+
+    virtual int_t getRenderBlockPass() const;
 
     virtual void onBlockDestroyedByPlayer(World &world, int_t x, int_t y, int_t z, int_t metadata);
+
+    virtual void onBlockAdded(World &world, int_t x, int_t y, int_t z);
+
+    virtual void onNeighborBlockChange(World &world, int_t x, int_t y, int_t z, int_t neighborBlockId);
 
     virtual void onBlockClicked(World &world, int_t x, int_t y, int_t z, EntityPlayer &player);
 
@@ -82,11 +98,16 @@ public:
 
     virtual bool canCollideCheck(int_t var1, bool var2) const;
 
+    virtual void velocityToAddToEntity(World &world, int_t x, int_t y, int_t z, Entity &entity,
+                                       Vec3D &velocity) const;
+
     virtual MovingObjectPosition collisionRayTrace(World &world, int_t x, int_t y, int_t z, const Vec3D &start,
                                                    const Vec3D &end);
 
-private:
+protected:
     int_t blockIndexInTexture;
+
+private:
     std::array<int_t, 6> blockTextures{};
 
     bool isVecInsideYZBounds(const std::unique_ptr<Vec3D> &vec) const;

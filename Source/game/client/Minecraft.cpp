@@ -21,6 +21,10 @@
 #include "game/client/renderer/RenderEngine.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
+#include "game/client/renderer/TextureLavaFX.h"
+#include "game/client/renderer/TextureLavaFlowFX.h"
+#include "game/client/renderer/TextureWaterFX.h"
+#include "game/client/renderer/TextureWaterFlowFX.h"
 #include "game/client/player/PlayerControllerSP.h"
 #include "java/Math.h"
 #include "java/System.h"
@@ -89,6 +93,10 @@ void Minecraft::startGame() {
     checkGLError("Startup");
 
     glCapabilities = OpenGlCapsChecker();
+    renderEngine->registerTextureFX(new TextureLavaFX());
+    renderEngine->registerTextureFX(new TextureWaterFX());
+    renderEngine->registerTextureFX(new TextureWaterFlowFX());
+    renderEngine->registerTextureFX(new TextureLavaFlowFX());
     renderGlobal = std::make_unique<RenderGlobal>(*this, *renderEngine);
     entityRenderer = std::make_unique<EntityRenderer>(*this);
     playerController = std::make_unique<PlayerControllerSP>(*this);
@@ -283,6 +291,11 @@ void Minecraft::runTick() {
         if (entityRenderer != nullptr) {
             entityRenderer->updateRenderer();
         }
+    }
+
+    glBindTexture(GL_TEXTURE_2D, renderEngine->getTexture(u"/terrain.png"));
+    if (!isGamePaused) {
+        renderEngine->updateDynamicTextures();
     }
 }
 

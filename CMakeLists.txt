@@ -54,6 +54,12 @@ add_executable(MCPort
         Source/game/client/MathHelper.h
         Source/game/block/Block.cpp
         Source/game/block/Block.h
+        Source/game/block/BlockFluid.cpp
+        Source/game/block/BlockFluid.h
+        Source/game/block/BlockFlowing.cpp
+        Source/game/block/BlockFlowing.h
+        Source/game/block/BlockStationary.cpp
+        Source/game/block/BlockStationary.h
         Source/game/block/Material.cpp
         Source/game/block/Material.h
         Source/game/phys/AxisAlignedBB.cpp
@@ -109,6 +115,14 @@ add_executable(MCPort
         Source/game/client/renderer/ThreadDownloadImageData.h
         Source/game/client/renderer/TextureFX.cpp
         Source/game/client/renderer/TextureFX.h
+        Source/game/client/renderer/TextureLavaFX.cpp
+        Source/game/client/renderer/TextureLavaFX.h
+        Source/game/client/renderer/TextureLavaFlowFX.cpp
+        Source/game/client/renderer/TextureLavaFlowFX.h
+        Source/game/client/renderer/TextureWaterFX.cpp
+        Source/game/client/renderer/TextureWaterFX.h
+        Source/game/client/renderer/TextureWaterFlowFX.cpp
+        Source/game/client/renderer/TextureWaterFlowFX.h
         Source/game/client/MouseHelper.cpp
         Source/game/client/MouseHelper.h
         Source/game/client/OpenGlCapsChecker.cpp

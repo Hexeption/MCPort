@@ -24,6 +24,8 @@ public:
 
     void onLivingUpdate() override;
 
+    float getEyeHeight() const override;
+
     float getCurrentPlayerStrVsBlock(const Block &block);
 
     bool canHarvestBlock(const Block &block);

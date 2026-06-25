@@ -134,6 +134,12 @@ public:
 
     std::vector<AxisAlignedBB> getCollidingBoundingBoxes(const Entity &entity, const AxisAlignedBB &box) const;
 
+    bool getIsAnyLiquid(const AxisAlignedBB &box) const;
+
+    bool handleMaterialAcceleration(const AxisAlignedBB &box, Material *material, Entity &entity);
+
+    bool isMaterialInBB(const AxisAlignedBB &box, Material *material) const;
+
     void saveWorld(bool saveChunks, void *progressUpdate);
 
     bool saveWorld(int_t progressStep);

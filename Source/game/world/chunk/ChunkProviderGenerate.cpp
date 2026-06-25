@@ -194,6 +194,29 @@ void ChunkProviderGenerate::replaceSurfaceBlocks(const int_t chunkX, const int_t
             }
         }
     }
+
+    for (int_t x = 0; x < 16; ++x) {
+        for (int_t z = 0; z < 16; ++z) {
+            int_t highestSolid = -1;
+            for (int_t y = 127; y >= 0; --y) {
+                const int_t index = (x << 11) | (z << 7) | y;
+                if (blocks[index] != 0) {
+                    highestSolid = y;
+                    break;
+                }
+            }
+
+            if (highestSolid < seaLevel - 1) {
+                const int_t waterBlockId = Block::waterStill != nullptr ? Block::waterStill->blockID : 0;
+                for (int_t y = highestSolid + 1; y < seaLevel; ++y) {
+                    const int_t index = (x << 11) | (z << 7) | y;
+                    if (blocks[index] == 0) {
+                        blocks[index] = waterBlockId;
+                    }
+                }
+            }
+        }
+    }
 }
 
 Chunk ChunkProviderGenerate::provideChunk(const int_t chunkX, const int_t chunkZ) {

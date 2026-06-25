@@ -76,36 +76,47 @@ void WorldRenderer::updateRenderer(RenderBlocks &renderBlocks) {
     ++chunksUpdated;
 
     needsUpdate = false;
-    skipRenderPass = true;
-    glNewList(static_cast<GLuint>(glRenderList), GL_COMPILE);
-    Tessellator &tessellator = Tessellator::instance;
-    tessellator.startDrawingQuads();
-
-    bool renderedAny = false;
     const int_t maxX = posX + sizeWidth;
     const int_t maxY = std::min<int_t>(128, posY + sizeHeight);
     const int_t maxZ = posZ + sizeDepth;
+
     ChunkCache chunkCache(*worldObj, posX - 1, posY - 1, posZ - 1, maxX + 1, maxY + 1, maxZ + 1);
     RenderBlocks chunkRenderBlocks(chunkCache);
-    for (int_t y = std::max<int_t>(0, posY); y < maxY; ++y) {
-        for (int_t z = posZ; z < maxZ; ++z) {
-            for (int_t x = posX; x < maxX; ++x) {
-                const int_t blockId = worldObj->getBlockId(x, y, z);
-                Block *block = blockId >= 0 && blockId < static_cast<int_t>(Block::blocksList.size())
-                                   ? Block::blocksList[blockId]
-                                   : nullptr;
-                if (block == nullptr) {
-                    continue;
-                }
+    bool renderMore = true;
+    for (int_t pass = 0; pass < 2 && renderMore; ++pass) {
+        renderMore = false;
+        skipRenderPass[pass] = true;
+        glNewList(static_cast<GLuint>(glRenderList + pass), GL_COMPILE);
+        Tessellator &tessellator = Tessellator::instance;
+        tessellator.startDrawingQuads();
 
-                renderedAny = chunkRenderBlocks.renderBlockByRenderType(block, x, y, z) || renderedAny;
+        bool renderedAny = false;
+        for (int_t y = std::max<int_t>(0, posY); y < maxY; ++y) {
+            for (int_t z = posZ; z < maxZ; ++z) {
+                for (int_t x = posX; x < maxX; ++x) {
+                    const int_t blockId = worldObj->getBlockId(x, y, z);
+                    Block *block = blockId >= 0 && blockId < static_cast<int_t>(Block::blocksList.size())
+                                       ? Block::blocksList[blockId]
+                                       : nullptr;
+                    if (block == nullptr) {
+                        continue;
+                    }
+
+                    const int_t renderPass = block->getRenderBlockPass();
+                    if (renderPass != pass) {
+                        renderMore = true;
+                        continue;
+                    }
+
+                    renderedAny = chunkRenderBlocks.renderBlockByRenderType(block, x, y, z) || renderedAny;
+                }
             }
         }
-    }
 
-    tessellator.draw();
-    glEndList();
-    skipRenderPass = !renderedAny;
+        tessellator.draw();
+        glEndList();
+        skipRenderPass[pass] = !renderedAny;
+    }
 }
 
 void WorldRenderer::markDirty() {
@@ -114,19 +125,19 @@ void WorldRenderer::markDirty() {
 
 void WorldRenderer::stopRendering() {
     worldObj = nullptr;
-    skipRenderPass = true;
+    skipRenderPass = {true, true};
     needsUpdate = false;
 }
 
-void WorldRenderer::render() const {
-    if (!skipRenderPass && glRenderList != 0) {
-        glCallList(static_cast<GLuint>(glRenderList));
+void WorldRenderer::render(const int_t pass) const {
+    if (!skipRenderPass[pass] && glRenderList != 0) {
+        glCallList(static_cast<GLuint>(glRenderList + pass));
     }
 }
 
 void WorldRenderer::releaseList() {
     if (glRenderList != 0) {
-        glDeleteLists(static_cast<GLuint>(glRenderList), 1);
+        glDeleteLists(static_cast<GLuint>(glRenderList), 2);
         glRenderList = 0;
     }
 }

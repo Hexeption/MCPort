@@ -56,7 +56,7 @@ public:
 
     bool isSolid() const override;
 
-    bool getCanBlockGrass() const override;
+    bool getIsSolid() const override;
 };
 
 class MaterialLogic : public Material {

@@ -72,7 +72,7 @@ WorldRenderer &RenderGlobal::getWorldRenderer(const int_t chunkX, const int_t ch
     }
 
     constexpr int_t sectionSize = 16;
-    const int_t list = static_cast<int_t>(glGenLists(1));
+    const int_t list = static_cast<int_t>(glGenLists(2));
     auto renderer = std::make_unique<WorldRenderer>(theWorld, chunkX * sectionSize, chunkY * sectionSize,
                                                     chunkZ * sectionSize, sectionSize, list);
     WorldRenderer &rendererRef = *renderer;
@@ -92,7 +92,8 @@ void RenderGlobal::renderWorld(float) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
+    glEnable(GL_ALPHA_TEST);
+    glDepthMask(true);
     glBindTexture(GL_TEXTURE_2D, renderEngine.getTexture(u"/terrain.png"));
 
     theWorld->updatingLighting();
@@ -113,10 +114,23 @@ void RenderGlobal::renderWorld(float) {
                     renderer.updateRenderer(*globalRenderBlocks);
                     ++updatedThisFrame;
                 }
-                renderer.render();
+                renderer.render(0);
             }
         }
     }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for (int_t chunkX = centerChunkX - renderRadius; chunkX <= centerChunkX + renderRadius; ++chunkX) {
+        for (int_t chunkZ = centerChunkZ - renderRadius; chunkZ <= centerChunkZ + renderRadius; ++chunkZ) {
+            for (int_t chunkY = 0; chunkY < 8; ++chunkY) {
+                WorldRenderer &renderer = getWorldRenderer(chunkX, chunkY, chunkZ);
+                renderer.render(1);
+            }
+        }
+    }
+
+    glDisable(GL_BLEND);
 }
 
 void RenderGlobal::drawBlockBreaking(EntityPlayer &player, const MovingObjectPosition &hit, int_t mode,

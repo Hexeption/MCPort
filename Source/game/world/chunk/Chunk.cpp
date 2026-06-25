@@ -28,8 +28,27 @@ bool Chunk::setBlockID(const int_t x, const int_t y, const int_t z, const int_t 
     if (!isValidLocalBlock(x, y, z)) {
         return false;
     }
+    const int_t oldBlockId = blocks[blockIndex(x, y, z)];
+    if (oldBlockId == blockId) {
+        return false;
+    }
+
+    const int_t oldHeight = heightMap[heightIndex(x, z)];
+    const int_t worldX = xPosition * width + x;
+    const int_t worldZ = zPosition * depth + z;
     blocks[blockIndex(x, y, z)] = blockId;
-    relightBlock(x, y, z);
+    metadata[blockIndex(x, y, z)] = 0;
+
+    if (Block::lightOpacity[blockId] != 0) {
+        if (y >= oldHeight) {
+            relightBlock(x, y + 1, z);
+        }
+    } else if (y == oldHeight - 1) {
+        relightBlock(x, y, z);
+    }
+
+    worldObj.scheduleLightingUpdate(EnumSkyBlock::Sky, worldX, y, worldZ, worldX, y, worldZ);
+    worldObj.scheduleLightingUpdate(EnumSkyBlock::Block, worldX, y, worldZ, worldX, y, worldZ);
     updateSkylight_do(x, z);
     return true;
 }
@@ -43,6 +62,9 @@ int_t Chunk::getBlockMetadata(const int_t x, const int_t y, const int_t z) const
 
 bool Chunk::setBlockMetadata(const int_t x, const int_t y, const int_t z, const int_t value) {
     if (!isValidLocalBlock(x, y, z)) {
+        return false;
+    }
+    if (metadata[blockIndex(x, y, z)] == value) {
         return false;
     }
     metadata[blockIndex(x, y, z)] = value;
@@ -207,8 +229,6 @@ void Chunk::relightBlock(const int_t x, int_t y, const int_t z) {
         while (newHeight > 0 && light > 0) {
             --newHeight;
 
-            skylightMap[blockIndex(x, newHeight, z)] = light;
-
             int_t opacity = Block::lightOpacity[getBlockID(x, newHeight, z)];
             if (opacity == 0) {
                 opacity = 1;
@@ -218,6 +238,8 @@ void Chunk::relightBlock(const int_t x, int_t y, const int_t z) {
             if (light < 0) {
                 light = 0;
             }
+
+            skylightMap[blockIndex(x, newHeight, z)] = light;
         }
 
         while (newHeight > 0 && Block::lightOpacity[getBlockID(x, newHeight - 1, z)] == 0) {
