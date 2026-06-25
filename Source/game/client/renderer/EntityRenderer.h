@@ -1,0 +1,39 @@
+//
+// Created by Keir Davis on 25/06/2026.
+//
+
+#ifndef MCPORT_ENTITYRENDERER_H
+#define MCPORT_ENTITYRENDERER_H
+
+#include "java/Type.h"
+
+class Material;
+class Minecraft;
+
+class EntityRenderer {
+private:
+    Minecraft &mc;
+    float farPlaneDistance = 0.0f;
+    float fogColorRed = 0.0f;
+    float fogColorGreen = 0.0f;
+    float fogColorBlue = 0.0f;
+    float prevFogColor = 0.0f;
+    float fogColor = 0.0f;
+
+    void updateFogColor(float partialTicks);
+
+    void setupCameraTransform(float partialTicks);
+
+    void setupFog(int_t mode);
+
+    bool isPlayerInsideMaterial(Material *material) const;
+
+public:
+    explicit EntityRenderer(Minecraft &minecraft);
+
+    void updateRenderer();
+
+    void renderWorld(float partialTicks);
+};
+
+#endif //MCPORT_ENTITYRENDERER_H

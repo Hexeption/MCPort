@@ -28,6 +28,8 @@ enum EnumOS {
     MACOS,
 };
 
+class EntityRenderer;
+
 class Minecraft {
 private:
     bool fullscreen = false;
@@ -48,6 +50,7 @@ public:
     std::unique_ptr<RenderEngine> renderEngine;
     std::unique_ptr<FontRenderer> fontRenderer;
     std::unique_ptr<RenderGlobal> renderGlobal;
+    std::unique_ptr<EntityRenderer> entityRenderer;
     MouseHelper mouseHelper = MouseHelper(*this);
     std::unique_ptr<File> mcDataDir;
     std::shared_ptr<GuiScreen> currentScreen = nullptr;

@@ -89,6 +89,8 @@ add_executable(MCPort
         Source/game/client/options/Keybinding.h
         Source/game/client/renderer/RenderEngine.cpp
         Source/game/client/renderer/RenderEngine.h
+        Source/game/client/renderer/EntityRenderer.cpp
+        Source/game/client/renderer/EntityRenderer.h
         Source/game/client/renderer/FontRenderer.cpp
         Source/game/client/renderer/FontRenderer.h
         Source/game/client/renderer/ScaledResolution.cpp

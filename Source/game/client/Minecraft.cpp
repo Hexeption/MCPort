@@ -16,16 +16,15 @@
 #include "game/client/gui/GuiIngameMenu.h"
 #include "game/client/gui/GuiMainMenu.h"
 #include "game/client/gui/GuiScreen.h"
+#include "game/client/renderer/EntityRenderer.h"
 #include "game/client/renderer/FontRenderer.h"
 #include "game/client/renderer/RenderEngine.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
-#include "game/util/Vec3D.h"
 #include "java/Math.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
 #include "lwjgl/Mouse.h"
-#include "utils/GLU.h"
 
 #include <glad/glad.h>
 
@@ -88,6 +87,7 @@ void Minecraft::startGame() {
 
     glCapabilities = OpenGlCapsChecker();
     renderGlobal = std::make_unique<RenderGlobal>(*this, *renderEngine);
+    entityRenderer = std::make_unique<EntityRenderer>(*this);
     glViewport(0, 0, displayWidth, displayHeight);
 
     checkGLError("Post startup");
@@ -257,6 +257,9 @@ void Minecraft::runTick() {
         if (!isGamePaused || isMultiplayerWorld()) {
             theWorld->tick();
         }
+        if (entityRenderer != nullptr) {
+            entityRenderer->updateRenderer();
+        }
     }
 }
 
@@ -348,34 +351,7 @@ void Minecraft::renderCurrentScreen(const float partialTicks) {
             updatePlayerLook();
         }
 
-        std::unique_ptr<Vec3D> skyColor = theWorld->getSkyColor(partialTicks);
-        glClearColor(static_cast<float>(skyColor->xCoord), static_cast<float>(skyColor->yCoord),
-                     static_cast<float>(skyColor->zCoord), 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        GLU::gluPerspective(70.0f, static_cast<float>(displayWidth) / static_cast<float>(displayHeight), 0.05f,
-                            100.0f);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        double cameraX = 0.0;
-        double cameraY = 0.0;
-        double cameraZ = 0.0;
-        float cameraYaw = 0.0f;
-        float cameraPitch = 0.0f;
-        if (thePlayer != nullptr) {
-            cameraX = thePlayer->prevPosX + (thePlayer->posX - thePlayer->prevPosX) * partialTicks;
-            cameraY = thePlayer->prevPosY + (thePlayer->posY - thePlayer->prevPosY) * partialTicks;
-            cameraZ = thePlayer->prevPosZ + (thePlayer->posZ - thePlayer->prevPosZ) * partialTicks;
-            cameraYaw = thePlayer->prevRotationYaw + (thePlayer->rotationYaw - thePlayer->prevRotationYaw) *
-                        partialTicks;
-            cameraPitch = thePlayer->prevRotationPitch +
-                          (thePlayer->rotationPitch - thePlayer->prevRotationPitch) * partialTicks;
-        }
-        glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
-        glRotatef(cameraYaw + 180.0f, 0.0f, 1.0f, 0.0f);
-        glTranslatef(static_cast<float>(-cameraX), static_cast<float>(-cameraY), static_cast<float>(-cameraZ));
-        renderGlobal->renderWorld(partialTicks);
+        entityRenderer->renderWorld(partialTicks);
         if (currentScreen == nullptr) {
             return;
         }
@@ -432,6 +408,13 @@ void Minecraft::handleIngameInput() {
         if (pressed && key == lwjgl::Keyboard::KEY_ESCAPE) {
             displayGuiScreen(std::make_shared<GuiIngameMenu>());
             return;
+        }
+        if (pressed && key == options->keyBindToggleFog.key) {
+            const int_t direction = !lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_LSHIFT) &&
+                                    !lwjgl::Keyboard::isKeyDown(lwjgl::Keyboard::KEY_RSHIFT)
+                                        ? 1
+                                        : -1;
+            options->setOptionValue(4, direction);
         }
     }
 
