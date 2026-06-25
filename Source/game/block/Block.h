@@ -26,6 +26,8 @@ public:
     static Block *grass;
     static Block *dirt;
     static Block *sand;
+    static Block *bedrock;
+    static Block *gravel;
 
     int_t blockID;
     Material *material;

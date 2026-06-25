@@ -95,52 +95,97 @@ void ChunkProviderGenerate::replaceSurfaceBlocks(const int_t chunkX, const int_t
                                                  std::array<int_t, 16 * 128 * 16> &blocks) {
     constexpr int_t seaLevel = 64;
     constexpr double noiseScale = 1.0 / 32.0;
-    sandNoise = noiseGen4->generateNoiseOctaves(sandNoise, static_cast<double>(chunkX * 16),
-                                                static_cast<double>(chunkZ * 16), 0.0, 16, 16, 1, noiseScale,
-                                                noiseScale, 1.0);
-    gravelNoise = noiseGen4->generateNoiseOctaves(gravelNoise, static_cast<double>(chunkZ * 16), 109.0134,
-                                                  static_cast<double>(chunkX * 16), 16, 1, 16, noiseScale, 1.0,
-                                                  noiseScale);
-    stoneNoise = noiseGen5->generateNoiseOctaves(stoneNoise, static_cast<double>(chunkX * 16),
-                                                 static_cast<double>(chunkZ * 16), 0.0, 16, 16, 1,
-                                                 noiseScale * 2.0, noiseScale * 2.0, noiseScale * 2.0);
+
+    sandNoise = noiseGen4->generateNoiseOctaves(
+        sandNoise,
+        static_cast<double>(chunkX * 16),
+        static_cast<double>(chunkZ * 16),
+        0.0,
+        16, 16, 1,
+        noiseScale,
+        noiseScale,
+        1.0
+    );
+
+    gravelNoise = noiseGen4->generateNoiseOctaves(
+        gravelNoise,
+        static_cast<double>(chunkZ * 16),
+        109.0134,
+        static_cast<double>(chunkX * 16),
+        16, 1, 16,
+        noiseScale,
+        1.0,
+        noiseScale
+    );
+
+    stoneNoise = noiseGen5->generateNoiseOctaves(
+        stoneNoise,
+        static_cast<double>(chunkX * 16),
+        static_cast<double>(chunkZ * 16),
+        0.0,
+        16, 16, 1,
+        noiseScale * 2.0,
+        noiseScale * 2.0,
+        noiseScale * 2.0
+    );
 
     for (int_t x = 0; x < 16; ++x) {
         for (int_t z = 0; z < 16; ++z) {
             const bool makeSand = sandNoise[x + z * 16] + rand.nextDouble() * 0.2 > 0.0;
-            const int_t surfaceThickness = static_cast<int_t>(stoneNoise[x + z * 16] / 3.0 + 3.0 +
-                                                              rand.nextDouble() * 0.25);
+
+            const bool makeGravel = gravelNoise[x + z * 16] + rand.nextDouble() * 0.2 > 3.0;
+
+            const int_t surfaceThickness = static_cast<int_t>(
+                stoneNoise[x + z * 16] / 3.0 + 3.0 + rand.nextDouble() * 0.25);
+
             int_t surfaceDepth = -1;
             int_t topBlock = Block::grass->blockID;
             int_t fillerBlock = Block::dirt->blockID;
-            const int_t worldX = chunkX * 16 + x;
-            const int_t worldZ = chunkZ * 16 + z;
-            if (makeSand || (worldX >= -4 && worldX <= 4 && worldZ >= -4 && worldZ <= 4)) {
-                topBlock = Block::sand->blockID;
-                fillerBlock = Block::sand->blockID;
-            }
 
             for (int_t y = 127; y >= 0; --y) {
-                const int_t index = x << 11 | z << 7 | y;
-                if (blocks[index] == 0) {
+                const int_t index = (x << 11) | (z << 7) | y;
+
+                if (y <= rand.nextInt(6) - 1) {
+                    blocks[index] = Block::bedrock->blockID;
+                    continue;
+                }
+
+                const int_t currentBlock = blocks[index];
+
+                if (currentBlock == 0) {
                     surfaceDepth = -1;
-                } else if (blocks[index] == Block::stone->blockID) {
+                } else if (currentBlock == Block::stone->blockID) {
                     if (surfaceDepth == -1) {
                         if (surfaceThickness <= 0) {
                             topBlock = 0;
                             fillerBlock = Block::stone->blockID;
                         } else if (y >= seaLevel - 4 && y <= seaLevel + 1) {
+                            topBlock = Block::grass->blockID;
+                            fillerBlock = Block::dirt->blockID;
+
+                            if (makeGravel) {
+                                topBlock = 0;
+                                fillerBlock = Block::gravel->blockID;
+                            }
+
                             if (makeSand) {
                                 topBlock = Block::sand->blockID;
                                 fillerBlock = Block::sand->blockID;
-                            } else {
-                                topBlock = Block::grass->blockID;
-                                fillerBlock = Block::dirt->blockID;
                             }
                         }
 
+                        if (y < seaLevel && topBlock == 0) {
+                            // todo: add water
+                            // topBlock = Block::waterStill->blockID;
+                        }
+
                         surfaceDepth = surfaceThickness;
-                        blocks[index] = y >= seaLevel - 1 ? topBlock : fillerBlock;
+
+                        if (y >= seaLevel - 1) {
+                            blocks[index] = topBlock;
+                        } else {
+                            blocks[index] = fillerBlock;
+                        }
                     } else if (surfaceDepth > 0) {
                         --surfaceDepth;
                         blocks[index] = fillerBlock;

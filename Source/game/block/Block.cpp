@@ -27,6 +27,8 @@ Block *Block::stone = (new Block(1, 1, Material::rock))->setHardness(1.5f);
 Block *Block::grass = (new Block(2, 0, 2, 3, Material::grass))->setHardness(0.6f);
 Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
 Block *Block::sand = (new Block(12, 18, Material::sand))->setHardness(0.5f);
+Block *Block::bedrock = (new Block(7, 17, Material::rock))->setHardness(-1.0F);
+Block *Block::gravel = (new Block(13, 19, Material::sand))->setHardness(0.6F);
 
 Block::Block(const int_t blockID, const int_t blockIndexInTexture, Material *material) : blockID(blockID),
     material(material), blockIndexInTexture(blockIndexInTexture) {
