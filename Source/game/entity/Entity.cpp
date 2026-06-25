@@ -13,6 +13,7 @@ Entity::Entity(World &world) : worldObj(world) {
 }
 
 void Entity::onUpdate() {
+    onEntityUpdate();
 }
 
 void Entity::onEntityUpdate() {
