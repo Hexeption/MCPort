@@ -20,6 +20,7 @@
 #include "WorldRenderer.h"
 #include "game/client/MathHelper.h"
 #include "game/block/Block.h"
+#include "game/block/BlockLeaves.h"
 #include "game/client/Minecraft.h"
 #include "game/client/options/GameSettings.h"
 #include "game/entity/EntityPlayer.h"
@@ -142,6 +143,12 @@ WorldRenderer *RenderGlobal::getWorldRenderer(const int_t x, const int_t y, cons
 }
 
 void RenderGlobal::loadRenderers() {
+    if (Block::leaves != nullptr) {
+        auto *leaves = dynamic_cast<BlockLeaves *>(Block::leaves);
+        if (leaves != nullptr) {
+            leaves->setGraphicsLevel(minecraft.options != nullptr && minecraft.options->fancyGraphics);
+        }
+    }
     renderDistance = minecraft.options != nullptr ? minecraft.options->renderDistance : 0;
     for (auto &renderer: worldRenderers) {
         if (renderer != nullptr) {

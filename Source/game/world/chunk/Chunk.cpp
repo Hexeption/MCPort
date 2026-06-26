@@ -4,6 +4,7 @@
 
 #include "Chunk.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include "game/block/Block.h"
@@ -31,6 +32,18 @@ const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &Chunk::get
 
 const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &Chunk::getMetadata() const {
     return metadata;
+}
+
+const std::array<int_t, Chunk::width * Chunk::depth> &Chunk::getHeightMap() const {
+    return heightMap;
+}
+
+const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &Chunk::getSkylightMap() const {
+    return skylightMap;
+}
+
+const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &Chunk::getBlocklightMap() const {
+    return blocklightMap;
 }
 
 int_t Chunk::getBlockID(const int_t x, const int_t y, const int_t z) const {
@@ -87,6 +100,19 @@ bool Chunk::setBlockMetadata(const int_t x, const int_t y, const int_t z, const 
     return true;
 }
 
+void Chunk::setHeightMap(const std::array<int_t, width * depth> &values) {
+    heightMap = values;
+    recalculateHeightValue();
+}
+
+void Chunk::setSkylightMap(const std::array<int_t, width * height * depth> &values) {
+    skylightMap = values;
+}
+
+void Chunk::setBlocklightMap(const std::array<int_t, width * height * depth> &values) {
+    blocklightMap = values;
+}
+
 int_t Chunk::getHeightValue(const int_t x, const int_t z) const {
     if (x < 0 || x >= width || z < 0 || z >= depth) {
         return 0;
@@ -120,8 +146,19 @@ void Chunk::generateHeightMap() {
             }
         }
     }
+
     heightValue = minimumHeight;
     isModified = true;
+}
+
+void Chunk::recalculateHeightValue() {
+    int_t minimumHeight = 127;
+    for (int_t x = 0; x < width; ++x) {
+        for (int_t z = 0; z < depth; ++z) {
+            minimumHeight = std::min(minimumHeight, heightMap[heightIndex(x, z)]);
+        }
+    }
+    heightValue = minimumHeight;
 }
 
 int_t Chunk::getSavedLightValue(const EnumSkyBlock skyBlock, const int_t x, const int_t y, const int_t z) const {

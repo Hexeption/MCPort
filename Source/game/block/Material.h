@@ -73,6 +73,8 @@ public:
     bool isSolid() const override;
 
     bool getCanBlockGrass() const override;
+
+    bool getIsSolid() const override;
 };
 
 #endif //MCPORT_MATERIAL_H

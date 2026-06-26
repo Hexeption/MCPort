@@ -112,3 +112,7 @@ bool MaterialTransparent::isSolid() const {
 bool MaterialTransparent::getCanBlockGrass() const {
     return false;
 }
+
+bool MaterialTransparent::getIsSolid() const {
+    return false;
+}

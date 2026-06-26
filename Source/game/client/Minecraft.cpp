@@ -375,6 +375,7 @@ void Minecraft::changeWorld(std::unique_ptr<World> world, const jstring &) {
         if (!theWorld->loadPlayerData(*thePlayer)) {
             thePlayer->preparePlayerToSpawn();
         }
+        theWorld->addPlayer(*thePlayer);
         theWorld->setPlayerToSave(thePlayer.get());
     } else {
         thePlayer = nullptr;

@@ -28,6 +28,7 @@ public:
     int_t zPosition;
     std::array<int_t, width * depth> heightMap{};
     int_t heightValue = 0;
+    bool isTerrainPopulated = false;
     bool isModified = false;
     std::array<std::vector<Entity *>, 8> entities{};
     bool hasEntities = false;
@@ -44,6 +45,12 @@ public:
 
     const std::array<int_t, width * height * depth> &getMetadata() const;
 
+    const std::array<int_t, width * depth> &getHeightMap() const;
+
+    const std::array<int_t, width * height * depth> &getSkylightMap() const;
+
+    const std::array<int_t, width * height * depth> &getBlocklightMap() const;
+
     int_t getBlockID(int_t x, int_t y, int_t z) const;
 
     bool setBlockID(int_t x, int_t y, int_t z, int_t blockId);
@@ -51,6 +58,12 @@ public:
     int_t getBlockMetadata(int_t x, int_t y, int_t z) const;
 
     bool setBlockMetadata(int_t x, int_t y, int_t z, int_t metadata);
+
+    void setHeightMap(const std::array<int_t, width * depth> &values);
+
+    void setSkylightMap(const std::array<int_t, width * height * depth> &values);
+
+    void setBlocklightMap(const std::array<int_t, width * height * depth> &values);
 
     int_t getHeightValue(int_t x, int_t z) const;
 
@@ -86,6 +99,8 @@ private:
     void checkSkylightNeighborHeight(int_t x, int_t z, int_t height);
 
     void relightBlock(int_t x, int_t y, int_t z);
+
+    void recalculateHeightValue();
 };
 
 #endif //MCPORT_CHUNK_H

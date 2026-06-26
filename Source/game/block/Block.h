@@ -38,6 +38,9 @@ public:
     static Block *waterStill;
     static Block *lavaMoving;
     static Block *lavaStill;
+    static Block *leaves;
+    static Block *wood;
+    static Block *sapling;
 
     int_t blockIndexInTexture;
     int_t blockID;
@@ -53,9 +56,15 @@ public:
 
     float blockParticleGravity = 1.0f;
 
+    Block(int_t blockID, Material *material);
+
     Block(int_t blockID, int_t blockIndexInTexture, Material *material);
 
     Block(int_t blockID, int_t topTexture, int_t bottomTexture, int_t sideTexture, Material *material);
+
+    Block *setLightOpacity(int_t opacity);
+
+    Block *setLightValue(int_t value);
 
     Block *setHardness(float hardness);
 
@@ -67,7 +76,7 @@ public:
 
     virtual int_t getBlockTextureFromSideAndMetadata(int_t side, int_t metadata) const;
 
-    bool isOpaqueCube() const;
+    virtual bool isOpaqueCube() const;
 
     virtual float getBlockBrightness(IBlockAccess &blockAccess, int_t x, int_t y, int_t z) const;
 

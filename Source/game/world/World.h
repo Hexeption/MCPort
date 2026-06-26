@@ -160,6 +160,8 @@ public:
 
     void tick();
 
+    void updateBlocksAndPlayCaveSounds();
+
     int_t getHeightValue(int_t x, int_t z) const;
 
     void neighborLightPropagationChanged(EnumSkyBlock skyBlock, int_t x, int_t y, int_t z, int_t newLightValue);
@@ -198,6 +200,10 @@ public:
     bool spawnEntityInWorld(std::unique_ptr<Entity> entity);
 
     bool spawnEntityInWorld(Entity *entity);
+
+    void addPlayer(EntityPlayer &player);
+
+    void removePlayer(EntityPlayer &player);
 
     void setEntityDead(Entity &entity);
 

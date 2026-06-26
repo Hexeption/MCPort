@@ -8,7 +8,6 @@
 
 #include "slot/SlotArmor.h"
 #include "slot/SlotCrafting.h"
-#include "SlotInventory.h"
 #include "game/client/Minecraft.h"
 #include "game/inventory/CraftingInventoryPlayerCB.h"
 #include "game/inventory/InventoryCraftResult.h"

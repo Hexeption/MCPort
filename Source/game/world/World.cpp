@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 #include "game/block/Block.h"
 #include "game/block/BlockFluid.h"
@@ -134,8 +135,8 @@ static std::unique_ptr<NBTTagCompound> createPlayerDataTag(EntityPlayer &player)
     return playerData;
 }
 
-static std::vector<byte_t> intArrayToByteArray(
-    const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &values) {
+template<std::size_t N>
+static std::vector<byte_t> intArrayToByteArray(const std::array<int_t, N> &values) {
     std::vector<byte_t> bytes(values.size());
     for (std::size_t i = 0; i < values.size(); ++i) {
         bytes[i] = static_cast<byte_t>(values[i] & 0xFF);
@@ -143,9 +144,9 @@ static std::vector<byte_t> intArrayToByteArray(
     return bytes;
 }
 
-static std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> byteArrayToIntArray(
-    const std::vector<byte_t> &bytes) {
-    std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> values{};
+template<std::size_t N>
+static std::array<int_t, N> byteArrayToIntArray(const std::vector<byte_t> &bytes) {
+    std::array<int_t, N> values{};
     const std::size_t count = std::min(values.size(), bytes.size());
     for (std::size_t i = 0; i < count; ++i) {
         values[i] = static_cast<int_t>(static_cast<ubyte_t>(bytes[i]));
@@ -321,6 +322,7 @@ bool World::setBlock(const int_t x, const int_t y, const int_t z, const int_t bl
         Block::blocksList[blockId] != nullptr && !multiplayerWorld) {
         Block::blocksList[blockId]->onBlockAdded(*this, x, y, z);
     }
+
     return true;
 }
 
@@ -756,6 +758,45 @@ void World::tick() {
         saveWorld(false, nullptr);
     }
     tickUpdates(false);
+    updateBlocksAndPlayCaveSounds();
+    while (const_cast<World *>(this)->updatingLighting()) {
+    }
+}
+
+void World::updateBlocksAndPlayCaveSounds() {
+    for (EntityPlayer *player: playerEntities) {
+        if (player == nullptr) {
+            continue;
+        }
+
+        const int_t baseChunkX = static_cast<int_t>(std::floor(player->posX / 16.0));
+        const int_t baseChunkZ = static_cast<int_t>(std::floor(player->posZ / 16.0));
+
+        for (int_t chunkX = baseChunkX - 9; chunkX <= baseChunkX + 9; ++chunkX) {
+            for (int_t chunkZ = baseChunkZ - 9; chunkZ <= baseChunkZ + 9; ++chunkZ) {
+                if (!chunkExists(chunkX, chunkZ)) {
+                    continue;
+                }
+
+                Chunk &chunk = getChunkFromChunkCoords(chunkX, chunkZ);
+                const int_t baseX = chunkX * 16;
+                const int_t baseZ = chunkZ * 16;
+
+                for (int_t i = 0; i < 80; ++i) {
+                    updateLCG = updateLCG * 3 + DIST_HASH_MAGIC;
+                    const int_t value = updateLCG >> 2;
+                    const int_t localX = value & 15;
+                    const int_t localZ = value >> 8 & 15;
+                    const int_t localY = value >> 16 & 127;
+                    const int_t blockId = chunk.blocks[localX << 11 | localZ << 7 | localY];
+                    if (blockId > 0 && blockId < static_cast<int_t>(Block::tickOnLoad.size()) &&
+                        Block::tickOnLoad[blockId] && Block::blocksList[blockId] != nullptr) {
+                        Block::blocksList[blockId]->updateTick(*this, baseX + localX, localY, baseZ + localZ, rand);
+                    }
+                }
+            }
+        }
+    }
 }
 
 int_t World::getHeightValue(int_t x, int_t z) const {
@@ -1128,6 +1169,10 @@ void World::saveChunk(const Chunk &chunk) const {
     level->setInteger(u"zPos", chunk.zPosition);
     level->setByteArray(u"Blocks", intArrayToByteArray(chunk.getBlocks()));
     level->setByteArray(u"Data", intArrayToByteArray(chunk.getMetadata()));
+    level->setByteArray(u"SkyLight", intArrayToByteArray(chunk.getSkylightMap()));
+    level->setByteArray(u"BlockLight", intArrayToByteArray(chunk.getBlocklightMap()));
+    level->setByteArray(u"HeightMap", intArrayToByteArray(chunk.getHeightMap()));
+    level->setBoolean(u"TerrainPopulated", chunk.isTerrainPopulated);
 
     auto *entities = new NBTTagList();
     for (const auto &entity: loadedEntityList) {
@@ -1174,12 +1219,29 @@ std::unique_ptr<Chunk> World::loadChunkFromDisk(const int_t chunkX, const int_t 
         std::unique_ptr<NBTTagCompound> root = CompressedStreamTools::readCompressed(chunkFile);
         NBTTagCompound *level = root->hasKey(u"Level") ? root->getCompoundTag(u"Level") : root.get();
         std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> blocks =
-                byteArrayToIntArray(level->getByteArray(u"Blocks"));
+                byteArrayToIntArray<Chunk::width * Chunk::height * Chunk::depth>(level->getByteArray(u"Blocks"));
         std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> metadata =
-                byteArrayToIntArray(level->getByteArray(u"Data"));
+                byteArrayToIntArray<Chunk::width * Chunk::height * Chunk::depth>(level->getByteArray(u"Data"));
 
+        if (Block::leaves != nullptr) {
+            for (int_t i = 0; i < static_cast<int_t>(blocks.size()); ++i) {
+                if (blocks[i] == Block::leaves->blockID) {
+                    metadata[i] = 0;
+                }
+            }
+        }
         auto chunk = std::make_unique<Chunk>(const_cast<World &>(*this), blocks, metadata, chunkX, chunkZ);
-        chunk->generateSkylightMap();
+        chunk->isTerrainPopulated = level->hasKey(u"TerrainPopulated") && level->getBoolean(u"TerrainPopulated");
+        if (level->hasKey(u"SkyLight") && level->hasKey(u"BlockLight") && level->hasKey(u"HeightMap")) {
+            chunk->setSkylightMap(
+                byteArrayToIntArray<Chunk::width * Chunk::height * Chunk::depth>(level->getByteArray(u"SkyLight")));
+            chunk->setBlocklightMap(
+                byteArrayToIntArray<Chunk::width * Chunk::height * Chunk::depth>(level->getByteArray(u"BlockLight")));
+            chunk->setHeightMap(
+                byteArrayToIntArray<Chunk::width * Chunk::depth>(level->getByteArray(u"HeightMap")));
+        } else {
+            chunk->generateSkylightMap();
+        }
         return chunk;
     } catch (const std::exception &e) {
         std::cerr << "Failed to load chunk " << chunkX << "," << chunkZ << ": " << e.what() << '\n';
@@ -1290,6 +1352,38 @@ Chunk &World::getChunkFromChunkCoords(const int_t chunkX, const int_t chunkZ) co
             std::cerr << "Failed to load chunk entities " << chunkX << "," << chunkZ << ": " << e.what() << '\n';
         }
     }
+
+    auto tryPopulateChunk = [this](const int_t populateChunkX, const int_t populateChunkZ) {
+        const long_t populateKey = chunkKey(populateChunkX, populateChunkZ);
+        const auto populateFound = loadedChunks.find(populateKey);
+        if (populateFound == loadedChunks.end()) {
+            return;
+        }
+
+        Chunk &populateChunk = *populateFound->second;
+        if (populateChunk.isTerrainPopulated) {
+            return;
+        }
+
+        if (!chunkExists(populateChunkX + 1, populateChunkZ + 1) || !chunkExists(populateChunkX, populateChunkZ + 1) ||
+            !chunkExists(populateChunkX + 1, populateChunkZ)) {
+            return;
+        }
+
+        chunkProvider->populate(populateChunkX, populateChunkZ);
+        populateChunk.isTerrainPopulated = true;
+        populateChunk.isModified = true;
+        populateChunk.generateSkylightMap();
+    };
+
+    tryPopulateChunk(chunkX, chunkZ);
+    tryPopulateChunk(chunkX - 1, chunkZ);
+    tryPopulateChunk(chunkX, chunkZ - 1);
+    tryPopulateChunk(chunkX - 1, chunkZ - 1);
+
+    while (const_cast<World *>(this)->updatingLighting()) {
+    }
+
     return chunkRef;
 }
 
@@ -1441,8 +1535,7 @@ bool World::spawnEntityInWorld(std::unique_ptr<Entity> entity) {
     }
 
     if (auto *player = dynamic_cast<EntityPlayer *>(entity.get())) {
-        playerEntities.push_back(player);
-        std::cout << "Player count: " << playerEntities.size() << '\n';
+        addPlayer(*player);
     }
 
     Entity *raw = entity.get();
@@ -1461,16 +1554,24 @@ bool World::spawnEntityInWorld(Entity *entity) {
     return spawnEntityInWorld(std::unique_ptr<Entity>(entity));
 }
 
+void World::addPlayer(EntityPlayer &player) {
+    if (std::find(playerEntities.begin(), playerEntities.end(), &player) == playerEntities.end()) {
+        playerEntities.push_back(&player);
+    }
+}
+
+void World::removePlayer(EntityPlayer &player) {
+    playerEntities.erase(
+        std::remove(playerEntities.begin(), playerEntities.end(), &player),
+        playerEntities.end()
+    );
+}
+
 void World::setEntityDead(Entity &entity) {
     entity.setEntityDead();
 
     if (auto *player = dynamic_cast<EntityPlayer *>(&entity)) {
-        playerEntities.erase(
-            std::remove(playerEntities.begin(), playerEntities.end(), player),
-            playerEntities.end()
-        );
-
-        std::cout << "Player count: " << playerEntities.size() << '\n';
+        removePlayer(*player);
     }
 }
 
@@ -1495,6 +1596,9 @@ void World::updateEntities() {
         if (entity.isDead) {
             if (entity.addedToChunk && chunkExists(entity.chunkCoordX, entity.chunkCoordZ)) {
                 getChunkFromChunkCoords(entity.chunkCoordX, entity.chunkCoordZ).removeEntity(entity);
+            }
+            if (auto *player = dynamic_cast<EntityPlayer *>(&entity)) {
+                removePlayer(*player);
             }
             releaseEntitySkin(entity);
             it = loadedEntityList.erase(it);
@@ -1534,6 +1638,7 @@ bool World::loadPlayerData(EntityPlayer &player) {
         player.inventory.draggedItemStack.reset();
     }
     savedPlayerData = createPlayerDataTag(player);
+
     return true;
 }
 

@@ -10,6 +10,7 @@
 #include "Chunk.h"
 #include "game/block/Block.h"
 #include "game/world/World.h"
+#include "game/world/gen/features/WorldGenTrees.h"
 
 ChunkProviderGenerate::ChunkProviderGenerate(World &world, const long_t seed) : worldObj(world), rand(seed) {
     noiseGen1 = std::make_unique<NoiseGeneratorOctaves>(rand, 16);
@@ -19,6 +20,7 @@ ChunkProviderGenerate::ChunkProviderGenerate(World &world, const long_t seed) : 
     noiseGen5 = std::make_unique<NoiseGeneratorOctaves>(rand, 4);
     noiseGen6 = std::make_unique<NoiseGeneratorOctaves>(rand, 10);
     noiseGen7 = std::make_unique<NoiseGeneratorOctaves>(rand, 16);
+    mobSpawnerNoise = std::make_unique<NoiseGeneratorOctaves>(rand, 8);
 }
 
 void ChunkProviderGenerate::generateTerrain(const int_t chunkX, const int_t chunkZ,
@@ -323,4 +325,46 @@ std::vector<double> ChunkProviderGenerate::initializeNoiseField(std::vector<doub
     }
 
     return noise;
+}
+
+void ChunkProviderGenerate::populate(const int_t chunkX, const int_t chunkZ) {
+    const int_t baseX = chunkX * 16;
+    const int_t baseZ = chunkZ * 16;
+
+    rand.setSeed(worldObj.randomSeed);
+
+    const long_t seedX = rand.nextLong() / 2L * 2L + 1L;
+    const long_t seedZ = rand.nextLong() / 2L * 2L + 1L;
+
+    rand.setSeed(static_cast<long_t>(chunkX) * seedX +
+                 static_cast<long_t>(chunkZ) * seedZ ^
+                 worldObj.randomSeed);
+
+    constexpr double treeNoiseScale = 0.5;
+
+    int_t treeCount = static_cast<int_t>(
+        (mobSpawnerNoise->generateNoiseOctaves(
+             static_cast<double>(baseX) * treeNoiseScale,
+             static_cast<double>(baseZ) * treeNoiseScale
+         ) / 8.0 + rand.nextDouble() * 4.0 + 4.0) / 3.0
+    );
+
+    if (treeCount < 0) {
+        treeCount = 0;
+    }
+
+    if (rand.nextInt(10) == 0) {
+        ++treeCount;
+    }
+
+    WorldGenTrees treeGen;
+
+    for (int_t i = 0; i < treeCount; ++i) {
+        const int_t x = baseX + rand.nextInt(16) + 8;
+        const int_t z = baseZ + rand.nextInt(16) + 8;
+        const int_t y = worldObj.getHeightValue(x, z);
+
+        treeGen.setScale(1.0, 1.0, 1.0);
+        treeGen.generate(worldObj, rand, x, y, z);
+    }
 }

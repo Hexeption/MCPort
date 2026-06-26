@@ -29,6 +29,8 @@ public:
 
     Chunk provideChunk(int_t chunkX, int_t chunkZ);
 
+    void populate(int_t chunkX, int_t chunkZ);
+
 private:
     std::unique_ptr<NoiseGeneratorOctaves> noiseGen1;
     std::unique_ptr<NoiseGeneratorOctaves> noiseGen2;
@@ -37,6 +39,7 @@ private:
     std::unique_ptr<NoiseGeneratorOctaves> noiseGen5;
     std::unique_ptr<NoiseGeneratorOctaves> noiseGen6;
     std::unique_ptr<NoiseGeneratorOctaves> noiseGen7;
+    std::unique_ptr<NoiseGeneratorOctaves> mobSpawnerNoise;
     std::vector<double> noiseArray;
     std::vector<double> sandNoise;
     std::vector<double> gravelNoise;

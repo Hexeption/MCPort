@@ -8,6 +8,8 @@
 #include "game/world/IBlockAccess.h"
 #include "game/world/World.h"
 #include "BlockFlowing.h"
+#include "BlockLeaves.h"
+#include "BlockLog.h"
 #include "BlockStationary.h"
 #include "game/entity/EntityItem.h"
 #include "game/item/ItemStack.h"
@@ -41,21 +43,46 @@ Block *Block::waterMoving = (new BlockFlowing(8, Material::water))->setHardness(
 Block *Block::waterStill = (new BlockStationary(9, Material::water))->setHardness(100.0f);
 Block *Block::lavaMoving = (new BlockFlowing(10, Material::lava))->setHardness(0.0f);
 Block *Block::lavaStill = (new BlockStationary(11, Material::lava))->setHardness(100.0f);
+Block *Block::leaves = (new BlockLeaves(18, 52))->setHardness(0.2f)->setLightOpacity(1);
+Block *Block::wood = (new BlockLog(17))->setHardness(2.0f);
+Block *Block::sapling = (new Block(6, 15, Material::plants))->setHardness(0.0f)->setLightValue(1);
 
-Block::Block(const int_t blockID, const int_t blockIndexInTexture, Material *material) : blockID(blockID),
-    material(material), blockIndexInTexture(blockIndexInTexture) {
-    blockTextures.fill(blockIndexInTexture);
+Block::Block(const int_t blockID, Material *material) : blockID(blockID), material(material), blockIndexInTexture(0) {
+    blockTextures.fill(0);
+
     if (blockID >= 0 && blockID < static_cast<int_t>(blocksList.size())) {
+        if (blocksList[blockID] != nullptr) {
+            throw std::runtime_error("Duplicate block id");
+        }
+
         blocksList[blockID] = this;
         lightOpacity[blockID] = isOpaqueCube() ? 255 : 0;
         opaqueCubeLookup[blockID] = isOpaqueCube();
     }
+
+    setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+}
+
+Block::Block(const int_t blockID, const int_t blockIndexInTexture, Material *material)
+    : Block(blockID, material) {
+    this->blockIndexInTexture = blockIndexInTexture;
+    blockTextures.fill(blockIndexInTexture);
 }
 
 Block::Block(const int_t blockID, const int_t topTexture, const int_t bottomTexture, const int_t sideTexture,
              Material *material) : Block(blockID, sideTexture, material) {
     blockTextures[0] = bottomTexture;
     blockTextures[1] = topTexture;
+}
+
+Block *Block::setLightOpacity(int_t opacity) {
+    lightOpacity[blockID] = opacity;
+    return this;
+}
+
+Block *Block::setLightValue(int_t value) {
+    lightValue[blockID] = value;
+    return this;
 }
 
 Block *Block::setHardness(const float newHardness) {
@@ -244,7 +271,7 @@ void Block::dropBlockAsItemWithChance(World &world, int_t x, int_t y, int_t z, i
 }
 
 bool Block::canCollideCheck(int_t, bool) const {
-    return isOpaqueCube();
+    return true;
 }
 
 void Block::velocityToAddToEntity(World &, int_t, int_t, int_t, Entity &, Vec3D &) const {

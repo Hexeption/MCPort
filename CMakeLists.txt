@@ -277,6 +277,16 @@ add_executable(MCPort
         Source/port/utils/Networking.cpp
         Source/port/utils/Networking.h
         Source/port/utils/SDLException.h
+        Source/game/world/gen/WorldGenerator.cpp
+        Source/game/world/gen/WorldGenerator.h
+        Source/game/world/gen/features/WorldGenTrees.cpp
+        Source/game/world/gen/features/WorldGenTrees.h
+        Source/game/block/BlockLeaves.cpp
+        Source/game/block/BlockLeaves.h
+        Source/game/block/BlockLeavesBase.cpp
+        Source/game/block/BlockLeavesBase.h
+        Source/game/block/BlockLog.cpp
+        Source/game/block/BlockLog.h
 )
 
 if (APPLE)
