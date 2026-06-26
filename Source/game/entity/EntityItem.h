@@ -1,0 +1,50 @@
+//
+// Created by Keir Davis on 25/06/2026.
+//
+
+#ifndef MCPORT_ENTITYITEM_H
+#define MCPORT_ENTITYITEM_H
+
+
+#include "game/entity/Entity.h"
+#include "game/item/ItemStack.h"
+
+class EntityPlayer;
+class EntityLiving;
+class NBTTagCompound;
+
+class EntityItem : public Entity {
+private:
+    int_t age2 = 0;
+    int_t health = 5;
+
+    bool pushOutOfBlocks(double x, double y, double z);
+
+protected:
+    void dealFireDamage(int_t amount);
+
+public:
+    ItemStack item;
+    int_t age = 0;
+    int_t delayBeforeCanPickup = 0;
+    float hoverStart = 0.0f;
+
+    EntityItem(World &world, double x, double y, double z, const ItemStack &stack);
+
+    explicit EntityItem(World &world);
+
+    void onUpdate() override;
+
+    bool handleWaterMovement() override;
+
+    bool attackEntityFrom(Entity *entity, int_t amount);
+
+    void writeEntityToNBT(NBTTagCompound &nbt);
+
+    void readEntityFromNBT(NBTTagCompound &nbt);
+
+    void onCollideWithPlayer(EntityPlayer &player);
+};
+
+
+#endif //MCPORT_ENTITYITEM_H

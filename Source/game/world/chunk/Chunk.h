@@ -6,7 +6,9 @@
 #define MCPORT_CHUNK_H
 
 #include <array>
+#include <vector>
 
+#include "game/entity/Entity.h"
 #include "game/world/EnumSkyBlock.h"
 #include "java/Type.h"
 
@@ -27,6 +29,9 @@ public:
     std::array<int_t, width * depth> heightMap{};
     int_t heightValue = 0;
     bool isModified = false;
+    std::array<std::vector<Entity *>, 8> entities{};
+    bool hasEntities = false;
+    bool isChunkRendered = false;
 
     Chunk(World &world, int_t chunkX, int_t chunkZ);
 
@@ -51,6 +56,12 @@ public:
     void generateHeightMap();
 
     void generateSkylightMap();
+
+    void addEntity(Entity &entity);
+
+    void removeEntity(Entity &entity);
+
+    void removeEntityAtIndex(Entity &entity, int_t index);
 
 private:
     std::array<int_t, width * height * depth> metadata{};

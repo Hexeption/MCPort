@@ -913,7 +913,7 @@ long_t World::chunkKey(const int_t chunkX, const int_t chunkZ) {
 }
 
 std::array<float, 16> World::makeLightBrightnessTable() {
-    std::array < float, 16 > table{};
+    std::array<float, 16> table{};
     constexpr float baseBrightness = 0.05f;
     for (int_t i = 0; i <= 15; ++i) {
         const float value = 1.0f - static_cast<float>(i) / 15.0f;
@@ -1164,4 +1164,142 @@ MovingObjectPosition World::rayTraceBlocks_do(const Vec3D &start, const Vec3D &e
     }
 
     return {};
+}
+
+bool World::spawnEntityInWorld(std::unique_ptr<Entity> entity) {
+    if (entity == nullptr) {
+        return false;
+    }
+
+    const int_t chunkX = MathHelper::floor_double(entity->posX / 16.0);
+    const int_t chunkZ = MathHelper::floor_double(entity->posZ / 16.0);
+
+    const bool isPlayer = dynamic_cast<EntityPlayer *>(entity.get()) != nullptr;
+
+    if (!isPlayer && !chunkExists(chunkX, chunkZ)) {
+        return false;
+    }
+
+    if (auto *player = dynamic_cast<EntityPlayer *>(entity.get())) {
+        playerEntities.push_back(player);
+        std::cout << "Player count: " << playerEntities.size() << '\n';
+    }
+
+    Entity *raw = entity.get();
+    raw->lastTickPosX = raw->prevPosX = raw->posX;
+    raw->lastTickPosY = raw->prevPosY = raw->posY;
+    raw->lastTickPosZ = raw->prevPosZ = raw->posZ;
+
+    getChunkFromChunkCoords(chunkX, chunkZ).addEntity(*raw);
+
+    loadedEntityList.push_back(std::move(entity));
+    obtainEntitySkin(*raw);
+    return true;
+}
+
+bool World::spawnEntityInWorld(Entity *entity) {
+    return spawnEntityInWorld(std::unique_ptr<Entity>(entity));
+}
+
+void World::setEntityDead(Entity &entity) {
+    entity.setEntityDead();
+
+    if (auto *player = dynamic_cast<EntityPlayer *>(&entity)) {
+        playerEntities.erase(
+            std::remove(playerEntities.begin(), playerEntities.end(), player),
+            playerEntities.end()
+        );
+
+        std::cout << "Player count: " << playerEntities.size() << '\n';
+    }
+}
+
+void World::obtainEntitySkin(Entity &) {
+}
+
+void World::releaseEntitySkin(Entity &) {
+}
+
+const std::vector<std::unique_ptr<Entity> > &World::getLoadedEntityList() const {
+    return loadedEntityList;
+}
+
+void World::updateEntities() {
+    for (auto it = loadedEntityList.begin(); it != loadedEntityList.end();) {
+        Entity &entity = **it;
+
+        if (!entity.isDead) {
+            updateEntity(entity);
+        }
+
+        if (entity.isDead) {
+            if (entity.addedToChunk && chunkExists(entity.chunkCoordX, entity.chunkCoordZ)) {
+                getChunkFromChunkCoords(entity.chunkCoordX, entity.chunkCoordZ).removeEntity(entity);
+            }
+            releaseEntitySkin(entity);
+            it = loadedEntityList.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void World::updateEntity(Entity &entity) {
+    const int_t blockX = MathHelper::floor_double(entity.posX);
+    const int_t blockZ = MathHelper::floor_double(entity.posZ);
+    constexpr int_t chunkCheckRadius = 16;
+    if (!checkChunksExist(blockX - chunkCheckRadius, 0, blockZ - chunkCheckRadius,
+                          blockX + chunkCheckRadius, 128, blockZ + chunkCheckRadius)) {
+        return;
+    }
+
+    entity.lastTickPosX = entity.posX;
+    entity.lastTickPosY = entity.posY;
+    entity.lastTickPosZ = entity.posZ;
+    entity.prevRotationYaw = entity.rotationYaw;
+    entity.prevRotationPitch = entity.rotationPitch;
+
+    if (entity.ridingEntity != nullptr) {
+        // Riding updates are not fully ported yet; keep the reference sane instead of ticking twice.
+        if (entity.ridingEntity->isDead || entity.ridingEntity->riddenByEntity != &entity) {
+            entity.ridingEntity->riddenByEntity = nullptr;
+            entity.ridingEntity = nullptr;
+        }
+    }
+
+    entity.onUpdate();
+
+    const int_t chunkX = MathHelper::floor_double(entity.posX / 16.0);
+    const int_t chunkY = MathHelper::floor_double(entity.posY / 16.0);
+    const int_t chunkZ = MathHelper::floor_double(entity.posZ / 16.0);
+    if (!entity.addedToChunk || entity.chunkCoordX != chunkX || entity.chunkCoordY != chunkY ||
+        entity.chunkCoordZ != chunkZ) {
+        if (entity.addedToChunk && chunkExists(entity.chunkCoordX, entity.chunkCoordZ)) {
+            getChunkFromChunkCoords(entity.chunkCoordX, entity.chunkCoordZ).removeEntityAtIndex(entity,
+                                                                                                entity.chunkCoordY);
+        }
+
+        if (chunkExists(chunkX, chunkZ)) {
+            getChunkFromChunkCoords(chunkX, chunkZ).addEntity(entity);
+        } else {
+            entity.addedToChunk = false;
+            entity.setEntityDead();
+        }
+    }
+
+    if (!std::isfinite(entity.posX)) {
+        entity.posX = entity.lastTickPosX;
+    }
+    if (!std::isfinite(entity.posY)) {
+        entity.posY = entity.lastTickPosY;
+    }
+    if (!std::isfinite(entity.posZ)) {
+        entity.posZ = entity.lastTickPosZ;
+    }
+    if (!std::isfinite(entity.rotationPitch)) {
+        entity.rotationPitch = entity.prevRotationPitch;
+    }
+    if (!std::isfinite(entity.rotationYaw)) {
+        entity.rotationYaw = entity.prevRotationYaw;
+    }
 }

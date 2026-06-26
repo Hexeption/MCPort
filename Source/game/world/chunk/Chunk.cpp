@@ -4,7 +4,10 @@
 
 #include "Chunk.h"
 
+#include <iostream>
+
 #include "game/block/Block.h"
+#include "game/client/MathHelper.h"
 #include "game/world/World.h"
 
 bool Chunk::isLit = false;
@@ -253,4 +256,54 @@ void Chunk::relightBlock(const int_t x, int_t y, const int_t z) {
 
         isModified = true;
     }
+}
+
+void Chunk::addEntity(Entity &entity) {
+    if (isChunkRendered) {
+        return;
+    }
+
+    hasEntities = true;
+
+    const int_t chunkX = MathHelper::floor_double(entity.posX / 16.0);
+    const int_t chunkZ = MathHelper::floor_double(entity.posZ / 16.0);
+
+    if (chunkX != xPosition || chunkZ != zPosition) {
+        std::cout << "Wrong location! " << &entity << '\n';
+    }
+
+    int_t verticalIndex = MathHelper::floor_double(entity.posY / 16.0);
+    if (verticalIndex < 0) {
+        verticalIndex = 0;
+    }
+
+    if (verticalIndex >= static_cast<int_t>(entities.size())) {
+        verticalIndex = static_cast<int_t>(entities.size()) - 1;
+    }
+
+    entity.addedToChunk = true;
+    entity.chunkCoordX = xPosition;
+    entity.chunkCoordY = verticalIndex;
+    entity.chunkCoordZ = zPosition;
+
+    entities[verticalIndex].push_back(&entity);
+}
+
+void Chunk::removeEntity(Entity &entity) {
+    removeEntityAtIndex(entity, entity.chunkCoordY);
+}
+
+void Chunk::removeEntityAtIndex(Entity &entity, int_t index) {
+    if (index < 0) {
+        index = 0;
+    }
+
+    if (index >= static_cast<int_t>(entities.size())) {
+        index = static_cast<int_t>(entities.size()) - 1;
+    }
+
+    auto &list = entities[index];
+    list.erase(std::remove(list.begin(), list.end(), &entity), list.end());
+
+    entity.addedToChunk = false;
 }

@@ -30,9 +30,9 @@ void EntityDiggingFX::renderParticle(Tessellator &tessellator, float partialTick
     const float v1 = v0 + 0.999f / 64.0f;
     const float scale = 0.1f * particleScale;
 
-    const float px = static_cast<float>(prevPosX + (posX - prevPosX) * static_cast<double>(partialTicks));
-    const float py = static_cast<float>(prevPosY + (posY - prevPosY) * static_cast<double>(partialTicks));
-    const float pz = static_cast<float>(prevPosZ + (posZ - prevPosZ) * static_cast<double>(partialTicks));
+    const float px = static_cast<float>(prevPosX + (posX - prevPosX) * static_cast<double>(partialTicks) - interpPosX);
+    const float py = static_cast<float>(prevPosY + (posY - prevPosY) * static_cast<double>(partialTicks) - interpPosY);
+    const float pz = static_cast<float>(prevPosZ + (posZ - prevPosZ) * static_cast<double>(partialTicks) - interpPosZ);
     const float brightness = getBrightness(partialTicks);
 
     tessellator.setColorOpaque_F(brightness * particleRed, brightness * particleGreen, brightness * particleBlue);

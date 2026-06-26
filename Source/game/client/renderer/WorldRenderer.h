@@ -8,9 +8,12 @@
 #include <array>
 #include <memory>
 
+#include "game/phys/AxisAlignedBB.h"
 #include "java/Type.h"
 
 class RenderBlocks;
+class Entity;
+class ICamera;
 class World;
 
 class WorldRenderer {
@@ -22,6 +25,23 @@ public:
     int_t sizeWidth = 16;
     int_t sizeHeight = 16;
     int_t sizeDepth = 16;
+    int_t posXMinus = 0;
+    int_t posYMinus = 0;
+    int_t posZMinus = 0;
+    int_t posXClip = 0;
+    int_t posYClip = 0;
+    int_t posZClip = 0;
+    int_t posXPlus = 0;
+    int_t posYPlus = 0;
+    int_t posZPlus = 0;
+    float rendererRadius = 0.0f;
+    bool isInFrustum = false;
+    bool isVisible = true;
+    bool isWaitingOnOcclusionQuery = false;
+    int_t glOcclusionQuery = 0;
+    bool isChunkLit = false;
+    bool isInitialized = false;
+    AxisAlignedBB rendererBoundingBox;
     bool needsUpdate = true;
     std::array<bool, 2> skipRenderPass{true, true};
     static int_t chunksUpdated;
@@ -47,6 +67,20 @@ public:
     void stopRendering();
 
     void render(int_t pass) const;
+
+    float distanceToEntitySquared(const Entity &entity) const;
+
+    void setDontDraw();
+
+    void updateInFrustum(class ICamera &camera);
+
+    bool skipAllRenderPasses() const;
+
+    int_t getGLCallListForPass(int_t pass) const;
+
+    void callOcclusionQueryList() const;
+
+    void setupGLTranslation() const;
 
 private:
     int_t glRenderList = 0;

@@ -5,11 +5,16 @@
 #ifndef MCPORT_ENTITYRENDERER_H
 #define MCPORT_ENTITYRENDERER_H
 
+#include <memory>
+
 #include "java/System.h"
 #include "java/Type.h"
+#include "game/client/renderer/ItemRenderer.h"
+#include "game/phys/Frustum.h"
 
 class Material;
 class Minecraft;
+class Entity;
 
 class EntityRenderer {
 private:
@@ -21,6 +26,9 @@ private:
     float prevFogColor = 0.0f;
     float fogColor = 0.0f;
     long_t prevFrameTime = System::currentTimeMillis();
+    int_t rendererUpdateCount = 0;
+    std::unique_ptr<ItemRenderer> itemRenderer;
+    Entity *pointedEntity = nullptr;
 
     void updateFogColor(float partialTicks);
 
@@ -33,6 +41,22 @@ private:
     bool isPlayerInsideMaterial(Material *material) const;
 
     void renderWarpedTextureOverlay(float partialTicks);
+
+    float getFOVModifier(float partialTicks) const;
+
+    void hurtCameraEffect(float partialTicks);
+
+    void setupViewBobbing(float partialTicks);
+
+    void orientCamera(float partialTicks);
+
+    void setupCameraTransform(float partialTicks, int_t pass);
+
+    void renderHand(float partialTicks, int_t pass);
+
+    void addRainParticles();
+
+    void renderSnow(float partialTicks);
 
 public:
     explicit EntityRenderer(Minecraft &minecraft);

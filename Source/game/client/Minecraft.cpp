@@ -33,6 +33,9 @@
 
 #include <glad/glad.h>
 
+#include "renderer/ItemRenderer.h"
+#include "renderer/RenderManager.h"
+#include "renderer/RenderManager.h"
 #include "renderer/WorldRenderer.h"
 
 namespace {
@@ -71,6 +74,8 @@ void Minecraft::startGame() {
 
     lwjgl::Display::create();
 
+    RenderManager::instance.ownedItemRenderer = std::make_unique<ItemRenderer>(*this);
+    RenderManager::instance.itemRenderer = RenderManager::instance.ownedItemRenderer.get();
     mcDataDir = std::make_unique<File>(getMinecraftDir());
 
     options = std::make_unique<GameSettings>(*this, *mcDataDir);
@@ -288,9 +293,15 @@ void Minecraft::runTick() {
 
     if (theWorld != nullptr) {
         theWorld->difficultySetting = options != nullptr ? options->difficulty : 0;
+
+        if (!isGamePaused) {
+            theWorld->updateEntities();
+        }
+
         if (!isGamePaused || isMultiplayerWorld()) {
             theWorld->tick();
         }
+
         if (playerController != nullptr) {
             playerController->onUpdate();
         }
@@ -471,11 +482,11 @@ jstring Minecraft::debugInfoRenders() {
 }
 
 jstring Minecraft::getEntityDebug() {
-    return u"";
+    return renderGlobal->getDebugInfoEntities();
 }
 
 jstring Minecraft::debugInfoEntities() {
-    return u"P:" + effectRenderer->getStatistics();
+    return u"P: " + effectRenderer->getStatistics() + u". T: " + renderGlobal->getDebugInfoEntities();
 }
 
 void Minecraft::sendClickBlockToController(const int_t button, const bool pressed) {

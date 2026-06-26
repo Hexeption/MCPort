@@ -25,6 +25,7 @@ void EntityPlayer::preparePlayerToSpawn() {
 
 void EntityPlayer::onLivingUpdate() {
     prevCameraYaw = cameraYaw;
+    prevCameraPitch = cameraPitch;
     EntityLiving::onLivingUpdate();
 
     float horizontalMotion = static_cast<float>(std::sqrt(motionX * motionX + motionZ * motionZ));

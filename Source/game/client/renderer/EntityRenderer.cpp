@@ -10,13 +10,17 @@
 #include <glad/glad.h>
 
 #include "RenderGlobal.h"
+#include "RenderManager.h"
+#include "ItemRenderer.h"
 #include "ScaledResolution.h"
 #include "Tessellator.h"
+#include "game/client/MathHelper.h"
 #include "game/block/Material.h"
 #include "game/client/Minecraft.h"
 #include "game/client/options/GameSettings.h"
 #include "game/client/player/PlayerController.h"
 #include "game/entity/EntityPlayerSP.h"
+#include "game/phys/Frustum.h"
 #include "game/util/Vec3D.h"
 #include "game/world/World.h"
 #include "lwjgl/Display.h"
@@ -25,6 +29,7 @@
 #include "utils/GLU.h"
 
 EntityRenderer::EntityRenderer(Minecraft &minecraft) : mc(minecraft) {
+    itemRenderer = std::make_unique<ItemRenderer>(minecraft);
 }
 
 void EntityRenderer::updateRenderer() {
@@ -40,6 +45,10 @@ void EntityRenderer::updateRenderer() {
     const float distanceFactor = static_cast<float>(3 - mc.options->renderDistance) / 3.0f;
     const float targetFogColor = brightness * (1.0f - distanceFactor) + distanceFactor;
     fogColor += (targetFogColor - fogColor) * 0.1f;
+    ++rendererUpdateCount;
+    if (itemRenderer != nullptr) {
+        itemRenderer->updateEquippedItem();
+    }
 }
 
 void EntityRenderer::updateCameraAndRender(float partialTicks) {
@@ -111,27 +120,104 @@ void EntityRenderer::renderWorld(const float partialTicks) {
     }
 
     getMouseOver(partialTicks);
+    EntityPlayerSP &player = *mc.thePlayer;
+    RenderGlobal &renderGlobal = *mc.renderGlobal;
+    EffectRenderer &effectRenderer = *mc.effectRenderer;
     updateFogColor(partialTicks);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    setupCameraTransform(partialTicks);
-    glEnable(GL_FOG);
-    setupFog(1);
-    setupFog(0);
-    mc.renderGlobal->renderWorld(partialTicks);
-    mc.effectRenderer->renderParticles(*mc.thePlayer, partialTicks);
-    if (mc.objectMouseOver != nullptr) {
-        glDisable(GL_ALPHA_TEST);
-        mc.renderGlobal->drawBlockBreaking(*mc.thePlayer, *mc.objectMouseOver, 0, partialTicks);
-        mc.renderGlobal->drawSelectionBox(*mc.thePlayer, *mc.objectMouseOver, 0, partialTicks);
-        glEnable(GL_ALPHA_TEST);
+    std::unique_ptr<Vec3D> cameraPos = player.getPosition(partialTicks);
+
+    for (int_t pass = 0; pass < 2; ++pass) {
+        if (mc.options->anaglyph) {
+            if (pass == 0) {
+                glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
+            } else {
+                glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+            }
+        }
+
+        glViewport(0, 0, mc.displayWidth, mc.displayHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
+        setupCameraTransform(partialTicks, pass);
+        Frustum frustum;
+        frustum.setPosition(cameraPos->xCoord, cameraPos->yCoord, cameraPos->zCoord);
+        if (mc.options->renderDistance < 2) {
+            setupFog(-1);
+            renderGlobal.renderSky(partialTicks);
+        }
+        glEnable(GL_FOG);
+        setupFog(1);
+        renderGlobal.clipRenderersByFrustum(frustum, partialTicks);
+        renderGlobal.updateRenderers(player, false);
+        setupFog(0);
+        glEnable(GL_FOG);
+        glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/terrain.png"));
+        renderGlobal.sortAndRender(player, 0, partialTicks);
+        renderGlobal.renderEntities(*cameraPos, frustum, partialTicks);
+        effectRenderer.renderLitParticles(player, partialTicks);
+        effectRenderer.renderParticles(player, partialTicks);
+        if (player.isInsideOfMaterial(Material::water)) {
+            glDisable(GL_ALPHA_TEST);
+            glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/water.png"));
+            renderWarpedTextureOverlay(partialTicks);
+            glEnable(GL_ALPHA_TEST);
+        }
+        if (mc.objectMouseOver != nullptr && !player.isInsideOfMaterial(Material::water)) {
+            glDisable(GL_ALPHA_TEST);
+            renderGlobal.drawBlockBreaking(player, *mc.objectMouseOver, 0, partialTicks);
+            renderGlobal.drawSelectionBox(player, *mc.objectMouseOver, 0, partialTicks);
+            glEnable(GL_ALPHA_TEST);
+        }
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        setupFog(0);
+        glEnable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
+        glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/terrain.png"));
+        if (mc.options->fancyGraphics) {
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            const int_t rendered = renderGlobal.sortAndRender(player, 1, partialTicks);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            if (mc.options->anaglyph) {
+                if (pass == 0) {
+                    glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
+                } else {
+                    glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+                }
+            }
+            if (rendered > 0) {
+                renderGlobal.renderAllRenderLists(1, partialTicks);
+            }
+        } else {
+            renderGlobal.sortAndRender(player, 1, partialTicks);
+        }
+        glDepthMask(true);
+        glEnable(GL_CULL_FACE);
+        glDisable(GL_BLEND);
+        if (mc.objectMouseOver != nullptr && player.isInsideOfMaterial(Material::water)) {
+            glDisable(GL_ALPHA_TEST);
+            renderGlobal.drawBlockBreaking(player, *mc.objectMouseOver, 0, partialTicks);
+            renderGlobal.drawSelectionBox(player, *mc.objectMouseOver, 0, partialTicks);
+            glEnable(GL_ALPHA_TEST);
+        }
+        glDisable(GL_FOG);
+        if (mc.theWorld->snowCovered) {
+            renderSnow(partialTicks);
+        }
+        setupFog(0);
+        glEnable(GL_FOG);
+        renderGlobal.renderClouds(partialTicks);
+        glDisable(GL_FOG);
+        setupFog(1);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        renderHand(partialTicks, pass);
+        if (!mc.options->anaglyph) {
+            break;
+        }
     }
-    glDisable(GL_ALPHA_TEST);
-    if (isPlayerInsideMaterial(Material::water)) {
-        glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/water.png"));
-        renderWarpedTextureOverlay(partialTicks);
+
+    if (mc.options->anaglyph) {
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
     }
-    glEnable(GL_ALPHA_TEST);
-    glDisable(GL_FOG);
 }
 
 void EntityRenderer::renderWarpedTextureOverlay(const float partialTicks) {
@@ -220,24 +306,170 @@ void EntityRenderer::getMouseOver(const float partialTicks) {
 }
 
 void EntityRenderer::setupCameraTransform(const float partialTicks) {
+    setupCameraTransform(partialTicks, 0);
+}
+
+void EntityRenderer::setupCameraTransform(const float partialTicks, const int_t pass) {
     farPlaneDistance = static_cast<float>(256 >> mc.options->renderDistance);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    GLU::gluPerspective(70.0f, static_cast<float>(mc.displayWidth) / static_cast<float>(mc.displayHeight), 0.05f,
+    if (mc.options->anaglyph) {
+        glTranslatef(static_cast<float>(-(pass * 2 - 1)) * 0.07f, 0.0f, 0.0f);
+    }
+    GLU::gluPerspective(getFOVModifier(partialTicks), static_cast<float>(mc.displayWidth) / mc.displayHeight, 0.05f,
                         farPlaneDistance);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    if (mc.options->anaglyph) {
+        glTranslatef(static_cast<float>(pass * 2 - 1) * 0.1f, 0.0f, 0.0f);
+    }
+    hurtCameraEffect(partialTicks);
+    if (mc.options->viewBobbing) {
+        setupViewBobbing(partialTicks);
+    }
+
+    orientCamera(partialTicks);
+}
+
+float EntityRenderer::getFOVModifier(const float partialTicks) const {
+    if (mc.thePlayer == nullptr) {
+        return 70.0f;
+    }
+
+    float fov = isPlayerInsideMaterial(Material::water) ? 60.0f : 70.0f;
+    if (mc.thePlayer->health <= 0) {
+        const float deathTime = static_cast<float>(mc.thePlayer->deathTime) + partialTicks;
+        fov /= (1.0f - 500.0f / (deathTime + 500.0f)) * 2.0f + 1.0f;
+    }
+    return fov;
+}
+
+void EntityRenderer::hurtCameraEffect(const float partialTicks) {
+    if (mc.thePlayer == nullptr) {
+        return;
+    }
+
+    const float hurtTime = static_cast<float>(mc.thePlayer->hurtTime) - partialTicks;
+    if (mc.thePlayer->health <= 0) {
+        const float deathTime = static_cast<float>(mc.thePlayer->deathTime) + partialTicks;
+        glRotatef(40.0f - 8000.0f / (deathTime + 200.0f), 0.0f, 0.0f, 1.0f);
+    }
+
+    if (hurtTime >= 0.0f) {
+        float hurtFraction = hurtTime / static_cast<float>(mc.thePlayer->maxHurtTime);
+        hurtFraction = MathHelper::sin(hurtFraction * hurtFraction * hurtFraction * hurtFraction *
+                                       static_cast<float>(std::acos(-1.0)));
+        const float attackedAtYaw = mc.thePlayer->attackedAtYaw;
+        glRotatef(-attackedAtYaw, 0.0f, 1.0f, 0.0f);
+        glRotatef(-hurtFraction * 14.0f, 0.0f, 0.0f, 1.0f);
+        glRotatef(attackedAtYaw, 0.0f, 1.0f, 0.0f);
+    }
+}
+
+void EntityRenderer::setupViewBobbing(const float partialTicks) {
+    if (mc.options == nullptr || mc.options->thirdPersonView || mc.thePlayer == nullptr) {
+        return;
+    }
+
+    const float walk = mc.thePlayer->prevDistanceWalkedModified +
+                       (mc.thePlayer->distanceWalkedModified - mc.thePlayer->prevDistanceWalkedModified) * partialTicks;
+    const float cameraYaw = mc.thePlayer->prevCameraYaw +
+                            (mc.thePlayer->cameraYaw - mc.thePlayer->prevCameraYaw) * partialTicks;
+    const float cameraPitch = mc.thePlayer->prevCameraPitch +
+                              (mc.thePlayer->cameraPitch - mc.thePlayer->prevCameraPitch) * partialTicks;
+
+    glTranslatef(MathHelper::sin(walk * static_cast<float>(std::acos(-1.0))) * cameraYaw * 0.5f,
+                 -std::fabs(MathHelper::cos(walk * static_cast<float>(std::acos(-1.0))) * cameraYaw), 0.0f);
+    glRotatef(MathHelper::sin(walk * static_cast<float>(std::acos(-1.0))) * cameraYaw * 3.0f, 0.0f, 0.0f, 1.0f);
+    glRotatef(std::fabs(MathHelper::cos(walk * static_cast<float>(std::acos(-1.0)) + 0.2f) * cameraYaw) * 5.0f,
+              1.0f, 0.0f, 0.0f);
+    glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
+}
+
+void EntityRenderer::orientCamera(const float partialTicks) {
+    if (mc.thePlayer == nullptr) {
+        return;
+    }
 
     const double cameraX = mc.thePlayer->prevPosX + (mc.thePlayer->posX - mc.thePlayer->prevPosX) * partialTicks;
     const double cameraY = mc.thePlayer->prevPosY + (mc.thePlayer->posY - mc.thePlayer->prevPosY) * partialTicks;
     const double cameraZ = mc.thePlayer->prevPosZ + (mc.thePlayer->posZ - mc.thePlayer->prevPosZ) * partialTicks;
-    const float cameraYaw = mc.thePlayer->prevRotationYaw + (mc.thePlayer->rotationYaw - mc.thePlayer->prevRotationYaw)
-                            * partialTicks;
-    const float cameraPitch = mc.thePlayer->prevRotationPitch + (mc.thePlayer->rotationPitch -
-                                                                 mc.thePlayer->prevRotationPitch) * partialTicks;
-    glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
-    glRotatef(cameraYaw + 180.0f, 0.0f, 1.0f, 0.0f);
-    glTranslatef(static_cast<float>(-cameraX), static_cast<float>(-cameraY), static_cast<float>(-cameraZ));
+    if (mc.options != nullptr && mc.options->thirdPersonView) {
+        double cameraDistance = 4.0;
+        const float yaw = mc.thePlayer->rotationYaw;
+        const float pitch = mc.thePlayer->rotationPitch;
+        const double radians = std::acos(-1.0) / 180.0;
+        const double xOffset = -std::sin(static_cast<double>(yaw) * radians) *
+                               std::cos(static_cast<double>(pitch) * radians) * cameraDistance;
+        const double zOffset = std::cos(static_cast<double>(yaw) * radians) *
+                               std::cos(static_cast<double>(pitch) * radians) * cameraDistance;
+        const double yOffset = -std::sin(static_cast<double>(pitch) * radians) * cameraDistance;
+
+        for (int_t i = 0; i < 8; ++i) {
+            const float sampleX = static_cast<float>((i & 1) * 2 - 1) * 0.1f;
+            const float sampleY = static_cast<float>((i >> 1 & 1) * 2 - 1) * 0.1f;
+            const float sampleZ = static_cast<float>((i >> 2 & 1) * 2 - 1) * 0.1f;
+            Vec3D start(cameraX + static_cast<double>(sampleX),
+                        cameraY + static_cast<double>(sampleY),
+                        cameraZ + static_cast<double>(sampleZ));
+            Vec3D end(cameraX - xOffset + static_cast<double>(sampleX) + static_cast<double>(sampleZ),
+                      cameraY - yOffset + static_cast<double>(sampleY),
+                      cameraZ - zOffset + static_cast<double>(sampleZ));
+            MovingObjectPosition hit = mc.theWorld->rayTraceBlocks(start, end);
+            if (hit.hitVec != nullptr) {
+                const double distance = hit.hitVec->distanceTo(Vec3D(cameraX, cameraY, cameraZ));
+                if (distance < cameraDistance) {
+                    cameraDistance = distance;
+                }
+            }
+        }
+
+        glRotatef(mc.thePlayer->rotationPitch - mc.thePlayer->prevRotationPitch, 1.0f, 0.0f, 0.0f);
+        glRotatef(mc.thePlayer->rotationYaw - mc.thePlayer->prevRotationYaw, 0.0f, 1.0f, 0.0f);
+        glTranslatef(0.0f, 0.0f, static_cast<float>(-cameraDistance));
+        glRotatef(mc.thePlayer->prevRotationYaw - mc.thePlayer->rotationYaw, 0.0f, 1.0f, 0.0f);
+        glRotatef(mc.thePlayer->prevRotationPitch - mc.thePlayer->rotationPitch, 1.0f, 0.0f, 0.0f);
+    } else {
+        glTranslatef(0.0f, 0.0f, -0.1f);
+    }
+    glRotatef(mc.thePlayer->prevRotationPitch + (mc.thePlayer->rotationPitch - mc.thePlayer->prevRotationPitch) *
+              partialTicks, 1.0f, 0.0f, 0.0f);
+    glRotatef(mc.thePlayer->prevRotationYaw + (mc.thePlayer->rotationYaw - mc.thePlayer->prevRotationYaw) *
+              partialTicks + 180.0f, 0.0f, 1.0f, 0.0f);
+}
+
+void EntityRenderer::renderHand(const float partialTicks, const int_t pass) {
+    glLoadIdentity();
+    if (mc.options->anaglyph) {
+        glTranslatef(static_cast<float>(pass * 2 - 1) * 0.1f, 0.0f, 0.0f);
+    }
+
+    glPushMatrix();
+    hurtCameraEffect(partialTicks);
+    if (mc.options->viewBobbing) {
+        setupViewBobbing(partialTicks);
+    }
+
+    if (!mc.options->thirdPersonView && itemRenderer != nullptr) {
+        itemRenderer->renderItemInFirstPerson(partialTicks);
+    }
+
+    glPopMatrix();
+    if (!mc.options->thirdPersonView && itemRenderer != nullptr) {
+        itemRenderer->renderOverlays(partialTicks);
+        hurtCameraEffect(partialTicks);
+    }
+
+    if (mc.options->viewBobbing) {
+        setupViewBobbing(partialTicks);
+    }
+}
+
+void EntityRenderer::addRainParticles() {
+}
+
+void EntityRenderer::renderSnow(const float partialTicks) {
+    (void) partialTicks;
 }
 
 void EntityRenderer::setupFog(const int_t mode) {

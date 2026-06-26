@@ -29,9 +29,9 @@ std::unique_ptr<Vec3D> EntityLiving::getPosition(const float partialTicks) const
         return Vec3D::createVector(posX, posY, posZ);
     }
 
-    const double x = prevPosX + (posX - prevPosX) * static_cast<double>(partialTicks);
-    const double y = prevPosY + (posY - prevPosY) * static_cast<double>(partialTicks);
-    const double z = prevPosZ + (posZ - prevPosZ) * static_cast<double>(partialTicks);
+    const double x = lastTickPosX + (posX - lastTickPosX) * static_cast<double>(partialTicks);
+    const double y = lastTickPosY + (posY - lastTickPosY) * static_cast<double>(partialTicks);
+    const double z = lastTickPosZ + (posZ - lastTickPosZ) * static_cast<double>(partialTicks);
     return Vec3D::createVector(x, y, z);
 }
 
@@ -64,10 +64,22 @@ MovingObjectPosition EntityLiving::rayTrace(const double reachDistance, const fl
     return worldObj.rayTraceBlocks(*start, *end);
 }
 
+bool EntityLiving::canBeCollidedWith() const {
+    return !isDead;
+}
+
+bool EntityLiving::canBePushed() const {
+    return !isDead;
+}
+
 void EntityLiving::onLivingUpdate() {
     if (isJumping && onGround) {
         jump();
     }
+
+    prevDistanceWalkedModified = distanceWalkedModified;
+    const float horizontalMotion = static_cast<float>(std::sqrt(motionX * motionX + motionZ * motionZ));
+    distanceWalkedModified += (horizontalMotion - distanceWalkedModified) * 0.4f;
 
     moveStrafing *= 0.98f;
     moveForward *= 0.98f;

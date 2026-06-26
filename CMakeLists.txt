@@ -64,6 +64,13 @@ add_executable(MCPort
         Source/game/block/Material.h
         Source/game/phys/AxisAlignedBB.cpp
         Source/game/phys/AxisAlignedBB.h
+        Source/game/phys/ClippingHelper.cpp
+        Source/game/phys/ClippingHelper.h
+        Source/game/phys/ClippingHelperImplementation.cpp
+        Source/game/phys/ClippingHelperImplementation.h
+        Source/game/phys/Frustum.cpp
+        Source/game/phys/Frustum.h
+        Source/game/phys/ICamera.h
         Source/game/phys/MovingObjectPosition.cpp
         Source/game/phys/MovingObjectPosition.h
         Source/game/entity/MovementInput.cpp
@@ -133,6 +140,8 @@ add_executable(MCPort
         Source/game/client/player/PlayerControllerSP.h
         Source/game/client/renderer/RenderGlobal.cpp
         Source/game/client/renderer/RenderGlobal.h
+        Source/game/client/renderer/RenderList.cpp
+        Source/game/client/renderer/RenderList.h
         Source/game/client/gui/Gui.cpp
         Source/game/client/gui/Gui.h
         Source/game/client/gui/GuiButton.cpp
@@ -202,6 +211,47 @@ add_executable(MCPort
         Source/game/entity/fx/EntityFX.h
         Source/game/entity/fx/EntityDiggingFX.cpp
         Source/game/entity/fx/EntityDiggingFX.h
+        Source/game/item/Item.cpp
+        Source/game/item/Item.h
+        Source/game/item/ItemStack.cpp
+        Source/game/item/ItemStack.h
+        Source/game/entity/EntityItem.cpp
+        Source/game/entity/EntityItem.h
+        Source/game/client/renderer/Render.cpp
+        Source/game/client/renderer/Render.h
+        Source/game/client/renderer/RenderEntity.cpp
+        Source/game/client/renderer/RenderEntity.h
+        Source/game/client/renderer/RenderItem.cpp
+        Source/game/client/renderer/RenderItem.h
+        Source/game/client/renderer/RenderManager.cpp
+        Source/game/client/renderer/RenderManager.h
+        Source/game/client/renderer/ItemRenderer.cpp
+        Source/game/client/renderer/ItemRenderer.h
+        Source/game/client/renderer/ItemRenderer.cpp
+        Source/game/client/renderer/ItemRenderer.h
+        Source/game/client/renderer/Render.cpp
+        Source/game/client/renderer/Render.h
+        Source/game/client/renderer/RenderEntity.cpp
+        Source/game/client/renderer/RenderEntity.h
+        Source/game/client/renderer/RenderItem.cpp
+        Source/game/client/renderer/RenderItem.h
+        Source/game/client/renderer/RenderList.cpp
+        Source/game/client/renderer/RenderList.h
+        Source/game/client/renderer/RenderManager.cpp
+        Source/game/client/renderer/RenderManager.h
+        Source/game/entity/EntityItem.cpp
+        Source/game/entity/EntityItem.h
+        Source/game/phys/ClippingHelper.cpp
+        Source/game/phys/ClippingHelper.h
+        Source/game/phys/ClippingHelperImplementation.cpp
+        Source/game/phys/ClippingHelperImplementation.h
+        Source/game/phys/Frustum.cpp
+        Source/game/phys/Frustum.h
+        Source/game/phys/ICamera.h
+        Source/game/item/Item.cpp
+        Source/game/item/Item.h
+        Source/game/item/ItemStack.cpp
+        Source/game/item/ItemStack.h
 )
 
 if (APPLE)

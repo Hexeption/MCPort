@@ -22,12 +22,13 @@ bool PlayerControllerSP::sendBlockRemoved(const int_t x, const int_t y, const in
     }
 
     const int_t blockId = mc.theWorld->getBlockId(x, y, z);
+    const int_t blockMetadata = mc.theWorld->getBlockMetadata(x, y, z);
     const bool removed = PlayerController::sendBlockRemoved(x, y, z, side);
     Block *block = blockId >= 0 && blockId < static_cast<int_t>(Block::blocksList.size())
                        ? Block::blocksList[blockId]
                        : nullptr;
     if (removed && block != nullptr && mc.thePlayer != nullptr && mc.thePlayer->canHarvestBlock(*block)) {
-        // Item drops are handled by Block::harvestBlock in the original. Items are not ported yet.
+        Block::blocksList[blockId]->harvestBlock(*mc.theWorld, x, y, z, blockMetadata);
     }
 
     return removed;

@@ -62,11 +62,6 @@ void EffectRenderer::renderParticles(Entity &entity, float partialTicks) {
     EntityFX::interpPosZ = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * static_cast<double>(
                                partialTicks);
 
-
-    EntityFX::interpPosX = entity.prevPosX + (entity.posX - entity.prevPosX) * static_cast<double>(partialTicks);
-    EntityFX::interpPosY = entity.prevPosY + (entity.posY - entity.prevPosY) * static_cast<double>(partialTicks);
-    EntityFX::interpPosZ = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * static_cast<double>(partialTicks);
-
     for (int_t layer = 0; layer < 3; ++layer) {
         if (fxLayers[layer].empty()) {
             continue;

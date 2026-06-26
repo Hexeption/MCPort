@@ -6,10 +6,12 @@
 #define MCPORT_ENTITY_H
 
 #include "game/phys/AxisAlignedBB.h"
+#include "java/Random.h"
 #include "java/Type.h"
 
 class World;
 class Material;
+class Vec3D;
 
 class Entity {
 public:
@@ -34,6 +36,7 @@ public:
     bool isCollidedHorizontally = false;
     bool isCollidedVertically = false;
     bool isCollided = false;
+    double renderDistanceWeight = 1.0;
     bool isDead = false;
     bool inWater = false;
     bool firstUpdate = true;
@@ -51,6 +54,12 @@ public:
     double lastTickPosX;
     double lastTickPosY;
     double lastTickPosZ;
+    Random rand = Random();
+    bool addedToChunk = false;
+    int_t chunkCoordX = 0;
+    int_t chunkCoordY = 0;
+    int_t chunkCoordZ = 0;
+    bool canTriggerWalking = true;
 
     explicit Entity(World &world);
 
@@ -80,15 +89,25 @@ public:
 
     float getBrightness(float partialTicks);
 
+    virtual bool canBeCollidedWith() const;
+
+    virtual bool canBePushed() const;
+
+    bool isInRangeToRenderVec3D(const Vec3D &vec) const;
+
+    bool isInRangeToRenderDist(double distanceSq) const;
+
     bool isInsideOfMaterial(Material *material) const;
 
-    bool handleWaterMovement();
+    virtual bool handleWaterMovement();
 
-    bool handleLavaMovement() const;
+    virtual bool handleLavaMovement() const;
 
     bool isOffsetPositionInLiquid(double x, double y, double z) const;
 
     bool isInWater() const;
+
+    virtual void setEntityDead();
 };
 
 #endif //MCPORT_ENTITY_H

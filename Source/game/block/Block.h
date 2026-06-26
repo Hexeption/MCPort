@@ -25,6 +25,7 @@ public:
     static std::array<int_t, 256> lightOpacity;
     static std::array<int_t, 256> lightValue;
     static std::array<bool, 256> tickOnLoad;
+    static std::array<bool, 256> opaqueCubeLookup;
     static Block *stone;
     static Block *grass;
     static Block *dirt;
@@ -94,6 +95,10 @@ public:
 
     virtual void onBlockDestroyedByPlayer(World &world, int_t x, int_t y, int_t z, int_t metadata);
 
+    virtual int_t quantityDropped(Random random);
+
+    virtual int_t idDropped(int_t var1, Random random);
+
     virtual void onBlockAdded(World &world, int_t x, int_t y, int_t z);
 
     virtual void onNeighborBlockChange(World &world, int_t x, int_t y, int_t z, int_t neighborBlockId);
@@ -102,6 +107,10 @@ public:
 
     virtual float blockStrength(EntityPlayer &player) const;
 
+    virtual void dropBlockAsItem(World &world, int_t x, int_t y, int_t z, int_t metadata);
+
+    virtual void dropBlockAsItemWithChance(World &world, int_t x, int_t y, int_t z, int_t metadata, float chance);
+
     virtual bool canCollideCheck(int_t var1, bool var2) const;
 
     virtual void velocityToAddToEntity(World &world, int_t x, int_t y, int_t z, Entity &entity,
@@ -109,6 +118,10 @@ public:
 
     virtual MovingObjectPosition collisionRayTrace(World &world, int_t x, int_t y, int_t z, const Vec3D &start,
                                                    const Vec3D &end);
+
+    virtual void harvestBlock(World &world, int_t x, int_t y, int_t z, int_t metadata);
+
+    virtual bool renderAsNormalBlock();
 
 private:
     std::array<int_t, 6> blockTextures{};

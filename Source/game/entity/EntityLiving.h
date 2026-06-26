@@ -15,7 +15,14 @@ public:
     float moveForward = 0.0f;
     bool isJumping = false;
     float moveSpeed = 0.7f;
+    float prevCameraPitch = 0.0f;
     float cameraPitch = 0.0f;
+    float prevDistanceWalkedModified = 0.0f;
+    float distanceWalkedModified = 0.0f;
+    int_t hurtTime = 0;
+    int_t maxHurtTime = 10;
+    int_t deathTime = 0;
+    float attackedAtYaw = 0.0f;
     int_t health = 10;
 
     explicit EntityLiving(World &world);
@@ -23,6 +30,10 @@ public:
     void onUpdate() override;
 
     float getEyeHeight() const override;
+
+    bool canBeCollidedWith() const override;
+
+    bool canBePushed() const override;
 
     std::unique_ptr<Vec3D> getPosition(float partialTicks) const;
 

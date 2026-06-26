@@ -61,6 +61,10 @@ AxisAlignedBB AxisAlignedBB::getOffsetBoundingBox(const double x, const double y
     return AxisAlignedBB(minX + x, minY + y, minZ + z, maxX + x, maxY + y, maxZ + z);
 }
 
+double AxisAlignedBB::getAverageEdgeLength() const {
+    return ((maxX - minX) + (maxY - minY) + (maxZ - minZ)) / 3.0;
+}
+
 double AxisAlignedBB::calculateXOffset(const AxisAlignedBB &other, double offset) const {
     if (other.maxY <= minY || other.minY >= maxY || other.maxZ <= minZ || other.minZ >= maxZ) {
         return offset;

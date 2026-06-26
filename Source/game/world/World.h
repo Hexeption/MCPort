@@ -26,6 +26,7 @@
 #include "java/Type.h"
 
 class Entity;
+class EntityPlayer;
 class RenderGlobal;
 
 class World : public IBlockAccess {
@@ -55,6 +56,11 @@ public:
     bool worldChunkLoadOverride = false;
     bool multiplayerWorld = false;
     RenderGlobal *renderGlobal = nullptr;
+    std::vector<std::unique_ptr<Entity> > loadedEntityList;
+    std::vector<Entity *> unloadedEntityList;
+    std::vector<EntityPlayer *> playerEntities;
+
+    const std::vector<std::unique_ptr<Entity> > &getLoadedEntityList() const;
 
     static std::unique_ptr<NBTTagCompound> getLevelData(const File &minecraftDir, const jstring &levelName);
 
@@ -185,6 +191,14 @@ public:
 
     MovingObjectPosition rayTraceBlocks_do(const Vec3D &start, const Vec3D &end, bool ignoreLiquid);
 
+    bool spawnEntityInWorld(std::unique_ptr<Entity> entity);
+
+    bool spawnEntityInWorld(Entity *entity);
+
+    void setEntityDead(Entity &entity);
+
+    void updateEntities();
+
 private:
     long_t lockTimestamp;
     std::unordered_map<long_t, int_t> blockOverrides;
@@ -218,6 +232,8 @@ private:
 
     void createSessionLock() const;
 
+    void updateEntity(Entity &entity);
+
     void saveLevel();
 
     bool findSpawn(int_t x, int_t z) const;
@@ -235,6 +251,11 @@ private:
     Chunk &getChunkFromChunkCoords(int_t chunkX, int_t chunkZ) const;
 
     Chunk &getChunkFromBlockCoords(int_t x, int_t z) const;
+
+protected:
+    void obtainEntitySkin(Entity &entity);
+
+    void releaseEntitySkin(Entity &entity);
 };
 
 #endif //MCPORT_WORLD_H

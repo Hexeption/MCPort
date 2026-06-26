@@ -29,6 +29,8 @@ public:
 
     AxisAlignedBB getOffsetBoundingBox(double x, double y, double z) const;
 
+    double getAverageEdgeLength() const;
+
     double calculateXOffset(const AxisAlignedBB &other, double offset) const;
 
     double calculateYOffset(const AxisAlignedBB &other, double offset) const;

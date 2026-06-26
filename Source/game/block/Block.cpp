@@ -9,6 +9,8 @@
 #include "game/world/World.h"
 #include "BlockFlowing.h"
 #include "BlockStationary.h"
+#include "game/entity/EntityItem.h"
+#include "game/item/ItemStack.h"
 
 struct BlockMaterialBootstrap {
     BlockMaterialBootstrap() {
@@ -26,6 +28,7 @@ std::array<int_t, 256> Block::lightOpacity = [] {
 }();
 std::array<int_t, 256> Block::lightValue = {};
 std::array<bool, 256> Block::tickOnLoad = {};
+std::array<bool, 256> Block::opaqueCubeLookup = {};
 Block *Block::stone = (new Block(1, 1, Material::rock))->setHardness(1.5f);
 Block *Block::grass = (new Block(2, 0, 2, 3, Material::grass))->setHardness(0.6f);
 Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
@@ -45,6 +48,7 @@ Block::Block(const int_t blockID, const int_t blockIndexInTexture, Material *mat
     if (blockID >= 0 && blockID < static_cast<int_t>(blocksList.size())) {
         blocksList[blockID] = this;
         lightOpacity[blockID] = isOpaqueCube() ? 255 : 0;
+        opaqueCubeLookup[blockID] = isOpaqueCube();
     }
 }
 
@@ -165,6 +169,14 @@ int_t Block::getRenderBlockPass() const {
 void Block::onBlockDestroyedByPlayer(World &, int_t, int_t, int_t, int_t) {
 }
 
+int Block::quantityDropped(Random random) {
+    return 1;
+}
+
+int_t Block::idDropped(int_t var1, Random random) {
+    return blockID;
+}
+
 void Block::onBlockAdded(World &, int_t, int_t, int_t) {
 }
 
@@ -184,6 +196,51 @@ float Block::blockStrength(EntityPlayer &player) const {
     }
 
     return player.getCurrentPlayerStrVsBlock(*this) / hardness / 30.0f;
+}
+
+void Block::dropBlockAsItem(World &world, int_t x, int_t y, int_t z, int_t metadata) {
+    dropBlockAsItemWithChance(world, x, y, z, metadata, 1.0f);
+}
+
+void Block::dropBlockAsItemWithChance(World &world, int_t x, int_t y, int_t z, int_t metadata, float chance) {
+    if (world.multiplayerWorld) {
+        return;
+    }
+
+    const int_t count = quantityDropped(world.rand);
+
+    for (int_t i = 0; i < count; ++i) {
+        if (world.rand.nextFloat() <= chance) {
+            const int_t droppedId = idDropped(metadata, world.rand);
+
+            if (droppedId > 0) {
+                constexpr float offset = 0.7f;
+
+                const double dx =
+                        static_cast<double>(world.rand.nextFloat() * offset) +
+                        static_cast<double>(1.0f - offset) * 0.5;
+
+                const double dy =
+                        static_cast<double>(world.rand.nextFloat() * offset) +
+                        static_cast<double>(1.0f - offset) * 0.5;
+
+                const double dz =
+                        static_cast<double>(world.rand.nextFloat() * offset) +
+                        static_cast<double>(1.0f - offset) * 0.5;
+
+                auto item = std::make_unique<EntityItem>(
+                    world,
+                    static_cast<double>(x) + dx,
+                    static_cast<double>(y) + dy,
+                    static_cast<double>(z) + dz,
+                    ItemStack(droppedId)
+                );
+
+                item->delayBeforeCanPickup = 10;
+                world.spawnEntityInWorld(std::move(item));
+            }
+        }
+    }
 }
 
 bool Block::canCollideCheck(int_t, bool) const {
@@ -284,4 +341,12 @@ bool Block::isVecInsideXZBounds(const std::unique_ptr<Vec3D> &vec) const {
 
 bool Block::isVecInsideXYBounds(const std::unique_ptr<Vec3D> &vec) const {
     return vec != nullptr && vec->xCoord >= minX && vec->xCoord <= maxX && vec->yCoord >= minY && vec->yCoord <= maxY;
+}
+
+void Block::harvestBlock(World &world, int_t x, int_t y, int_t z, int_t metadata) {
+    dropBlockAsItem(world, x, y, z, metadata);
+}
+
+bool Block::renderAsNormalBlock() {
+    return true;
 }

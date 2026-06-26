@@ -47,6 +47,10 @@ public:
     void renderNorthFace(Block *block, double x, double y, double z, int_t texture);
 
     void renderSouthFace(Block *block, double x, double y, double z, int_t texture);
+
+    static bool renderItemIn3d(int_t renderType);
+
+    void renderBlockOnInventory(Block *block);
 };
 
 #endif //MCPORT_RENDERBLOCKS_H

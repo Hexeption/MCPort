@@ -445,3 +445,15 @@ void RenderBlocks::renderSouthFace(Block *block, const double x, const double y,
     var9.addVertexWithUV(maxX, maxY, minZ, u1, v0);
     var9.addVertexWithUV(maxX, maxY, maxZ, u0, v0);
 }
+
+bool RenderBlocks::renderItemIn3d(const int_t renderType) {
+    return renderType == 0;
+}
+
+void RenderBlocks::renderBlockOnInventory(Block *block) {
+    if (block == nullptr) {
+        return;
+    }
+
+    renderBlockAsItem(block, 1.0f);
+}

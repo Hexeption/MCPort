@@ -10,6 +10,7 @@
 #include "game/block/BlockFluid.h"
 #include "game/block/Material.h"
 #include "game/client/MathHelper.h"
+#include "game/util/Vec3D.h"
 #include "game/world/World.h"
 
 Entity::Entity(World &world) : worldObj(world) {
@@ -31,6 +32,9 @@ void Entity::onEntityUpdate() {
     prevPosZ = posZ;
     prevRotationYaw = rotationYaw;
     prevRotationPitch = rotationPitch;
+    lastTickPosX = prevPosX;
+    lastTickPosY = prevPosY;
+    lastTickPosZ = prevPosZ;
 
     if (handleWaterMovement()) {
         fallDistance = 0.0f;
@@ -198,6 +202,27 @@ float Entity::getBrightness(float partialTicks) {
     return worldObj.getBrightness(x, y, z);
 }
 
+bool Entity::canBeCollidedWith() const {
+    return false;
+}
+
+bool Entity::canBePushed() const {
+    return false;
+}
+
+bool Entity::isInRangeToRenderVec3D(const Vec3D &vec) const {
+    const double dx = posX - vec.xCoord;
+    const double dy = posY - vec.yCoord;
+    const double dz = posZ - vec.zCoord;
+    return isInRangeToRenderDist(dx * dx + dy * dy + dz * dz);
+}
+
+bool Entity::isInRangeToRenderDist(const double distanceSq) const {
+    double range = boundingBox.getAverageEdgeLength();
+    range *= 64.0 * renderDistanceWeight;
+    return distanceSq < range * range;
+}
+
 bool Entity::isInsideOfMaterial(Material *material) const {
     if (material == nullptr) {
         return false;
@@ -238,4 +263,8 @@ bool Entity::isOffsetPositionInLiquid(const double x, const double y, const doub
 
 bool Entity::isInWater() const {
     return inWater;
+}
+
+void Entity::setEntityDead() {
+    isDead = true;
 }
