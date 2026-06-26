@@ -8,6 +8,7 @@
 #include "game/world/IBlockAccess.h"
 #include "game/world/World.h"
 #include "BlockFlowing.h"
+#include "BlockGrass.h"
 #include "BlockGravel.h"
 #include "BlockLeaves.h"
 #include "BlockLog.h"
@@ -35,7 +36,7 @@ std::array<int_t, 256> Block::lightValue = {};
 std::array<bool, 256> Block::tickOnLoad = {};
 std::array<bool, 256> Block::opaqueCubeLookup = {};
 Block *Block::stone = (new Block(1, 1, Material::rock))->setHardness(1.5f);
-Block *Block::grass = (new Block(2, 0, 2, 3, Material::grass))->setHardness(0.6f);
+Block *Block::grass = (new BlockGrass(2))->setHardness(0.6f);
 Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
 Block *Block::cobblestone = (new Block(4, 16, Material::rock))->setHardness(2.0f);
 Block *Block::sand = (new BlockSand(12, 18))->setHardness(0.5f);
@@ -98,6 +99,10 @@ int_t Block::getRenderType() const {
 }
 
 void Block::setBlockBoundsForItemRender() {
+}
+
+int_t Block::getBlockTexture(IBlockAccess &blockAccess, int_t x, int_t y, int_t z, int_t side) const {
+    return getBlockTextureFromSideAndMetadata(side, blockAccess.getBlockMetadata(x, y, z));
 }
 
 int_t Block::getBlockTextureFromSide(const int_t side) const {

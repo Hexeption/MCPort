@@ -67,8 +67,8 @@ bool RenderBlocks::renderStandardBlockWithColorMultiplier(Block *block, const in
 
     Tessellator &tessellator = Tessellator::instance;
     bool renderedAny = false;
-    const auto textureForSide = [this, block](const int_t side) {
-        return overrideBlockTexture >= 0 ? overrideBlockTexture : block->getBlockTextureFromSide(side);
+    const auto textureForSide = [this, block, x, y, z](const int_t side) {
+        return overrideBlockTexture >= 0 ? overrideBlockTexture : block->getBlockTexture(*blockAccess, x, y, z, side);
     };
 
     if (block->shouldSideBeRendered(*blockAccess, x, y - 1, z, 0)) {

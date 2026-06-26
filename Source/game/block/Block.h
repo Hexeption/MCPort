@@ -72,6 +72,8 @@ public:
 
     void setBlockBoundsForItemRender();
 
+    virtual int_t getBlockTexture(IBlockAccess &blockAccess, int_t x, int_t y, int_t z, int_t side) const;
+
     virtual int_t getBlockTextureFromSide(int_t side) const;
 
     virtual int_t getBlockTextureFromSideAndMetadata(int_t side, int_t metadata) const;

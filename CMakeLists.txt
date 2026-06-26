@@ -299,6 +299,8 @@ add_executable(MCPort
         Source/game/block/BlockFlower.h
         Source/game/block/BlockSapling.cpp
         Source/game/block/BlockSapling.h
+        Source/game/block/BlockGrass.cpp
+        Source/game/block/BlockGrass.h
 )
 
 if (APPLE)
