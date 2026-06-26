@@ -33,6 +33,8 @@ public:
     std::array<std::vector<Entity *>, 8> entities{};
     bool hasEntities = false;
     bool isChunkRendered = false;
+    bool neverSave = false;
+    long_t lastSaveTime = 0;
 
     Chunk(World &world, int_t chunkX, int_t chunkZ);
 
@@ -76,6 +78,12 @@ public:
     void generateHeightMap();
 
     void generateSkylightMap();
+
+    bool isAtLocation(int_t chunkX, int_t chunkZ) const;
+
+    void setChunkModified();
+
+    bool needsSaving(bool forceSave) const;
 
     void addEntity(Entity &entity);
 

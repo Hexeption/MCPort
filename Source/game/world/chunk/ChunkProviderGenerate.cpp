@@ -221,6 +221,10 @@ void ChunkProviderGenerate::replaceSurfaceBlocks(const int_t chunkX, const int_t
     }
 }
 
+bool ChunkProviderGenerate::chunkExists(int_t, int_t) {
+    return true;
+}
+
 Chunk ChunkProviderGenerate::provideChunk(const int_t chunkX, const int_t chunkZ) {
     rand.setSeed(static_cast<long_t>(chunkX) * 341873128712L + static_cast<long_t>(chunkZ) * 132897987541L);
     std::array<int_t, 16 * 128 * 16> blocks{};
@@ -327,7 +331,7 @@ std::vector<double> ChunkProviderGenerate::initializeNoiseField(std::vector<doub
     return noise;
 }
 
-void ChunkProviderGenerate::populate(const int_t chunkX, const int_t chunkZ) {
+void ChunkProviderGenerate::populate(IChunkProvider &, const int_t chunkX, const int_t chunkZ) {
     const int_t baseX = chunkX * 16;
     const int_t baseZ = chunkZ * 16;
 
@@ -367,4 +371,17 @@ void ChunkProviderGenerate::populate(const int_t chunkX, const int_t chunkZ) {
         treeGen.setScale(1.0, 1.0, 1.0);
         treeGen.generate(worldObj, rand, x, y, z);
     }
+
+}
+
+bool ChunkProviderGenerate::saveChunks(bool, void *) {
+    return true;
+}
+
+bool ChunkProviderGenerate::unload100OldestChunks() {
+    return false;
+}
+
+bool ChunkProviderGenerate::canSave() const {
+    return true;
 }

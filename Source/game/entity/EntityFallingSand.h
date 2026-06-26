@@ -7,6 +7,8 @@
 
 #include "Entity.h"
 
+class NBTTagCompound;
+
 class EntityFallingSand : public Entity {
 public:
     int_t blockID = 0;
@@ -21,6 +23,10 @@ public:
     void onUpdate() override;
 
     World &getWorld() const;
+
+    void writeEntityToNBT(NBTTagCompound &nbt) override;
+
+    void readEntityFromNBT(NBTTagCompound &nbt) override;
 
 private:
     void dropItem(int_t itemId, int_t count);

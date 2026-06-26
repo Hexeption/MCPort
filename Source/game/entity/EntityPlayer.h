@@ -13,6 +13,7 @@ class Block;
 class Entity;
 class EntityItem;
 class ItemStack;
+class NBTTagCompound;
 
 class EntityPlayer : public EntityLiving {
 public:
@@ -48,6 +49,10 @@ public:
     void joinEntityItemWithWorld(EntityItem &item);
 
     void onItemPickup(Entity &entity, int_t amount);
+
+    void writeEntityToNBT(NBTTagCompound &nbt) override;
+
+    void readEntityFromNBT(NBTTagCompound &nbt) override;
 };
 
 #endif //MCPORT_ENTITYPLAYER_H

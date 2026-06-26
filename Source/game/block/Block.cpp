@@ -50,6 +50,7 @@ Block *Block::lavaStill = (new BlockStationary(11, Material::lava))->setHardness
 Block *Block::leaves = (new BlockLeaves(18, 52))->setHardness(0.2f)->setLightOpacity(1);
 Block *Block::wood = (new BlockLog(17))->setHardness(2.0f);
 Block *Block::sapling = (new BlockSapling(6, 15))->setHardness(0.0f)->setLightValue(1);
+Block *Block::ladder = nullptr;
 
 Block::Block(const int_t blockID, Material *material) : blockID(blockID), material(material), blockIndexInTexture(0) {
     blockTextures.fill(0);

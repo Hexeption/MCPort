@@ -41,6 +41,7 @@ public:
     static Block *leaves;
     static Block *wood;
     static Block *sapling;
+    static Block *ladder;
 
     int_t blockIndexInTexture;
     int_t blockID;

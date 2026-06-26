@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "game/world/chunk/IChunkProvider.h"
 #include "game/world/gen/NoiseGeneratorOctaves.h"
 #include "java/Random.h"
 #include "java/Type.h"
@@ -16,7 +17,7 @@
 class Chunk;
 class World;
 
-class ChunkProviderGenerate {
+class ChunkProviderGenerate : public IChunkProvider {
 public:
     World &worldObj;
     Random rand;
@@ -27,9 +28,17 @@ public:
 
     void replaceSurfaceBlocks(int_t chunkX, int_t chunkZ, std::array<int_t, 16 * 128 * 16> &blocks);
 
-    Chunk provideChunk(int_t chunkX, int_t chunkZ);
+    bool chunkExists(int_t chunkX, int_t chunkZ) override;
 
-    void populate(int_t chunkX, int_t chunkZ);
+    Chunk provideChunk(int_t chunkX, int_t chunkZ) override;
+
+    void populate(IChunkProvider &provider, int_t chunkX, int_t chunkZ) override;
+
+    bool saveChunks(bool forceSave, void *progressUpdate) override;
+
+    bool unload100OldestChunks() override;
+
+    bool canSave() const override;
 
 private:
     std::unique_ptr<NoiseGeneratorOctaves> noiseGen1;

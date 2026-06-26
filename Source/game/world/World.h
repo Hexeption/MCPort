@@ -20,14 +20,16 @@
 #include "game/world/MetadataChunkBlock.h"
 #include "game/world/NextTickListEntry.h"
 #include "game/world/chunk/Chunk.h"
-#include "game/world/chunk/ChunkProviderGenerate.h"
+#include "game/world/chunk/ChunkProviderLoadOrGenerate.h"
 #include "java/File.h"
 #include "java/Random.h"
 #include "java/Type.h"
 
 class Entity;
 class EntityPlayer;
+class PathEntity;
 class RenderGlobal;
+class ChunkProviderLoadOrGenerate;
 
 class World : public IBlockAccess {
 public:
@@ -213,14 +215,27 @@ public:
 
     bool loadPlayerData(EntityPlayer &player);
 
+    EntityPlayer *getClosestPlayerToEntity(Entity *entity, double radius) const;
+
+    void playSoundAtEntity(Entity *entity, const jstring &sound, float volume, float pitch);
+
+    void spawnParticle(const jstring &name, double x, double y, double z, double velX, double velY, double velZ);
+
+    bool checkIfAABBIsClear(const AxisAlignedBB &box) const;
+
+    std::unique_ptr<PathEntity> getPathToEntity(Entity *entity, Entity *target, float maxRange);
+
+    std::unique_ptr<PathEntity> getEntityPathToXYZ(Entity *entity, int_t x, int_t y, int_t z, float maxRange);
+
 private:
     long_t lockTimestamp;
     std::unordered_map<long_t, int_t> blockOverrides;
     std::unordered_map<long_t, int_t> metadataOverrides;
     std::vector<NextTickListEntry> scheduledTickEntries;
     std::vector<MetadataChunkBlock> lightingToUpdate;
-    mutable std::unordered_map<long_t, std::unique_ptr<Chunk> > loadedChunks;
-    std::unique_ptr<ChunkProviderGenerate> chunkProvider;
+    std::unique_ptr<ChunkProviderLoadOrGenerate> chunkProvider;
+    std::vector<std::unique_ptr<Entity>> pendingEntityList;
+    bool isUpdatingEntities = false;
 
     static void deleteWorldFiles(const std::vector<File> &files);
 
@@ -252,15 +267,7 @@ private:
 
     void saveChunks();
 
-    void saveChunk(const Chunk &chunk) const;
-
-    std::unique_ptr<Chunk> loadChunkFromDisk(int_t chunkX, int_t chunkZ) const;
-
     void loadChunkEntities(NBTTagCompound &chunkData);
-
-    File getChunksDirectory() const;
-
-    File getChunkFile(int_t chunkX, int_t chunkZ) const;
 
     bool findSpawn(int_t x, int_t z) const;
 
@@ -277,6 +284,8 @@ private:
     Chunk &getChunkFromChunkCoords(int_t chunkX, int_t chunkZ) const;
 
     Chunk &getChunkFromBlockCoords(int_t x, int_t z) const;
+
+    friend class ChunkProviderLoadOrGenerate;
 
 protected:
     void obtainEntitySkin(Entity &entity);

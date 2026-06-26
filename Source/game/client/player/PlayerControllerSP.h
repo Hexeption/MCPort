@@ -6,6 +6,7 @@
 #define MCPORT_PLAYERCONTROLLERSP_H
 
 #include "PlayerController.h"
+#include "game/world/spawner/SpawnerAnimals.h"
 
 class PlayerControllerSP : public PlayerController {
 private:
@@ -16,6 +17,7 @@ private:
     float prevBlockDamage = 0.0f;
     float blockDestroySoundCounter = 0.0f;
     int_t blockHitWait = 0;
+    SpawnerAnimals animalSpawner;
 
 public:
     explicit PlayerControllerSP(Minecraft &minecraft);

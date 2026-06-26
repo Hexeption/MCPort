@@ -140,6 +140,8 @@ add_executable(MCPort
         Source/game/client/renderer/WorldRenderer.h
         Source/game/entity/Entity.cpp
         Source/game/entity/Entity.h
+        Source/game/entity/EntityList.cpp
+        Source/game/entity/EntityList.h
         Source/game/entity/EntityItem.cpp
         Source/game/entity/EntityItem.cpp
         Source/game/entity/EntityItem.h
@@ -230,10 +232,19 @@ add_executable(MCPort
         Source/game/world/MetadataChunkBlock.h
         Source/game/world/NextTickListEntry.cpp
         Source/game/world/NextTickListEntry.h
+        Source/game/world/PathEntity.cpp
+        Source/game/world/PathEntity.h
+        Source/game/world/spawner/SpawnerAnimals.cpp
+        Source/game/world/spawner/SpawnerAnimals.h
         Source/game/world/World.cpp
         Source/game/world/World.h
         Source/game/world/chunk/Chunk.cpp
         Source/game/world/chunk/Chunk.h
+        Source/game/world/chunk/IChunkProvider.h
+        Source/game/world/chunk/ChunkLoader.cpp
+        Source/game/world/chunk/ChunkLoader.h
+        Source/game/world/chunk/ChunkProviderLoadOrGenerate.cpp
+        Source/game/world/chunk/ChunkProviderLoadOrGenerate.h
         Source/game/world/chunk/ChunkCache.cpp
         Source/game/world/chunk/ChunkCache.h
         Source/game/world/chunk/ChunkProviderGenerate.cpp
@@ -301,6 +312,27 @@ add_executable(MCPort
         Source/game/block/BlockSapling.h
         Source/game/block/BlockGrass.cpp
         Source/game/block/BlockGrass.h
+        Source/game/entity/EntityCreature.h
+        Source/game/entity/EntityCreature.cpp
+        Source/game/entity/EntityAnimal.h
+        Source/game/entity/EntityAnimal.cpp
+        Source/game/entity/EntityCow.h
+        Source/game/entity/EntityCow.cpp
+        Source/game/client/renderer/model/PositionTexureVertex.h
+        Source/game/client/renderer/model/TexturedQuad.h
+        Source/game/client/renderer/model/TexturedQuad.cpp
+        Source/game/client/renderer/model/ModelBase.h
+        Source/game/client/renderer/model/ModelBase.cpp
+        Source/game/client/renderer/model/ModelRenderer.h
+        Source/game/client/renderer/model/ModelRenderer.cpp
+        Source/game/client/renderer/model/ModelQuadraped.h
+        Source/game/client/renderer/model/ModelQuadraped.cpp
+        Source/game/client/renderer/model/ModelCow.h
+        Source/game/client/renderer/model/ModelCow.cpp
+        Source/game/client/renderer/RenderLiving.h
+        Source/game/client/renderer/RenderLiving.cpp
+        Source/game/client/renderer/RenderCow.h
+        Source/game/client/renderer/RenderCow.cpp
 )
 
 if (APPLE)

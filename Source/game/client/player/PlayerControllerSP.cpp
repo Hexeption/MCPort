@@ -4,12 +4,28 @@
 
 #include "PlayerControllerSP.h"
 
+#include <memory>
+
 #include "game/block/Block.h"
 #include "game/client/Minecraft.h"
+#include "game/entity/EntityAnimal.h"
+#include "game/entity/EntityCow.h"
 #include "game/entity/EntityPlayer.h"
 #include "game/world/World.h"
 
-PlayerControllerSP::PlayerControllerSP(Minecraft &minecraft) : PlayerController(minecraft) {
+namespace {
+    bool isAnimalEntity(const Entity &entity) {
+        return dynamic_cast<const EntityAnimal *>(&entity) != nullptr;
+    }
+
+    std::unique_ptr<EntityLiving> createCow(World &world) {
+        return std::make_unique<EntityCow>(world);
+    }
+}
+
+PlayerControllerSP::PlayerControllerSP(Minecraft &minecraft)
+    : PlayerController(minecraft),
+      animalSpawner(15, isAnimalEntity, std::vector<SpawnerAnimals::EntityFactory>{createCow}) {
 }
 
 void PlayerControllerSP::flipPlayer(EntityPlayer &player) {
@@ -119,4 +135,7 @@ void PlayerControllerSP::onWorldChange(World &world) {
 
 void PlayerControllerSP::onUpdate() {
     prevBlockDamage = curBlockDamage;
+    if (mc.theWorld != nullptr) {
+        animalSpawner.onUpdate(*mc.theWorld);
+    }
 }

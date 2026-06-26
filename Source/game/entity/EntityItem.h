@@ -37,11 +37,11 @@ public:
 
     bool handleWaterMovement() override;
 
-    bool attackEntityFrom(Entity *entity, int_t amount);
+    bool attackEntityFrom(Entity *entity, int_t amount) override;
 
-    void writeEntityToNBT(NBTTagCompound &nbt);
+    void writeEntityToNBT(NBTTagCompound &nbt) override;
 
-    void readEntityFromNBT(NBTTagCompound &nbt);
+    void readEntityFromNBT(NBTTagCompound &nbt) override;
 
     void onCollideWithPlayer(EntityPlayer &player) override;
 };

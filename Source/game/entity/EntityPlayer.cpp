@@ -12,10 +12,13 @@
 #include "game/block/Material.h"
 #include "game/entity/EntityItem.h"
 #include "game/item/ItemStack.h"
+#include "game/nbt/NBTTagCompound.h"
+#include "game/nbt/NBTTagList.h"
 #include "game/world/World.h"
 
 EntityPlayer::EntityPlayer(World &world) : EntityLiving(world), inventory(*this) {
     yOffset = 1.62f;
+    isAIEnabled = true;
     setLocationAndAngles(static_cast<double>(world.spawnX) + 0.5, static_cast<double>(world.spawnY + 1),
                          static_cast<double>(world.spawnZ) + 0.5, 0.0f, 0.0f);
     health = 20;
@@ -130,4 +133,17 @@ void EntityPlayer::joinEntityItemWithWorld(EntityItem &item) {
 }
 
 void EntityPlayer::onItemPickup(Entity &, int_t) {
+}
+
+void EntityPlayer::writeEntityToNBT(NBTTagCompound &nbt) {
+    EntityLiving::writeEntityToNBT(nbt);
+    auto *inventoryTag = new NBTTagList();
+    inventory.writeToNBT(*inventoryTag);
+    nbt.setTag(u"Inventory", inventoryTag);
+}
+
+void EntityPlayer::readEntityFromNBT(NBTTagCompound &nbt) {
+    EntityLiving::readEntityFromNBT(nbt);
+    NBTTagList *inventoryTag = nbt.getTagList(u"Inventory");
+    inventory.readFromNBT(*inventoryTag);
 }

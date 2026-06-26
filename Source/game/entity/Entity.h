@@ -5,14 +5,19 @@
 #ifndef MCPORT_ENTITY_H
 #define MCPORT_ENTITY_H
 
+#include <memory>
+
 #include "game/phys/AxisAlignedBB.h"
 #include "java/Random.h"
+#include "java/String.h"
 #include "java/Type.h"
 
 class World;
 class Material;
 class Vec3D;
+class EntityItem;
 class EntityPlayer;
+class NBTTagCompound;
 
 class Entity {
 public:
@@ -62,6 +67,7 @@ public:
     int_t chunkCoordZ = 0;
     bool canTriggerWalking = true;
     bool preventEntitySpawning = false;
+    jstring skinUrl;
 
     explicit Entity(World &world);
 
@@ -95,6 +101,16 @@ public:
 
     virtual bool canBePushed() const;
 
+    double getDistanceSqToEntity(const Entity &other) const;
+
+    float getDistanceToEntity(const Entity &other) const;
+
+    virtual bool interact(EntityPlayer &player);
+
+    virtual void applyEntityCollision(Entity &other);
+
+    virtual bool attackEntityFrom(Entity *attacker, int_t amount);
+
     bool isInRangeToRenderVec3D(const Vec3D &vec) const;
 
     bool isInRangeToRenderDist(double distanceSq) const;
@@ -112,6 +128,30 @@ public:
     virtual void onCollideWithPlayer(EntityPlayer &player);
 
     virtual void setEntityDead();
+
+    virtual void addToPlayerScore(Entity *entity, int_t score);
+
+    virtual bool isEntityAlive() const;
+
+    virtual bool isEntityInsideOpaqueBlock() const;
+
+    EntityItem *dropItem(int_t itemId, int_t count);
+
+    EntityItem *entityDropItem(int_t itemId, int_t count, float offsetY);
+
+    std::unique_ptr<Vec3D> getLookVec() const;
+
+    virtual void fall(float distance);
+
+    bool addEntityID(NBTTagCompound &nbt);
+
+    void writeToNBT(NBTTagCompound &nbt);
+
+    void readFromNBT(NBTTagCompound &nbt);
+
+    virtual void writeEntityToNBT(NBTTagCompound &nbt);
+
+    virtual void readEntityFromNBT(NBTTagCompound &nbt);
 };
 
 #endif //MCPORT_ENTITY_H

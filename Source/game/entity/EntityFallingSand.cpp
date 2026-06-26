@@ -7,6 +7,7 @@
 #include "EntityItem.h"
 #include "game/client/MathHelper.h"
 #include "game/item/ItemStack.h"
+#include "game/nbt/NBTTagCompound.h"
 #include "game/world/World.h"
 
 EntityFallingSand::EntityFallingSand(World &world) : Entity(world) {
@@ -73,6 +74,14 @@ void EntityFallingSand::onUpdate() {
 
 World &EntityFallingSand::getWorld() const {
     return worldObj;
+}
+
+void EntityFallingSand::writeEntityToNBT(NBTTagCompound &nbt) {
+    nbt.setByte(u"Tile", static_cast<byte_t>(blockID));
+}
+
+void EntityFallingSand::readEntityFromNBT(NBTTagCompound &nbt) {
+    blockID = static_cast<int_t>(static_cast<ubyte_t>(nbt.getByte(u"Tile")));
 }
 
 void EntityFallingSand::dropItem(const int_t itemId, const int_t count) {

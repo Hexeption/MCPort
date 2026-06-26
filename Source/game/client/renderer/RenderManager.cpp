@@ -16,6 +16,9 @@
 #include "game/entity/EntityPlayer.h"
 #include "game/client/renderer/RenderEntity.h"
 #include "game/client/renderer/RenderFallingSand.h"
+#include "game/client/renderer/RenderCow.h"
+#include "game/client/renderer/model/ModelCow.h"
+#include "game/entity/EntityCow.h"
 #include "game/entity/EntityFallingSand.h"
 
 RenderManager RenderManager::instance;
@@ -28,6 +31,7 @@ RenderManager::RenderManager() {
     entityRenderMap[typeid(Entity)] = std::make_unique<RenderEntity>();
     entityRenderMap[typeid(EntityItem)] = std::make_unique<RenderItem>();
     entityRenderMap[typeid(EntityFallingSand)] = std::make_unique<RenderFallingSand>();
+    entityRenderMap[typeid(EntityCow)] = std::make_unique<RenderCow>(new ModelCow(), 0.7f);
 
     for (auto &entry: entityRenderMap) {
         entry.second->setRenderManager(*this);

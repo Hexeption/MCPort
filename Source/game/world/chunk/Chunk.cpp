@@ -215,6 +215,22 @@ void Chunk::generateSkylightMap() {
     isModified = true;
 }
 
+bool Chunk::isAtLocation(const int_t chunkX, const int_t chunkZ) const {
+    return chunkX == xPosition && chunkZ == zPosition;
+}
+
+void Chunk::setChunkModified() {
+    isModified = true;
+}
+
+bool Chunk::needsSaving(const bool forceSave) const {
+    (void) forceSave;
+    if (neverSave) {
+        return false;
+    }
+    return hasEntities && worldObj.worldTime != lastSaveTime || isModified;
+}
+
 void Chunk::updateSkylight_do(const int_t x, const int_t z) {
     const int_t columnHeight = getHeightValue(x, z);
     const int_t worldX = xPosition * width + x;
