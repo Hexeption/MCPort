@@ -27,6 +27,7 @@
 #include "game/phys/AxisAlignedBB.h"
 #include "game/phys/MovingObjectPosition.h"
 #include "game/util/Vec3D.h"
+#include "java/Random.h"
 #include "java/System.h"
 #include "game/world/World.h"
 
@@ -67,9 +68,9 @@ RenderGlobal::RenderGlobal(Minecraft &minecraft, RenderEngine &renderEngine) : m
     glSkyList2 = starGLCallList + 2;
     glNewList(static_cast<GLuint>(glSkyList2), GL_COMPILE);
     const float skyHeight2 = -16.0f;
+    tessellator.startDrawingQuads();
     for (int_t x = -skySize * skyRepeat; x <= skySize * skyRepeat; x += skySize) {
         for (int_t z = -skySize * skyRepeat; z <= skySize * skyRepeat; z += skySize) {
-            tessellator.startDrawingQuads();
             tessellator.addVertex(static_cast<double>(x + skySize), static_cast<double>(skyHeight2),
                                   static_cast<double>(z));
             tessellator.addVertex(static_cast<double>(x), static_cast<double>(skyHeight2),
@@ -78,9 +79,9 @@ RenderGlobal::RenderGlobal(Minecraft &minecraft, RenderEngine &renderEngine) : m
                                   static_cast<double>(z + skySize));
             tessellator.addVertex(static_cast<double>(x + skySize), static_cast<double>(skyHeight2),
                                   static_cast<double>(z + skySize));
-            tessellator.draw();
         }
     }
+    tessellator.draw();
     glEndList();
 }
 
@@ -521,8 +522,8 @@ void RenderGlobal::renderClouds(float partialTicks) {
 
     glDisable(GL_CULL_FACE);
     const float playerY = static_cast<float>(minecraft.thePlayer->lastTickPosY +
-                                              (minecraft.thePlayer->posY - minecraft.thePlayer->lastTickPosY) *
-                                              static_cast<double>(partialTicks));
+                                             (minecraft.thePlayer->posY - minecraft.thePlayer->lastTickPosY) *
+                                             static_cast<double>(partialTicks));
     constexpr int_t cloudSize = 32;
     const int_t cloudRepeat = 256 / cloudSize;
     Tessellator &tessellator = Tessellator::instance;
@@ -588,19 +589,20 @@ void RenderGlobal::renderClouds(float partialTicks) {
     glEnable(GL_CULL_FACE);
 }
 
-void RenderGlobal::renderCloudsFancy(float) {
+void RenderGlobal::renderCloudsFancy(float partialTicks) {
     if (theWorld == nullptr || minecraft.thePlayer == nullptr) {
         return;
     }
 
     glDisable(GL_CULL_FACE);
     const float playerY = static_cast<float>(minecraft.thePlayer->lastTickPosY +
-                                              (minecraft.thePlayer->posY - minecraft.thePlayer->lastTickPosY));
+                                             (minecraft.thePlayer->posY - minecraft.thePlayer->lastTickPosY) *
+                                             static_cast<double>(partialTicks));
     Tessellator &tessellator = Tessellator::instance;
     glBindTexture(GL_TEXTURE_2D, renderEngine.getTexture(u"/clouds.png"));
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    std::unique_ptr<Vec3D> cloudColor = theWorld->getCloudColor(0.0f);
+    std::unique_ptr<Vec3D> cloudColor = theWorld->getCloudColor(partialTicks);
     float red = static_cast<float>(cloudColor->xCoord);
     float green = static_cast<float>(cloudColor->yCoord);
     float blue = static_cast<float>(cloudColor->zCoord);
@@ -613,37 +615,269 @@ void RenderGlobal::renderCloudsFancy(float) {
         blue = anaglyphBlue;
     }
 
-    glScalef(12.0f, 1.0f, 12.0f);
-    tessellator.startDrawingQuads();
-    tessellator.setColorRGBA_F(red, green, blue, 0.8f);
-    tessellator.addVertex(-10.0, 128.0 - playerY, -10.0);
-    tessellator.addVertex(10.0, 128.0 - playerY, -10.0);
-    tessellator.addVertex(10.0, 128.0 - playerY, 10.0);
-    tessellator.addVertex(-10.0, 128.0 - playerY, 10.0);
-    tessellator.draw();
+    const float scale = 12.0f;
+    const float tileSize = 4.0f;
+    const double cloudX = (minecraft.thePlayer->prevPosX +
+                           (minecraft.thePlayer->posX - minecraft.thePlayer->prevPosX) *
+                           static_cast<double>(partialTicks) +
+                           static_cast<double>((static_cast<float>(cloudTickCounter) + partialTicks) * 0.03f)) /
+                          static_cast<double>(scale);
+    const double cloudZ = (minecraft.thePlayer->prevPosZ +
+                           (minecraft.thePlayer->posZ - minecraft.thePlayer->prevPosZ) *
+                           static_cast<double>(partialTicks)) /
+                          static_cast<double>(scale) + 0.33;
+    const int_t cloudTileX = MathHelper::floor_double(cloudX / 2048.0);
+    const int_t cloudTileZ = MathHelper::floor_double(cloudZ / 2048.0);
+    const double cloudWrapX = cloudX - static_cast<double>(cloudTileX * 2048);
+    const double cloudWrapZ = cloudZ - static_cast<double>(cloudTileZ * 2048);
+    const float cloudY = 108.0f - playerY + 0.33f;
+    const float texScale = 0.00390625f;
+    const float texOffsetX = static_cast<float>(MathHelper::floor_double(cloudWrapX)) * texScale;
+    const float texOffsetZ = static_cast<float>(MathHelper::floor_double(cloudWrapZ)) * texScale;
+    const float fracX = static_cast<float>(cloudWrapX - static_cast<double>(MathHelper::floor_double(cloudWrapX)));
+    const float fracZ = static_cast<float>(cloudWrapZ - static_cast<double>(MathHelper::floor_double(cloudWrapZ)));
+    constexpr int_t tileSpan = 8;
+    constexpr int_t tileCount = 3;
+    constexpr float uvShrink = 1.0f / 1024.0f;
+
+    glScalef(scale, 1.0f, scale);
+    for (int_t pass = 0; pass < 2; ++pass) {
+        if (pass == 0) {
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        } else {
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        }
+
+        for (int_t x = -tileCount + 1; x <= tileCount; ++x) {
+            for (int_t z = -tileCount + 1; z <= tileCount; ++z) {
+                tessellator.startDrawingQuads();
+                const float tileX = static_cast<float>(x * tileSpan);
+                const float tileZ = static_cast<float>(z * tileSpan);
+                const float offsetX = tileX - fracX;
+                const float offsetZ = tileZ - fracZ;
+
+                if (cloudY > -tileSize - 1.0f) {
+                    tessellator.setColorRGBA_F(red * 0.7f, green * 0.7f, blue * 0.7f, 0.8f);
+                    tessellator.setNormal(0.0f, -1.0f, 0.0f);
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX), static_cast<double>(cloudY),
+                                                static_cast<double>(offsetZ + tileSpan),
+                                                static_cast<double>(tileX * texScale + texOffsetX),
+                                                static_cast<double>((tileZ + static_cast<float>(tileSpan)) * texScale +
+                                                                    texOffsetZ));
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan), static_cast<double>(cloudY),
+                                                static_cast<double>(offsetZ + tileSpan),
+                                                static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                    texScale + texOffsetX),
+                                                static_cast<double>((tileZ + static_cast<float>(tileSpan)) * texScale +
+                                                                    texOffsetZ));
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan), static_cast<double>(cloudY),
+                                                static_cast<double>(offsetZ),
+                                                static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                    texScale + texOffsetX),
+                                                static_cast<double>(tileZ * texScale + texOffsetZ));
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX), static_cast<double>(cloudY),
+                                                static_cast<double>(offsetZ),
+                                                static_cast<double>(tileX * texScale + texOffsetX),
+                                                static_cast<double>(tileZ * texScale + texOffsetZ));
+                }
+
+                if (cloudY <= tileSize + 1.0f) {
+                    tessellator.setColorRGBA_F(red, green, blue, 0.8f);
+                    tessellator.setNormal(0.0f, 1.0f, 0.0f);
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX),
+                                                static_cast<double>(cloudY + tileSize - uvShrink),
+                                                static_cast<double>(offsetZ + tileSpan),
+                                                static_cast<double>(tileX * texScale + texOffsetX),
+                                                static_cast<double>((tileZ + static_cast<float>(tileSpan)) * texScale +
+                                                                    texOffsetZ));
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan),
+                                                static_cast<double>(cloudY + tileSize - uvShrink),
+                                                static_cast<double>(offsetZ + tileSpan),
+                                                static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                    texScale + texOffsetX),
+                                                static_cast<double>((tileZ + static_cast<float>(tileSpan)) * texScale +
+                                                                    texOffsetZ));
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan),
+                                                static_cast<double>(cloudY + tileSize - uvShrink),
+                                                static_cast<double>(offsetZ),
+                                                static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                    texScale + texOffsetX),
+                                                static_cast<double>(tileZ * texScale + texOffsetZ));
+                    tessellator.addVertexWithUV(static_cast<double>(offsetX),
+                                                static_cast<double>(cloudY + tileSize - uvShrink),
+                                                static_cast<double>(offsetZ),
+                                                static_cast<double>(tileX * texScale + texOffsetX),
+                                                static_cast<double>(tileZ * texScale + texOffsetZ));
+                }
+
+                tessellator.setColorRGBA_F(red * 0.9f, green * 0.9f, blue * 0.9f, 0.8f);
+                if (x > -1) {
+                    tessellator.setNormal(-1.0f, 0.0f, 0.0f);
+                    for (int_t side = 0; side < tileSpan; ++side) {
+                        const float edge = static_cast<float>(side);
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge), static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ + tileSpan),
+                                                    static_cast<double>((tileX + edge + 0.5f) * texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ + tileSpan),
+                                                    static_cast<double>((tileX + edge + 0.5f) * texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ),
+                                                    static_cast<double>((tileX + edge + 0.5f) * texScale + texOffsetX),
+                                                    static_cast<double>(tileZ * texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge), static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ),
+                                                    static_cast<double>((tileX + edge + 0.5f) * texScale + texOffsetX),
+                                                    static_cast<double>(tileZ * texScale + texOffsetZ));
+                    }
+                }
+
+                if (x <= 1) {
+                    tessellator.setNormal(1.0f, 0.0f, 0.0f);
+                    for (int_t side = 0; side < tileSpan; ++side) {
+                        const float edge = static_cast<float>(side) + 1.0f - uvShrink;
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge), static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ + tileSpan),
+                                                    static_cast<double>((tileX + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ + tileSpan),
+                                                    static_cast<double>((tileX + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ),
+                                                    static_cast<double>((tileX + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>(tileZ * texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + edge), static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ),
+                                                    static_cast<double>((tileX + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>(tileZ * texScale + texOffsetZ));
+                    }
+                }
+
+                tessellator.setColorRGBA_F(red * 0.8f, green * 0.8f, blue * 0.8f, 0.8f);
+                if (z > -1) {
+                    tessellator.setNormal(0.0f, 0.0f, -1.0f);
+                    for (int_t side = 0; side < tileSpan; ++side) {
+                        const float edge = static_cast<float>(side);
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>(tileX * texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + edge + 0.5f) * texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + edge + 0.5f) * texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan),
+                                                    static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + edge + 0.5f) * texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX), static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>(tileX * texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + edge + 0.5f) * texScale + texOffsetZ));
+                    }
+                }
+
+                if (z <= 1) {
+                    tessellator.setNormal(0.0f, 0.0f, 1.0f);
+                    for (int_t side = 0; side < tileSpan; ++side) {
+                        const float edge = static_cast<float>(side) + 1.0f - uvShrink;
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>(tileX * texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan),
+                                                    static_cast<double>(cloudY + tileSize),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX + tileSpan),
+                                                    static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>((tileX + static_cast<float>(tileSpan)) *
+                                                                        texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetZ));
+                        tessellator.addVertexWithUV(static_cast<double>(offsetX), static_cast<double>(cloudY),
+                                                    static_cast<double>(offsetZ + edge),
+                                                    static_cast<double>(tileX * texScale + texOffsetX),
+                                                    static_cast<double>((tileZ + static_cast<float>(side) + 0.5f) *
+                                                                        texScale + texOffsetZ));
+                    }
+                }
+
+                tessellator.draw();
+            }
+        }
+    }
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 }
 
 void RenderGlobal::renderStars() {
+    Random random(10842L);
     Tessellator &tessellator = Tessellator::instance;
     tessellator.startDrawingQuads();
     for (int_t i = 0; i < 1500; ++i) {
-        const double x = (static_cast<double>(rand()) / RAND_MAX) * 2.0 - 1.0;
-        const double y = (static_cast<double>(rand()) / RAND_MAX) * 2.0 - 1.0;
-        const double z = (static_cast<double>(rand()) / RAND_MAX) * 2.0 - 1.0;
-        const double scale = 0.25 + static_cast<double>(rand()) / RAND_MAX * 0.25;
+        double x = static_cast<double>(random.nextFloat() * 2.0f - 1.0f);
+        double y = static_cast<double>(random.nextFloat() * 2.0f - 1.0f);
+        double z = static_cast<double>(random.nextFloat() * 2.0f - 1.0f);
+        const double scale = static_cast<double>(0.25f + random.nextFloat() * 0.25f);
         const double distSq = x * x + y * y + z * z;
         if (distSq < 1.0 && distSq > 0.01) {
             const double inv = 1.0 / std::sqrt(distSq);
-            const double sx = x * inv * 100.0;
-            const double sy = y * inv * 100.0;
-            const double sz = z * inv * 100.0;
-            tessellator.addVertex(sx - scale, sy - scale, sz);
-            tessellator.addVertex(sx + scale, sy - scale, sz);
-            tessellator.addVertex(sx + scale, sy + scale, sz);
-            tessellator.addVertex(sx - scale, sy + scale, sz);
+            x *= inv;
+            y *= inv;
+            z *= inv;
+            const double sx = x * 100.0;
+            const double sy = y * 100.0;
+            const double sz = z * 100.0;
+            const double yaw = std::atan2(x, z);
+            const double yawSin = std::sin(yaw);
+            const double yawCos = std::cos(yaw);
+            const double pitch = std::atan2(std::sqrt(x * x + z * z), y);
+            const double pitchSin = std::sin(pitch);
+            const double pitchCos = std::cos(pitch);
+            const double roll = random.nextDouble() * std::acos(-1.0) * 2.0;
+            const double rollSin = std::sin(roll);
+            const double rollCos = std::cos(roll);
+
+            for (int_t corner = 0; corner < 4; ++corner) {
+                const double localX = static_cast<double>(((corner & 2) - 1)) * scale;
+                const double localY = static_cast<double>(((((corner + 1) & 2) - 1))) * scale;
+                const double rotatedX = localX * rollCos - localY * rollSin;
+                const double rotatedY = localY * rollCos + localX * rollSin;
+                const double var53 = rotatedX * pitchSin;
+                const double var55 = -rotatedX * pitchCos;
+                const double var57 = var55 * yawSin - rotatedY * yawCos;
+                const double var61 = rotatedY * yawSin + var55 * yawCos;
+                tessellator.addVertex(sx + var57, sy + var53, sz + var61);
+            }
         }
     }
     tessellator.draw();

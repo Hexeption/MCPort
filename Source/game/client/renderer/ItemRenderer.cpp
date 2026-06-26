@@ -25,6 +25,7 @@ ItemRenderer::ItemRenderer(Minecraft &minecraft) : mc(minecraft) {
 }
 
 void ItemRenderer::renderItem(ItemStack &stack) {
+    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
 
     if (stack.itemID < 256 &&
@@ -130,6 +131,8 @@ void ItemRenderer::renderItem(ItemStack &stack) {
     }
 
     glPopMatrix();
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glPopAttrib();
 }
 
 void ItemRenderer::renderItemInFirstPerson(const float partialTicks) {

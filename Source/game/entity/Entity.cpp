@@ -265,6 +265,9 @@ bool Entity::isInWater() const {
     return inWater;
 }
 
+void Entity::onCollideWithPlayer(EntityPlayer &) {
+}
+
 void Entity::setEntityDead() {
     isDead = true;
 }

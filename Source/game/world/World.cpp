@@ -15,8 +15,10 @@
 #include "game/client/MathHelper.h"
 #include "game/client/renderer/RenderGlobal.h"
 #include "game/entity/Entity.h"
+#include "game/entity/EntityItem.h"
 #include "game/entity/EntityPlayer.h"
 #include "game/nbt/CompressedStreamTools.h"
+#include "game/nbt/NBTTagList.h"
 #include "java/System.h"
 
 std::array<float, 16> World::lightBrightnessTable = World::makeLightBrightnessTable();
@@ -45,6 +47,110 @@ static std::unique_ptr<NBTTagCompound> createLevelDataTag(const World &world) {
     levelData->setBoolean(u"SnowCovered", world.snowCovered);
     levelData->setLong(u"LastPlayed", System::currentTimeMillis());
     return levelData;
+}
+
+static float wrapAngleTo180(float angle) {
+    while (angle <= -180.0f) {
+        angle += 360.0f;
+    }
+    while (angle > 180.0f) {
+        angle -= 360.0f;
+    }
+    return angle;
+}
+
+static std::unique_ptr<NBTTagCompound> copyPlayerData(NBTTagCompound &playerData) {
+    auto copy = std::make_unique<NBTTagCompound>();
+    copy->setDouble(u"PosX", playerData.getDouble(u"PosX"));
+    copy->setDouble(u"PosY", playerData.getDouble(u"PosY"));
+    copy->setDouble(u"PosZ", playerData.getDouble(u"PosZ"));
+    copy->setDouble(u"MotionX", playerData.getDouble(u"MotionX"));
+    copy->setDouble(u"MotionY", playerData.getDouble(u"MotionY"));
+    copy->setDouble(u"MotionZ", playerData.getDouble(u"MotionZ"));
+    copy->setFloat(u"Yaw", wrapAngleTo180(playerData.getFloat(u"Yaw")));
+    copy->setFloat(u"Pitch", playerData.getFloat(u"Pitch"));
+    copy->setShort(u"Health", playerData.getShort(u"Health"));
+    copy->setShort(u"Fire", playerData.getShort(u"Fire"));
+    copy->setShort(u"Air", playerData.getShort(u"Air"));
+    copy->setFloat(u"FallDistance", playerData.getFloat(u"FallDistance"));
+    copy->setBoolean(u"OnGround", playerData.getBoolean(u"OnGround"));
+    copy->setInteger(u"SelectedItemSlot", playerData.getInteger(u"SelectedItemSlot"));
+
+    auto *inventoryCopy = new NBTTagList();
+    if (playerData.hasKey(u"Inventory")) {
+        NBTTagList *inventory = playerData.getTagList(u"Inventory");
+        for (int_t i = 0; i < inventory->tagCount(); ++i) {
+            auto *itemTag = dynamic_cast<NBTTagCompound *>(inventory->tagAt(i));
+            if (itemTag == nullptr) {
+                continue;
+            }
+
+            auto *itemCopy = new NBTTagCompound();
+            itemCopy->setByte(u"Slot", itemTag->getByte(u"Slot"));
+            itemCopy->setShort(u"id", itemTag->getShort(u"id"));
+            itemCopy->setByte(u"Count", itemTag->getByte(u"Count"));
+            itemCopy->setShort(u"Damage", itemTag->getShort(u"Damage"));
+            inventoryCopy->setTag(itemCopy);
+        }
+    }
+    copy->setTag(u"Inventory", inventoryCopy);
+    if (playerData.hasKey(u"CursorItem")) {
+        NBTTagCompound *cursorItem = playerData.getCompoundTag(u"CursorItem");
+        auto *cursorCopy = new NBTTagCompound();
+        cursorCopy->setShort(u"id", cursorItem->getShort(u"id"));
+        cursorCopy->setByte(u"Count", cursorItem->getByte(u"Count"));
+        cursorCopy->setShort(u"Damage", cursorItem->getShort(u"Damage"));
+        copy->setCompoundTag(u"CursorItem", cursorCopy);
+    }
+    return copy;
+}
+
+static std::unique_ptr<NBTTagCompound> createPlayerDataTag(EntityPlayer &player) {
+    auto playerData = std::make_unique<NBTTagCompound>();
+    playerData->setDouble(u"PosX", player.posX);
+    playerData->setDouble(u"PosY", player.posY);
+    playerData->setDouble(u"PosZ", player.posZ);
+    playerData->setDouble(u"MotionX", player.motionX);
+    playerData->setDouble(u"MotionY", player.motionY);
+    playerData->setDouble(u"MotionZ", player.motionZ);
+    playerData->setFloat(u"Yaw", wrapAngleTo180(player.rotationYaw));
+    playerData->setFloat(u"Pitch", player.rotationPitch);
+    playerData->setShort(u"Health", static_cast<short_t>(player.health));
+    playerData->setShort(u"Fire", static_cast<short_t>(player.fire));
+    playerData->setShort(u"Air", static_cast<short_t>(player.air));
+    playerData->setFloat(u"FallDistance", player.fallDistance);
+    playerData->setBoolean(u"OnGround", player.onGround);
+    playerData->setInteger(u"SelectedItemSlot", player.inventory.currentItem);
+
+    auto *inventory = new NBTTagList();
+    player.inventory.writeToNBT(*inventory);
+    playerData->setTag(u"Inventory", inventory);
+
+    if (player.inventory.draggedItemStack.has_value()) {
+        auto *cursorItem = new NBTTagCompound();
+        player.inventory.draggedItemStack->writeToNBT(*cursorItem);
+        playerData->setCompoundTag(u"CursorItem", cursorItem);
+    }
+    return playerData;
+}
+
+static std::vector<byte_t> intArrayToByteArray(
+    const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &values) {
+    std::vector<byte_t> bytes(values.size());
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        bytes[i] = static_cast<byte_t>(values[i] & 0xFF);
+    }
+    return bytes;
+}
+
+static std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> byteArrayToIntArray(
+    const std::vector<byte_t> &bytes) {
+    std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> values{};
+    const std::size_t count = std::min(values.size(), bytes.size());
+    for (std::size_t i = 0; i < count; ++i) {
+        values[i] = static_cast<int_t>(static_cast<ubyte_t>(bytes[i]));
+    }
+    return values;
 }
 
 std::unique_ptr<NBTTagCompound> World::getLevelData(const File &minecraftDir, const jstring &levelName) {
@@ -109,6 +215,9 @@ World::World(const File &savesDirectory, const jstring &levelName, const long_t 
                 worldTime = levelData->getLong(u"Time");
                 sizeOnDisk = levelData->getLong(u"SizeOnDisk");
                 snowCovered = levelData->getBoolean(u"SnowCovered");
+                if (levelData->hasKey(u"Player")) {
+                    savedPlayerData = copyPlayerData(*levelData->getCompoundTag(u"Player"));
+                }
             }
         } catch (const std::exception &e) {
             std::cerr << "Failed to load level.dat: " << e.what() << '\n';
@@ -499,6 +608,20 @@ std::vector<AxisAlignedBB> World::getCollidingBoundingBoxes(const Entity &, cons
     return boxes;
 }
 
+std::vector<Entity *>
+World::getEntitiesWithinAABBExcludingEntity(const Entity &entity, const AxisAlignedBB &box) const {
+    std::vector<Entity *> entities;
+    for (const auto &loaded: loadedEntityList) {
+        if (loaded.get() == &entity || loaded->isDead) {
+            continue;
+        }
+        if (loaded->boundingBox.intersectsWith(box)) {
+            entities.push_back(loaded.get());
+        }
+    }
+    return entities;
+}
+
 bool World::getIsAnyLiquid(const AxisAlignedBB &box) const {
     int_t minX = MathHelper::floor_double(box.minX);
     int_t maxX = MathHelper::floor_double(box.maxX + 1.0);
@@ -591,13 +714,16 @@ bool World::isMaterialInBB(const AxisAlignedBB &box, Material *material) const {
     return false;
 }
 
-void World::saveWorld(bool saveChunks, void *progressUpdate) {
+void World::saveWorld(bool, void *progressUpdate) {
+    (void) progressUpdate;
     saveLevel();
+    saveChunks();
 }
 
 bool World::saveWorld(const int_t progressStep) {
     if (progressStep == 0) {
         saveLevel();
+        saveChunks();
     }
 
     return true;
@@ -952,6 +1078,18 @@ void World::saveLevel() {
     sizeOnDisk = getDirectorySize(saveDirectory);
 
     std::unique_ptr<NBTTagCompound> levelData = createLevelDataTag(*this);
+    EntityPlayer *player = playerToSave;
+    if (player == nullptr && !playerEntities.empty()) {
+        player = playerEntities.front();
+    }
+    if (player != nullptr) {
+        std::unique_ptr<NBTTagCompound> playerData = createPlayerDataTag(*player);
+        savedPlayerData = copyPlayerData(*playerData);
+        levelData->setCompoundTag(u"Player", playerData.release());
+    } else if (savedPlayerData != nullptr) {
+        levelData->setCompoundTag(u"Player", copyPlayerData(*savedPlayerData).release());
+    }
+
     auto root = std::make_unique<NBTTagCompound>();
     root->setTag(u"Data", levelData.release());
 
@@ -973,6 +1111,113 @@ void World::saveLevel() {
     if (levelDatNew.exists()) {
         levelDatNew.deleteFile();
     }
+}
+
+void World::saveChunks() {
+    checkSessionLock();
+    getChunksDirectory().mkdirs();
+
+    for (const auto &entry: loadedChunks) {
+        saveChunk(*entry.second);
+    }
+}
+
+void World::saveChunk(const Chunk &chunk) const {
+    auto level = std::make_unique<NBTTagCompound>();
+    level->setInteger(u"xPos", chunk.xPosition);
+    level->setInteger(u"zPos", chunk.zPosition);
+    level->setByteArray(u"Blocks", intArrayToByteArray(chunk.getBlocks()));
+    level->setByteArray(u"Data", intArrayToByteArray(chunk.getMetadata()));
+
+    auto *entities = new NBTTagList();
+    for (const auto &entity: loadedEntityList) {
+        if (entity == nullptr || entity->isDead) {
+            continue;
+        }
+        if (entity->chunkCoordX != chunk.xPosition || entity->chunkCoordZ != chunk.zPosition) {
+            continue;
+        }
+
+        auto *item = dynamic_cast<EntityItem *>(entity.get());
+        if (item == nullptr) {
+            continue;
+        }
+
+        auto *entityTag = new NBTTagCompound();
+        entityTag->setString(u"id", u"Item");
+        entityTag->setDouble(u"PosX", item->posX);
+        entityTag->setDouble(u"PosY", item->posY);
+        entityTag->setDouble(u"PosZ", item->posZ);
+        entityTag->setDouble(u"MotionX", item->motionX);
+        entityTag->setDouble(u"MotionY", item->motionY);
+        entityTag->setDouble(u"MotionZ", item->motionZ);
+        entityTag->setFloat(u"Yaw", item->rotationYaw);
+        entityTag->setFloat(u"Pitch", item->rotationPitch);
+        entityTag->setShort(u"PickupDelay", static_cast<short_t>(item->delayBeforeCanPickup));
+        item->writeEntityToNBT(*entityTag);
+        entities->setTag(entityTag);
+    }
+    level->setTag(u"Entities", entities);
+
+    auto root = std::make_unique<NBTTagCompound>();
+    root->setTag(u"Level", level.release());
+    CompressedStreamTools::writeCompressed(*root, getChunkFile(chunk.xPosition, chunk.zPosition));
+}
+
+std::unique_ptr<Chunk> World::loadChunkFromDisk(const int_t chunkX, const int_t chunkZ) const {
+    const File chunkFile = getChunkFile(chunkX, chunkZ);
+    if (!chunkFile.exists()) {
+        return nullptr;
+    }
+
+    try {
+        std::unique_ptr<NBTTagCompound> root = CompressedStreamTools::readCompressed(chunkFile);
+        NBTTagCompound *level = root->hasKey(u"Level") ? root->getCompoundTag(u"Level") : root.get();
+        std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> blocks =
+                byteArrayToIntArray(level->getByteArray(u"Blocks"));
+        std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> metadata =
+                byteArrayToIntArray(level->getByteArray(u"Data"));
+
+        auto chunk = std::make_unique<Chunk>(const_cast<World &>(*this), blocks, metadata, chunkX, chunkZ);
+        chunk->generateSkylightMap();
+        return chunk;
+    } catch (const std::exception &e) {
+        std::cerr << "Failed to load chunk " << chunkX << "," << chunkZ << ": " << e.what() << '\n';
+        return nullptr;
+    }
+}
+
+void World::loadChunkEntities(NBTTagCompound &chunkData) {
+    if (!chunkData.hasKey(u"Entities")) {
+        return;
+    }
+
+    NBTTagList *entities = chunkData.getTagList(u"Entities");
+    for (int_t i = 0; i < entities->tagCount(); ++i) {
+        auto *entityTag = dynamic_cast<NBTTagCompound *>(entities->tagAt(i));
+        if (entityTag == nullptr || entityTag->getString(u"id") != u"Item") {
+            continue;
+        }
+
+        auto item = std::make_unique<EntityItem>(*this);
+        item->readEntityFromNBT(*entityTag);
+        item->motionX = entityTag->getDouble(u"MotionX");
+        item->motionY = entityTag->getDouble(u"MotionY");
+        item->motionZ = entityTag->getDouble(u"MotionZ");
+        item->delayBeforeCanPickup = entityTag->getShort(u"PickupDelay");
+        item->setLocationAndAngles(entityTag->getDouble(u"PosX"), entityTag->getDouble(u"PosY"),
+                                   entityTag->getDouble(u"PosZ"), entityTag->getFloat(u"Yaw"),
+                                   entityTag->getFloat(u"Pitch"));
+        spawnEntityInWorld(std::move(item));
+    }
+}
+
+File World::getChunksDirectory() const {
+    return File(saveDirectory, u"chunks");
+}
+
+File World::getChunkFile(const int_t chunkX, const int_t chunkZ) const {
+    return File(getChunksDirectory(), u"c." + String::toString(chunkX) + u"." + String::toString(chunkZ) + u".dat");
 }
 
 bool World::findSpawn(const int_t x, const int_t z) const {
@@ -1027,9 +1272,24 @@ Chunk &World::getChunkFromChunkCoords(const int_t chunkX, const int_t chunkZ) co
         return *found->second;
     }
 
-    auto chunk = std::make_unique<Chunk>(chunkProvider->provideChunk(chunkX, chunkZ));
+    bool loadedFromDisk = false;
+    auto chunk = loadChunkFromDisk(chunkX, chunkZ);
+    if (chunk != nullptr) {
+        loadedFromDisk = true;
+    } else {
+        chunk = std::make_unique<Chunk>(chunkProvider->provideChunk(chunkX, chunkZ));
+    }
     Chunk &chunkRef = *chunk;
     loadedChunks.emplace(key, std::move(chunk));
+    if (loadedFromDisk) {
+        try {
+            std::unique_ptr<NBTTagCompound> root = CompressedStreamTools::readCompressed(getChunkFile(chunkX, chunkZ));
+            NBTTagCompound *level = root->hasKey(u"Level") ? root->getCompoundTag(u"Level") : root.get();
+            const_cast<World *>(this)->loadChunkEntities(*level);
+        } catch (const std::exception &e) {
+            std::cerr << "Failed to load chunk entities " << chunkX << "," << chunkZ << ": " << e.what() << '\n';
+        }
+    }
     return chunkRef;
 }
 
@@ -1244,6 +1504,39 @@ void World::updateEntities() {
     }
 }
 
+void World::setPlayerToSave(EntityPlayer *player) {
+    playerToSave = player;
+}
+
+bool World::loadPlayerData(EntityPlayer &player) {
+    if (savedPlayerData == nullptr) {
+        return false;
+    }
+
+    player.setLocationAndAngles(savedPlayerData->getDouble(u"PosX"), savedPlayerData->getDouble(u"PosY"),
+                                savedPlayerData->getDouble(u"PosZ"), wrapAngleTo180(savedPlayerData->getFloat(u"Yaw")),
+                                savedPlayerData->getFloat(u"Pitch"));
+    player.motionX = savedPlayerData->getDouble(u"MotionX");
+    player.motionY = savedPlayerData->getDouble(u"MotionY");
+    player.motionZ = savedPlayerData->getDouble(u"MotionZ");
+    player.health = savedPlayerData->getShort(u"Health");
+    player.fire = savedPlayerData->getShort(u"Fire");
+    player.air = savedPlayerData->getShort(u"Air");
+    player.fallDistance = savedPlayerData->getFloat(u"FallDistance");
+    player.onGround = savedPlayerData->getBoolean(u"OnGround");
+    player.inventory.currentItem = std::clamp(savedPlayerData->getInteger(u"SelectedItemSlot"), 0, 8);
+    if (savedPlayerData->hasKey(u"Inventory")) {
+        player.inventory.readFromNBT(*savedPlayerData->getTagList(u"Inventory"));
+    }
+    if (savedPlayerData->hasKey(u"CursorItem")) {
+        player.inventory.draggedItemStack = ItemStack(*savedPlayerData->getCompoundTag(u"CursorItem"));
+    } else {
+        player.inventory.draggedItemStack.reset();
+    }
+    savedPlayerData = createPlayerDataTag(player);
+    return true;
+}
+
 void World::updateEntity(Entity &entity) {
     const int_t blockX = MathHelper::floor_double(entity.posX);
     const int_t blockZ = MathHelper::floor_double(entity.posZ);
@@ -1276,7 +1569,7 @@ void World::updateEntity(Entity &entity) {
         entity.chunkCoordZ != chunkZ) {
         if (entity.addedToChunk && chunkExists(entity.chunkCoordX, entity.chunkCoordZ)) {
             getChunkFromChunkCoords(entity.chunkCoordX, entity.chunkCoordZ).removeEntityAtIndex(entity,
-                                                                                                entity.chunkCoordY);
+                entity.chunkCoordY);
         }
 
         if (chunkExists(chunkX, chunkZ)) {

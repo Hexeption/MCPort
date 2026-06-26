@@ -20,6 +20,19 @@ Chunk::Chunk(World &world, const std::array<int_t, width * height * depth> &bloc
              const int_t chunkZ) : worldObj(world), blocks(blocks), xPosition(chunkX), zPosition(chunkZ) {
 }
 
+Chunk::Chunk(World &world, const std::array<int_t, width * height * depth> &blocks,
+             const std::array<int_t, width * height * depth> &metadata, const int_t chunkX, const int_t chunkZ)
+    : worldObj(world), blocks(blocks), xPosition(chunkX), zPosition(chunkZ), metadata(metadata) {
+}
+
+const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &Chunk::getBlocks() const {
+    return blocks;
+}
+
+const std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> &Chunk::getMetadata() const {
+    return metadata;
+}
+
 int_t Chunk::getBlockID(const int_t x, const int_t y, const int_t z) const {
     if (!isValidLocalBlock(x, y, z)) {
         return 0;

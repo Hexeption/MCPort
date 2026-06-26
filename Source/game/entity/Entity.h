@@ -12,6 +12,7 @@
 class World;
 class Material;
 class Vec3D;
+class EntityPlayer;
 
 class Entity {
 public:
@@ -106,6 +107,8 @@ public:
     bool isOffsetPositionInLiquid(double x, double y, double z) const;
 
     bool isInWater() const;
+
+    virtual void onCollideWithPlayer(EntityPlayer &player);
 
     virtual void setEntityDead();
 };

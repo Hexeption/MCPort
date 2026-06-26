@@ -131,6 +131,7 @@ void RenderItem::renderItemIntoGUI(FontRenderer &, RenderEngine &engine, ItemSta
         return;
     }
 
+    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT);
     if (stack->itemID < 256 &&
         Block::blocksList[stack->itemID] != nullptr &&
         RenderBlocks::renderItemIn3d(Block::blocksList[stack->itemID]->getRenderType())) {
@@ -162,12 +163,16 @@ void RenderItem::renderItemIntoGUI(FontRenderer &, RenderEngine &engine, ItemSta
     }
 
     glEnable(GL_CULL_FACE);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glPopAttrib();
 }
 
 void RenderItem::renderItemOverlayIntoGUI(FontRenderer &font, RenderEngine &, ItemStack *stack, int_t x, int_t y) {
     if (stack == nullptr) {
         return;
     }
+
+    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (stack->stackSize > 1) {
         const jstring text = String::toString(stack->stackSize);
@@ -207,6 +212,8 @@ void RenderItem::renderItemOverlayIntoGUI(FontRenderer &font, RenderEngine &, It
         glEnable(GL_DEPTH_TEST);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
+
+    glPopAttrib();
 }
 
 void RenderItem::renderQuad(Tessellator &t, int_t x, int_t y, int_t width, int_t height, int_t color) {

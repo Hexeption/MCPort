@@ -43,7 +43,7 @@ public:
 
     void readEntityFromNBT(NBTTagCompound &nbt);
 
-    void onCollideWithPlayer(EntityPlayer &player);
+    void onCollideWithPlayer(EntityPlayer &player) override;
 };
 
 

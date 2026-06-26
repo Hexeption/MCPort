@@ -14,8 +14,10 @@
 
 #include "game/client/options/GameSettings.h"
 #include "game/client/gui/GuiIngameMenu.h"
+#include "game/client/gui/GuiInventory.h"
 #include "game/client/gui/GuiMainMenu.h"
 #include "game/client/gui/GuiScreen.h"
+#include "game/block/Block.h"
 #include "game/client/renderer/EntityRenderer.h"
 #include "game/client/renderer/FontRenderer.h"
 #include "game/client/renderer/RenderEngine.h"
@@ -26,6 +28,7 @@
 #include "game/client/renderer/TextureWaterFX.h"
 #include "game/client/renderer/TextureWaterFlowFX.h"
 #include "game/client/player/PlayerControllerSP.h"
+#include "game/item/ItemStack.h"
 #include "java/Math.h"
 #include "java/System.h"
 #include "lwjgl/Display.h"
@@ -270,11 +273,20 @@ void Minecraft::run() {
 }
 
 void Minecraft::shutdown() {
+    if (theWorld != nullptr && thePlayer != nullptr) {
+        theWorld->setPlayerToSave(thePlayer.get());
+        theWorld->saveWorld(true, nullptr);
+    }
     running = false;
 }
 
 void Minecraft::runTick() {
     ingameGui->updateTick();
+    isGamePaused = !isMultiplayerWorld() && currentScreen != nullptr && currentScreen->doesGuiPauseGame();
+
+    if (thePlayer != nullptr && !isGamePaused) {
+        thePlayer->onUpdate();
+    }
 
     glBindTexture(GL_TEXTURE_2D, renderEngine->getTexture(u"/terrain.png"));
     if (!isGamePaused) {
@@ -290,6 +302,8 @@ void Minecraft::runTick() {
     } else if (theWorld != nullptr) {
         handleIngameInput();
     }
+
+    isGamePaused = !isMultiplayerWorld() && currentScreen != nullptr && currentScreen->doesGuiPauseGame();
 
     if (theWorld != nullptr) {
         theWorld->difficultySetting = options != nullptr ? options->difficulty : 0;
@@ -350,10 +364,18 @@ void Minecraft::changeWorld1(std::unique_ptr<World> world) {
 }
 
 void Minecraft::changeWorld(std::unique_ptr<World> world, const jstring &) {
+    if (theWorld != nullptr && thePlayer != nullptr) {
+        theWorld->setPlayerToSave(thePlayer.get());
+        theWorld->saveWorld(true, nullptr);
+    }
+
     theWorld = std::move(world);
     if (theWorld != nullptr) {
         thePlayer = std::make_unique<EntityPlayerSP>(*theWorld, *options);
-        thePlayer->preparePlayerToSpawn();
+        if (!theWorld->loadPlayerData(*thePlayer)) {
+            thePlayer->preparePlayerToSpawn();
+        }
+        theWorld->setPlayerToSave(thePlayer.get());
     } else {
         thePlayer = nullptr;
         setIngameNotInFocus();
@@ -451,11 +473,31 @@ void Minecraft::handleIngameInput() {
                                         : -1;
             options->setOptionValue(4, direction);
         }
+
+        if (pressed && key == options->keyBindInventory.key && currentScreen == nullptr) {
+            displayGuiScreen(std::make_shared<GuiInventory>(thePlayer->inventory));
+        }
+
+        if (pressed && key == options->keyBindDrop.key && thePlayer != nullptr) {
+            std::optional<ItemStack> dropped = thePlayer->inventory.decrStackSize(thePlayer->inventory.currentItem, 1);
+            if (dropped.has_value()) {
+                thePlayer->dropPlayerItemWithRandomChoice(*dropped, false);
+            }
+        }
+
+        if (pressed && key >= lwjgl::Keyboard::KEY_1 && key <= lwjgl::Keyboard::KEY_9 && thePlayer != nullptr) {
+            thePlayer->inventory.currentItem = key - lwjgl::Keyboard::KEY_1;
+        }
     }
 
     while (lwjgl::Mouse::next()) {
         if (currentScreen != nullptr || theWorld == nullptr || thePlayer == nullptr) {
             continue;
+        }
+
+        const int_t wheel = lwjgl::Mouse::getEventDWheel();
+        if (wheel != 0) {
+            thePlayer->inventory.changeCurrentItem(wheel);
         }
 
         const int_t button = lwjgl::Mouse::getEventButton();
@@ -465,10 +507,6 @@ void Minecraft::handleIngameInput() {
     }
 
     sendClickBlockToController(0, currentScreen == nullptr && lwjgl::Mouse::isButtonDown(0));
-
-    if (thePlayer != nullptr && !isGamePaused) {
-        thePlayer->onUpdate();
-    }
 }
 
 void Minecraft::displayInGameMenu() {
@@ -528,6 +566,61 @@ void Minecraft::clickMouse(const int_t button) {
         const int_t side = objectMouseOver->sideHit;
         if (button == 0) {
             playerController->clickBlock(x, y, z, side);
+        } else if (button == 1 && thePlayer != nullptr && theWorld != nullptr) {
+            ItemStack *stack = thePlayer->inventory.getCurrentItem();
+            if (stack == nullptr) {
+                return;
+            }
+
+            if (stack->getItem() != nullptr) {
+                ItemStack result = stack->useItemRightClick(*theWorld, *thePlayer);
+                thePlayer->inventory.mainInventory[thePlayer->inventory.currentItem] = result;
+                if (thePlayer->inventory.mainInventory[thePlayer->inventory.currentItem]->stackSize <= 0) {
+                    thePlayer->inventory.mainInventory[thePlayer->inventory.currentItem].reset();
+                }
+                return;
+            }
+
+            if (stack->itemID >= 0 && stack->itemID < static_cast<int_t>(Block::blocksList.size()) &&
+                Block::blocksList[stack->itemID] != nullptr) {
+                int_t placeX = x;
+                int_t placeY = y;
+                int_t placeZ = z;
+                switch (side) {
+                    case 0:
+                        --placeY;
+                        break;
+                    case 1:
+                        ++placeY;
+                        break;
+                    case 2:
+                        --placeZ;
+                        break;
+                    case 3:
+                        ++placeZ;
+                        break;
+                    case 4:
+                        --placeX;
+                        break;
+                    case 5:
+                        ++placeX;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (theWorld->canBlockBePlacedAt(stack->itemID, placeX, placeY, placeZ, false) &&
+                    (Block::blocksList[stack->itemID] == nullptr ||
+                     !Block::blocksList[stack->itemID]->getCollisionBoundingBoxFromPool(*theWorld, placeX, placeY,
+                         placeZ).intersectsWith(
+                         thePlayer->boundingBox)) &&
+                    theWorld->setBlockAndMetadataWithNotify(placeX, placeY, placeZ, stack->itemID, stack->itemDmg)) {
+                    --stack->stackSize;
+                    if (stack->stackSize <= 0) {
+                        thePlayer->inventory.mainInventory[thePlayer->inventory.currentItem].reset();
+                    }
+                }
+            }
         }
     }
 }

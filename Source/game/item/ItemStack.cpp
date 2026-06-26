@@ -55,7 +55,15 @@ Item *ItemStack::getItem() const {
 }
 
 int_t ItemStack::getIconIndex() const {
-    return getItem()->getIconIndex(const_cast<ItemStack *>(this));
+    if (Item *item = getItem()) {
+        return item->getIconIndex(const_cast<ItemStack *>(this));
+    }
+
+    if (itemID >= 0 && itemID < static_cast<int_t>(Block::blocksList.size()) && Block::blocksList[itemID] != nullptr) {
+        return Block::blocksList[itemID]->getBlockTextureFromSide(0);
+    }
+
+    return 0;
 }
 
 bool ItemStack::useItem(EntityPlayer &player, World &world, int_t x, int_t y, int_t z, int_t side) {
@@ -63,7 +71,15 @@ bool ItemStack::useItem(EntityPlayer &player, World &world, int_t x, int_t y, in
 }
 
 float ItemStack::getStrVsBlock(Block &block) {
-    return getItem()->getStrVsBlock(this, &block);
+    if (Item *item = getItem()) {
+        return item->getStrVsBlock(this, &block);
+    }
+
+    if (itemID >= 0 && itemID < static_cast<int_t>(Block::blocksList.size()) && Block::blocksList[itemID] != nullptr) {
+        return 1.0f;
+    }
+
+    return 1.0f;
 }
 
 ItemStack ItemStack::useItemRightClick(World &world, EntityPlayer &player) {
@@ -79,16 +95,34 @@ NBTTagCompound &ItemStack::writeToNBT(NBTTagCompound &nbt) const {
 
 void ItemStack::readFromNBT(NBTTagCompound &nbt) {
     itemID = nbt.getShort(u"id");
-    stackSize = nbt.getByte(u"Count");
+    stackSize = static_cast<int_t>(static_cast<ubyte_t>(nbt.getByte(u"Count")));
     itemDmg = nbt.getShort(u"Damage");
+    if (stackSize < 0) {
+        stackSize = 0;
+    }
+    if (stackSize > getMaxStackSize()) {
+        stackSize = getMaxStackSize();
+    }
 }
 
 int_t ItemStack::getMaxStackSize() const {
-    return getItem()->getItemStackLimit();
+    if (Item *item = getItem()) {
+        return item->getItemStackLimit();
+    }
+
+    if (itemID >= 0 && itemID < static_cast<int_t>(Block::blocksList.size()) && Block::blocksList[itemID] != nullptr) {
+        return 64;
+    }
+
+    return 64;
 }
 
 int_t ItemStack::getMaxDamage() const {
-    return Item::itemsList[itemID]->getMaxDamage();
+    if (Item *item = Item::itemsList[itemID]) {
+        return item->getMaxDamage();
+    }
+
+    return 0;
 }
 
 void ItemStack::damageItem(int_t amount) {
@@ -104,26 +138,38 @@ void ItemStack::damageItem(int_t amount) {
 }
 
 void ItemStack::hitEntity(EntityLiving &entity) {
-    Item::itemsList[itemID]->hitEntity(this, &entity);
+    if (Item *item = Item::itemsList[itemID]) {
+        item->hitEntity(this, &entity);
+    }
 }
 
 void ItemStack::onDestroyBlock(int_t x, int_t y, int_t z, int_t side) {
-    Item::itemsList[itemID]->onBlockDestroyed(this, x, y, z, side);
+    if (Item *item = Item::itemsList[itemID]) {
+        item->onBlockDestroyed(this, x, y, z, side);
+    }
 }
 
 int_t ItemStack::getDamageVsEntity(Entity &entity) {
-    return Item::itemsList[itemID]->getDamageVsEntity(&entity);
+    if (Item *item = Item::itemsList[itemID]) {
+        return item->getDamageVsEntity(&entity);
+    }
+    return 1;
 }
 
 bool ItemStack::canHarvestBlock(Block &block) {
-    return Item::itemsList[itemID]->canHarvestBlock(&block);
+    if (Item *item = Item::itemsList[itemID]) {
+        return item->canHarvestBlock(&block);
+    }
+    return true;
 }
 
 void ItemStack::onItemDestroyedByUse(EntityPlayer &) {
 }
 
 void ItemStack::useItemOnEntity(EntityLiving &entity) {
-    Item::itemsList[itemID]->saddleEntity(this, &entity);
+    if (Item *item = Item::itemsList[itemID]) {
+        item->saddleEntity(this, &entity);
+    }
 }
 
 ItemStack ItemStack::copy() const {

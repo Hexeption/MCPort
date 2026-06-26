@@ -59,6 +59,8 @@ public:
     std::vector<std::unique_ptr<Entity> > loadedEntityList;
     std::vector<Entity *> unloadedEntityList;
     std::vector<EntityPlayer *> playerEntities;
+    EntityPlayer *playerToSave = nullptr;
+    std::unique_ptr<NBTTagCompound> savedPlayerData;
 
     const std::vector<std::unique_ptr<Entity> > &getLoadedEntityList() const;
 
@@ -140,6 +142,8 @@ public:
 
     std::vector<AxisAlignedBB> getCollidingBoundingBoxes(const Entity &entity, const AxisAlignedBB &box) const;
 
+    std::vector<Entity *> getEntitiesWithinAABBExcludingEntity(const Entity &entity, const AxisAlignedBB &box) const;
+
     bool getIsAnyLiquid(const AxisAlignedBB &box) const;
 
     bool handleMaterialAcceleration(const AxisAlignedBB &box, Material *material, Entity &entity);
@@ -199,6 +203,10 @@ public:
 
     void updateEntities();
 
+    void setPlayerToSave(EntityPlayer *player);
+
+    bool loadPlayerData(EntityPlayer &player);
+
 private:
     long_t lockTimestamp;
     std::unordered_map<long_t, int_t> blockOverrides;
@@ -235,6 +243,18 @@ private:
     void updateEntity(Entity &entity);
 
     void saveLevel();
+
+    void saveChunks();
+
+    void saveChunk(const Chunk &chunk) const;
+
+    std::unique_ptr<Chunk> loadChunkFromDisk(int_t chunkX, int_t chunkZ) const;
+
+    void loadChunkEntities(NBTTagCompound &chunkData);
+
+    File getChunksDirectory() const;
+
+    File getChunkFile(int_t chunkX, int_t chunkZ) const;
 
     bool findSpawn(int_t x, int_t z) const;
 

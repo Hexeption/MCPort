@@ -88,13 +88,22 @@ void GuiScreen::handleMouseInput() {
 }
 
 void GuiScreen::handleKeyboardInput() {
-    if (lwjgl::Keyboard::getEventKeyState()) {
-        if (lwjgl::Keyboard::getEventKey() == lwjgl::Keyboard::KEY_F11) {
-            // todo: full screen toggle
-        }
+    const bool pressed = lwjgl::Keyboard::getEventKeyState();
+    const int_t key = lwjgl::Keyboard::getEventKey();
 
-        keyTyped(lwjgl::Keyboard::getEventCharacter(), lwjgl::Keyboard::getEventKey());
+    if (allowUserInput && mc != nullptr && mc->thePlayer != nullptr) {
+        mc->thePlayer->handleKeyPress(key, pressed);
     }
+
+    if (!pressed) {
+        return;
+    }
+
+    if (key == lwjgl::Keyboard::KEY_F11) {
+        // todo: full screen toggle
+    }
+
+    keyTyped(lwjgl::Keyboard::getEventCharacter(), key);
 }
 
 void GuiScreen::updateScreen() {

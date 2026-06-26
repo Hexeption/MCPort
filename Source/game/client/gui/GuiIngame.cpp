@@ -5,11 +5,31 @@
 #include "GuiIngame.h"
 
 #include "game/client/renderer/EntityRenderer.h"
+#include "game/client/renderer/RenderHelper.h"
 #include "game/client/renderer/ScaledResolution.h"
 #include "game/client/renderer/Tessellator.h"
+#include "game/client/renderer/RenderItem.h"
+#include "game/inventory/InventoryPlayer.h"
+#include "port/java/String.h"
 #include "glad/glad.h"
 
+namespace {
+    RenderItem itemRenderer;
+}
+
 GuiIngame::GuiIngame(Minecraft &mc) : mc(mc) {
+}
+
+void GuiIngame::renderInventorySlot(const int_t slot, const int_t x, const int_t y, const float) {
+    if (mc.thePlayer == nullptr) {
+        return;
+    }
+
+    InventoryPlayer &inventory = mc.thePlayer->inventory;
+    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT);
+    itemRenderer.renderItemIntoGUI(*mc.fontRenderer, *mc.renderEngine, inventory.getStackInSlot(slot), x, y);
+    itemRenderer.renderItemOverlayIntoGUI(*mc.fontRenderer, *mc.renderEngine, inventory.getStackInSlot(slot), x, y);
+    glPopAttrib();
 }
 
 void GuiIngame::renderGameOverlay(float partialTicks, bool inScreen, int_t mouseX, int_t mouseY) {
@@ -29,7 +49,29 @@ void GuiIngame::renderGameOverlay(float partialTicks, bool inScreen, int_t mouse
     drawTexturedModalRect(scaledWidth / 2 - 7, scaledHeight / 2 - 7, 0, 0, 16, 16);
     glDisable(GL_BLEND);
 
-    // gui slots
+    if (mc.thePlayer != nullptr) {
+        InventoryPlayer &inventory = mc.thePlayer->inventory;
+        glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/gui/gui.png"));
+        drawTexturedModalRect(scaledWidth / 2 - 91, scaledHeight - 22, 0, 0, 182, 22);
+        drawTexturedModalRect(scaledWidth / 2 - 91 - 1 + inventory.currentItem * 20, scaledHeight - 23, 0, 22, 24, 22);
+
+        glPushMatrix();
+        glRotatef(180.0f, 1.0f, 0.0f, 0.0f);
+        RenderHelper::enableStandardItemLighting();
+        glPopMatrix();
+        glEnable(GL_RESCALE_NORMAL);
+        glEnable(GL_NORMALIZE);
+
+        for (int_t slot = 0; slot < 9; ++slot) {
+            const int_t slotX = scaledWidth / 2 - 90 + slot * 20 + 2;
+            const int_t slotY = scaledHeight - 16 - 3;
+            renderInventorySlot(slot, slotX, slotY, partialTicks);
+        }
+
+        glDisable(GL_RESCALE_NORMAL);
+        glDisable(GL_NORMALIZE);
+        RenderHelper::disableStandardItemLighting();
+    }
 
     jstring var21;
     if (mc.options->showFramerate) {
@@ -37,6 +79,19 @@ void GuiIngame::renderGameOverlay(float partialTicks, bool inScreen, int_t mouse
         fontRenderer.drawStringWithShadow(mc.debugInfoRenders(), 2, 12, 16777215);
         fontRenderer.drawStringWithShadow(mc.getEntityDebug(), 2, 22, 16777215);
         fontRenderer.drawStringWithShadow(mc.debugInfoEntities(), 2, 32, 16777215);
+        if (mc.thePlayer != nullptr) {
+            float wrappedYaw = mc.thePlayer->rotationYaw;
+            while (wrappedYaw <= -180.0f) {
+                wrappedYaw += 360.0f;
+            }
+            while (wrappedYaw > 180.0f) {
+                wrappedYaw -= 360.0f;
+            }
+            fontRenderer.drawStringWithShadow(
+                u"Pitch: " + String::toString(mc.thePlayer->rotationPitch) +
+                u" Yaw: " + String::toString(wrappedYaw),
+                2, 42, 16777215);
+        }
     } else {
         fontRenderer.drawStringWithShadow(u"Minecraft Alpha v1.1.0", 2, 2, 16777215);
     }

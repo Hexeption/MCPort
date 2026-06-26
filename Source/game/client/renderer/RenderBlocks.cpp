@@ -455,5 +455,44 @@ void RenderBlocks::renderBlockOnInventory(Block *block) {
         return;
     }
 
-    renderBlockAsItem(block, 1.0f);
+    const int_t renderType = block->getRenderType();
+    Tessellator &tessellator = Tessellator::instance;
+    if (renderType == 0) {
+        block->setBlockBoundsForItemRender();
+        glTranslatef(-0.5f, -0.5f, -0.5f);
+
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(0.0f, -1.0f, 0.0f);
+        renderBottomFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(0));
+        tessellator.draw();
+
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(0.0f, 1.0f, 0.0f);
+        renderTopFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(1));
+        tessellator.draw();
+
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(0.0f, 0.0f, -1.0f);
+        renderEastFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(2));
+        tessellator.draw();
+
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(0.0f, 0.0f, 1.0f);
+        renderWestFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(3));
+        tessellator.draw();
+
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(-1.0f, 0.0f, 0.0f);
+        renderNorthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(4));
+        tessellator.draw();
+
+        tessellator.startDrawingQuads();
+        tessellator.setNormal(1.0f, 0.0f, 0.0f);
+        renderSouthFace(block, 0.0, 0.0, 0.0, block->getBlockTextureFromSide(5));
+        tessellator.draw();
+
+        glTranslatef(0.5f, 0.5f, 0.5f);
+    }
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }

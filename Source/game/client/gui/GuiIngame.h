@@ -7,11 +7,14 @@
 #include "Gui.h"
 #include "game/client/Minecraft.h"
 
+class RenderItem;
 
 class GuiIngame : public Gui {
 private:
     Minecraft &mc;
     float prevVignetteBrightness = 1.0f;
+
+    void renderInventorySlot(int_t slot, int_t x, int_t y, float partialTicks);
 
 public:
     GuiIngame(Minecraft &mc);

@@ -37,6 +37,13 @@ public:
 
     Chunk(World &world, const std::array<int_t, width * height * depth> &blocks, int_t chunkX, int_t chunkZ);
 
+    Chunk(World &world, const std::array<int_t, width * height * depth> &blocks,
+          const std::array<int_t, width * height * depth> &metadata, int_t chunkX, int_t chunkZ);
+
+    const std::array<int_t, width * height * depth> &getBlocks() const;
+
+    const std::array<int_t, width * height * depth> &getMetadata() const;
+
     int_t getBlockID(int_t x, int_t y, int_t z) const;
 
     bool setBlockID(int_t x, int_t y, int_t z, int_t blockId);

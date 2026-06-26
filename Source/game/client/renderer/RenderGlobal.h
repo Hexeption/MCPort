@@ -119,6 +119,7 @@ public:
 
 private:
     static void drawOutlinedBoundingBox(const AxisAlignedBB &box);
+
     void renderStars();
 };
 

@@ -57,6 +57,7 @@ void Gui::drawGradientRect(const int_t x1, const int_t y1, const int_t x2, const
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
     glEnable(GL_TEXTURE_2D);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Gui::drawCenteredString(FontRenderer *fontRenderer, const jstring &text, const int_t x, const int_t y,

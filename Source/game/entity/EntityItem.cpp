@@ -186,5 +186,17 @@ void EntityItem::readEntityFromNBT(NBTTagCompound &nbt) {
 }
 
 void EntityItem::onCollideWithPlayer(EntityPlayer &player) {
-    // todo: pickup
+    if (worldObj.multiplayerWorld) {
+        return;
+    }
+
+    if (delayBeforeCanPickup > 0) {
+        return;
+    }
+
+    const int_t pickedUp = item.stackSize;
+    if (player.inventory.addItemStackToInventory(item)) {
+        player.onItemPickup(*this, pickedUp);
+        setEntityDead();
+    }
 }

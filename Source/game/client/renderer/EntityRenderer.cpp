@@ -12,6 +12,7 @@
 #include "RenderGlobal.h"
 #include "RenderManager.h"
 #include "ItemRenderer.h"
+#include "RenderHelper.h"
 #include "ScaledResolution.h"
 #include "Tessellator.h"
 #include "game/client/MathHelper.h"
@@ -141,6 +142,7 @@ void EntityRenderer::renderWorld(const float partialTicks) {
         setupCameraTransform(partialTicks, pass);
         Frustum frustum;
         frustum.setPosition(cameraPos->xCoord, cameraPos->yCoord, cameraPos->zCoord);
+        RenderHelper::disableStandardItemLighting();
         if (mc.options->renderDistance < 2) {
             setupFog(-1);
             renderGlobal.renderSky(partialTicks);
@@ -152,9 +154,12 @@ void EntityRenderer::renderWorld(const float partialTicks) {
         setupFog(0);
         glEnable(GL_FOG);
         glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(u"/terrain.png"));
+        RenderHelper::disableStandardItemLighting();
         renderGlobal.sortAndRender(player, 0, partialTicks);
+        RenderHelper::enableStandardItemLighting();
         renderGlobal.renderEntities(*cameraPos, frustum, partialTicks);
         effectRenderer.renderLitParticles(player, partialTicks);
+        RenderHelper::disableStandardItemLighting();
         effectRenderer.renderParticles(player, partialTicks);
         if (player.isInsideOfMaterial(Material::water)) {
             glDisable(GL_ALPHA_TEST);

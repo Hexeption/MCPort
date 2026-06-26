@@ -12,7 +12,7 @@ void NBTTagByte::writeTagContents(DataOutput &out) {
 }
 
 void NBTTagByte::readTagContents(DataInput &in) {
-    in.readByte();
+    byteValue = in.readByte();
 }
 
 byte_t NBTTagByte::getType() {

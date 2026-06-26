@@ -7,11 +7,16 @@
 
 #include "EntityLiving.h"
 #include "java/Type.h"
+#include "game/inventory/InventoryPlayer.h"
 
 class Block;
+class Entity;
+class EntityItem;
+class ItemStack;
 
 class EntityPlayer : public EntityLiving {
 public:
+    InventoryPlayer inventory;
     int_t score = 0;
     float prevCameraYaw = 0.0f;
     float cameraYaw = 0.0f;
@@ -31,6 +36,18 @@ public:
     bool canHarvestBlock(const Block &block);
 
     void swingItem();
+
+    ItemStack *getCurrentEquippedItem();
+
+    void destroyCurrentEquippedItem();
+
+    void dropPlayerItem(ItemStack &stack);
+
+    void dropPlayerItemWithRandomChoice(ItemStack &stack, bool randomize);
+
+    void joinEntityItemWithWorld(EntityItem &item);
+
+    void onItemPickup(Entity &entity, int_t amount);
 };
 
 #endif //MCPORT_ENTITYPLAYER_H

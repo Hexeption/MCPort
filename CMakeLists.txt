@@ -85,6 +85,17 @@ add_executable(MCPort
         Source/game/entity/EntityPlayer.h
         Source/game/entity/EntityPlayerSP.cpp
         Source/game/entity/EntityPlayerSP.h
+        Source/game/inventory/IInventory.h
+        Source/game/inventory/CraftingInventoryCB.cpp
+        Source/game/inventory/CraftingInventoryCB.h
+        Source/game/inventory/CraftingInventoryPlayerCB.cpp
+        Source/game/inventory/CraftingInventoryPlayerCB.h
+        Source/game/inventory/InventoryCraftResult.cpp
+        Source/game/inventory/InventoryCraftResult.h
+        Source/game/inventory/InventoryCrafting.cpp
+        Source/game/inventory/InventoryCrafting.h
+        Source/game/inventory/InventoryPlayer.cpp
+        Source/game/inventory/InventoryPlayer.h
         Source/game/world/chunk/Chunk.cpp
         Source/game/world/chunk/Chunk.h
         Source/game/world/chunk/ChunkProviderGenerate.cpp
@@ -114,6 +125,8 @@ add_executable(MCPort
         Source/game/client/renderer/Tessellator.h
         Source/game/client/renderer/RenderBlocks.cpp
         Source/game/client/renderer/RenderBlocks.h
+        Source/game/client/renderer/RenderHelper.cpp
+        Source/game/client/renderer/RenderHelper.h
         Source/game/client/renderer/WorldRenderer.cpp
         Source/game/client/renderer/WorldRenderer.h
         Source/game/client/renderer/ThreadDownloadImage.cpp
@@ -146,6 +159,8 @@ add_executable(MCPort
         Source/game/client/gui/Gui.h
         Source/game/client/gui/GuiButton.cpp
         Source/game/client/gui/GuiButton.h
+        Source/game/client/gui/GuiContainer.cpp
+        Source/game/client/gui/GuiContainer.h
         Source/game/client/gui/GuiSmallButton.cpp
         Source/game/client/gui/GuiSmallButton.h
         Source/game/client/gui/GuiScreen.cpp
@@ -205,6 +220,16 @@ add_executable(MCPort
         Source/game/world/IWorldAccess.h
         Source/game/client/gui/GuiIngame.cpp
         Source/game/client/gui/GuiIngame.h
+        Source/game/client/gui/GuiInventory.cpp
+        Source/game/client/gui/GuiInventory.h
+        Source/game/client/gui/slot/Slot.cpp
+        Source/game/client/gui/slot/Slot.h
+        Source/game/client/gui/slot/SlotArmor.cpp
+        Source/game/client/gui/slot/SlotArmor.h
+        Source/game/client/gui/slot/SlotCrafting.cpp
+        Source/game/client/gui/slot/SlotCrafting.h
+        Source/game/client/gui/slot/SlotInventory.cpp
+        Source/game/client/gui/slot/SlotInventory.h
         Source/game/client/renderer/EffectRenderer.cpp
         Source/game/client/renderer/EffectRenderer.h
         Source/game/entity/fx/EntityFX.cpp

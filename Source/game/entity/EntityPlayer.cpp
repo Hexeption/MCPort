@@ -6,10 +6,15 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
+#include "game/block/Block.h"
+#include "game/block/Material.h"
+#include "game/entity/EntityItem.h"
+#include "game/item/ItemStack.h"
 #include "game/world/World.h"
 
-EntityPlayer::EntityPlayer(World &world) : EntityLiving(world) {
+EntityPlayer::EntityPlayer(World &world) : EntityLiving(world), inventory(*this) {
     yOffset = 1.62f;
     setLocationAndAngles(static_cast<double>(world.spawnX) + 0.5, static_cast<double>(world.spawnY + 1),
                          static_cast<double>(world.spawnZ) + 0.5, 0.0f, 0.0f);
@@ -24,6 +29,7 @@ void EntityPlayer::preparePlayerToSpawn() {
 }
 
 void EntityPlayer::onLivingUpdate() {
+    inventory.decrementAnimations();
     prevCameraYaw = cameraYaw;
     prevCameraPitch = cameraPitch;
     EntityLiving::onLivingUpdate();
@@ -39,21 +45,89 @@ void EntityPlayer::onLivingUpdate() {
     }
     cameraYaw += (horizontalMotion - cameraYaw) * 0.4f;
     cameraPitch += (pitchMotion - cameraPitch) * 0.8f;
+
+    if (health > 0) {
+        const double expand = 1.0;
+        const auto entities = worldObj.getEntitiesWithinAABBExcludingEntity(
+            *this, boundingBox.expand(expand, 0.0, expand));
+        for (Entity *entity: entities) {
+            if (entity != nullptr) {
+                entity->onCollideWithPlayer(*this);
+            }
+        }
+    }
 }
 
 float EntityPlayer::getEyeHeight() const {
     return 0.12f;
 }
 
-float EntityPlayer::getCurrentPlayerStrVsBlock(const Block &) {
-    return 1.0f;
+float EntityPlayer::getCurrentPlayerStrVsBlock(const Block &block) {
+    float strength = inventory.getStrVsBlock(const_cast<Block &>(block));
+    if (isInsideOfMaterial(Material::water)) {
+        strength /= 5.0f;
+    }
+    if (!onGround) {
+        strength /= 5.0f;
+    }
+    return strength;
 }
 
-bool EntityPlayer::canHarvestBlock(const Block &) {
-    return true;
+bool EntityPlayer::canHarvestBlock(const Block &block) {
+    return inventory.canHarvestBlock(const_cast<Block &>(block));
 }
 
 void EntityPlayer::swingItem() {
     swingProgressInt = -1;
     isSwinging = true;
+}
+
+ItemStack *EntityPlayer::getCurrentEquippedItem() {
+    return inventory.getCurrentItem();
+}
+
+void EntityPlayer::destroyCurrentEquippedItem() {
+    inventory.mainInventory[inventory.currentItem].reset();
+}
+
+void EntityPlayer::dropPlayerItem(ItemStack &stack) {
+    dropPlayerItemWithRandomChoice(stack, false);
+}
+
+void EntityPlayer::dropPlayerItemWithRandomChoice(ItemStack &stack, bool randomize) {
+    if (stack.stackSize <= 0) {
+        return;
+    }
+
+    auto item = std::make_unique<EntityItem>(worldObj, posX, posY - 0.3 + getEyeHeight(), posZ, stack);
+    item->delayBeforeCanPickup = 40;
+
+    float spread = 0.1f;
+    if (randomize) {
+        const float size = rand.nextFloat() * 0.5f;
+        const float angle = rand.nextFloat() * static_cast<float>(std::acos(-1.0)) * 2.0f;
+        item->motionX = -std::sin(angle) * size;
+        item->motionZ = std::cos(angle) * size;
+        item->motionY = 0.2f;
+    } else {
+        spread = 0.3f;
+        const float degreesToRadians = static_cast<float>(std::acos(-1.0) / 180.0);
+        item->motionX = -std::sin(rotationYaw * degreesToRadians) * std::cos(rotationPitch * degreesToRadians) * spread;
+        item->motionZ = std::cos(rotationYaw * degreesToRadians) * std::cos(rotationPitch * degreesToRadians) * spread;
+        item->motionY = -std::sin(rotationPitch * degreesToRadians) * spread + 0.1f;
+        float jitter = rand.nextFloat() * static_cast<float>(std::acos(-1.0)) * 2.0f;
+        spread = 0.02f * rand.nextFloat();
+        item->motionX += std::cos(jitter) * spread;
+        item->motionY += (rand.nextFloat() - rand.nextFloat()) * 0.1f;
+        item->motionZ += std::sin(jitter) * spread;
+    }
+
+    worldObj.spawnEntityInWorld(std::move(item));
+}
+
+void EntityPlayer::joinEntityItemWithWorld(EntityItem &item) {
+    (void) item;
+}
+
+void EntityPlayer::onItemPickup(Entity &, int_t) {
 }
