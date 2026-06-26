@@ -11,9 +11,11 @@
 #include "MovementInput.h"
 
 class GameSettings;
+class Minecraft;
 
 class EntityPlayerSP : public EntityPlayer {
 public:
+    Minecraft *mc = nullptr;
     std::unique_ptr<MovementInput> movementInput;
 
     EntityPlayerSP(World &world, GameSettings &gameSettings);
@@ -23,6 +25,10 @@ public:
     void resetPlayerKeyState();
 
     void handleKeyPress(int_t key, bool pressed);
+
+    void displayWorkbenchGUI() override;
+
+    void attackEntity(Entity &entity);
 };
 
 #endif //MCPORT_ENTITYPLAYERSP_H

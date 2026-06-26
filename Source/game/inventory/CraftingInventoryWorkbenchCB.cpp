@@ -2,7 +2,7 @@
 // Created by Keir Davis on 26/06/2026.
 //
 
-#include "CraftingInventoryPlayerCB.h"
+#include "CraftingInventoryWorkbenchCB.h"
 
 #include "CraftingManager.h"
 #include "InventoryCraftResult.h"
@@ -10,22 +10,19 @@
 #include "game/entity/EntityPlayer.h"
 #include "game/item/ItemStack.h"
 
-CraftingInventoryPlayerCB::CraftingInventoryPlayerCB(std::array<std::optional<ItemStack>, 4> &craftingInventory) {
-    craftMatrix = new InventoryCrafting(*this, craftingInventory);
+CraftingInventoryWorkbenchCB::CraftingInventoryWorkbenchCB() {
+    craftMatrix = new InventoryCrafting(*this, 3, 3);
     craftResult = new InventoryCraftResult();
-    onCraftMatrixChanged(*craftMatrix);
 }
 
-void CraftingInventoryPlayerCB::onCraftMatrixChanged(IInventory &) {
+void CraftingInventoryWorkbenchCB::onCraftMatrixChanged(IInventory &) {
     std::vector<int_t> grid(9);
 
     for (int_t col = 0; col < 3; ++col) {
         for (int_t row = 0; row < 3; ++row) {
             int_t id = -1;
-            if (col < 2 && row < 2) {
-                if (ItemStack *stack = craftMatrix->getStackInSlot(col + row * 2)) {
-                    id = stack->itemID;
-                }
+            if (ItemStack *stack = craftMatrix->getStackInSlot(col + row * 3)) {
+                id = stack->itemID;
             }
             grid[col + row * 3] = id;
         }
@@ -35,12 +32,8 @@ void CraftingInventoryPlayerCB::onCraftMatrixChanged(IInventory &) {
     craftResult->setInventorySlotContents(0, result.value_or(ItemStack(0, 0)));
 }
 
-void CraftingInventoryPlayerCB::onCraftGuiClosed(EntityPlayer &player) {
+void CraftingInventoryWorkbenchCB::onCraftGuiClosed(EntityPlayer &player) {
     CraftingInventoryCB::onCraftGuiClosed(player);
-
-    if (craftMatrix == nullptr) {
-        return;
-    }
 
     for (int_t slot = 0; slot < 9; ++slot) {
         if (ItemStack *stack = craftMatrix->getStackInSlot(slot)) {

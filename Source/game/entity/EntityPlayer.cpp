@@ -147,3 +147,6 @@ void EntityPlayer::readEntityFromNBT(NBTTagCompound &nbt) {
     NBTTagList *inventoryTag = nbt.getTagList(u"Inventory");
     inventory.readFromNBT(*inventoryTag);
 }
+
+void EntityPlayer::displayWorkbenchGUI() {
+}

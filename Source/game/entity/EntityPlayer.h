@@ -53,6 +53,8 @@ public:
     void writeEntityToNBT(NBTTagCompound &nbt) override;
 
     void readEntityFromNBT(NBTTagCompound &nbt) override;
+
+    virtual void displayWorkbenchGUI();
 };
 
 #endif //MCPORT_ENTITYPLAYER_H

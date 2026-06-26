@@ -40,6 +40,16 @@ bool PlayerControllerSP::sendBlockRemoved(const int_t x, const int_t y, const in
     const int_t blockId = mc.theWorld->getBlockId(x, y, z);
     const int_t blockMetadata = mc.theWorld->getBlockMetadata(x, y, z);
     const bool removed = PlayerController::sendBlockRemoved(x, y, z, side);
+
+    if (mc.thePlayer != nullptr) {
+        if (ItemStack *stack = mc.thePlayer->getCurrentEquippedItem()) {
+            stack->onDestroyBlock(x, y, z, side);
+            if (stack->stackSize <= 0) {
+                mc.thePlayer->destroyCurrentEquippedItem();
+            }
+        }
+    }
+
     Block *block = blockId >= 0 && blockId < static_cast<int_t>(Block::blocksList.size())
                        ? Block::blocksList[blockId]
                        : nullptr;

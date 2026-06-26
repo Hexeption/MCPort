@@ -372,6 +372,7 @@ void Minecraft::changeWorld(std::unique_ptr<World> world, const jstring &) {
     theWorld = std::move(world);
     if (theWorld != nullptr) {
         thePlayer = std::make_unique<EntityPlayerSP>(*theWorld, *options);
+        thePlayer->mc = this;
         if (!theWorld->loadPlayerData(*thePlayer)) {
             thePlayer->preparePlayerToSpawn();
         }
@@ -568,6 +569,14 @@ void Minecraft::clickMouse(const int_t button) {
         if (button == 0) {
             playerController->clickBlock(x, y, z, side);
         } else if (button == 1 && thePlayer != nullptr && theWorld != nullptr) {
+            const int_t hitBlockId = theWorld->getBlockId(x, y, z);
+            if (hitBlockId > 0 && hitBlockId < static_cast<int_t>(Block::blocksList.size()) &&
+                Block::blocksList[hitBlockId] != nullptr) {
+                if (Block::blocksList[hitBlockId]->blockActivated(*theWorld, x, y, z, *thePlayer)) {
+                    return;
+                }
+            }
+
             ItemStack *stack = thePlayer->inventory.getCurrentItem();
             if (stack == nullptr) {
                 return;

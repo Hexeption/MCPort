@@ -12,13 +12,18 @@ InventoryCrafting::InventoryCrafting(CraftingInventoryCB &craftingInventory,
     : craftingInventory(&craftingInventory), stackList(&stackList), gridSize(static_cast<int_t>(stackList.size())) {
 }
 
+InventoryCrafting::InventoryCrafting(CraftingInventoryCB &cb, int_t width, int_t height)
+    : craftingInventory(&cb), ownedSlots(static_cast<size_t>(width * height)), gridSize(width * height) {
+}
+
 int_t InventoryCrafting::getSizeInventory() {
     return gridSize;
 }
 
 ItemStack *InventoryCrafting::getStackInSlot(const int_t slot) {
-    return slot >= 0 && slot < gridSize && (*stackList)[slot].has_value() && (*stackList)[slot]->stackSize > 0
-               ? &(*stackList)[slot].value()
+    auto &storage = stackList ? (*stackList)[slot] : ownedSlots[slot];
+    return slot >= 0 && slot < gridSize && storage.has_value() && storage->stackSize > 0
+               ? &storage.value()
                : nullptr;
 }
 
@@ -31,7 +36,7 @@ std::optional<ItemStack> InventoryCrafting::decrStackSize(const int_t slot, cons
         return std::nullopt;
     }
 
-    auto &stack = (*stackList)[slot];
+    auto &stack = stackList ? (*stackList)[slot] : ownedSlots[slot];
     if (!stack.has_value()) {
         return std::nullopt;
     }
@@ -56,7 +61,8 @@ void InventoryCrafting::setInventorySlotContents(const int_t slot, const ItemSta
         return;
     }
 
-    (*stackList)[slot] = stack;
+    auto &storage = stackList ? (*stackList)[slot] : ownedSlots[slot];
+    storage = stack;
     craftingInventory->onCraftMatrixChanged(*this);
 }
 

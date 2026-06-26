@@ -15,6 +15,8 @@
 #include "BlockSand.h"
 #include "BlockSapling.h"
 #include "BlockStationary.h"
+#include "BlockStone.h"
+#include "BlockWorkbench.h"
 #include "game/entity/EntityItem.h"
 #include "game/item/ItemStack.h"
 
@@ -35,7 +37,7 @@ std::array<int_t, 256> Block::lightOpacity = [] {
 std::array<int_t, 256> Block::lightValue = {};
 std::array<bool, 256> Block::tickOnLoad = {};
 std::array<bool, 256> Block::opaqueCubeLookup = {};
-Block *Block::stone = (new Block(1, 1, Material::rock))->setHardness(1.5f);
+Block *Block::stone = (new BlockStone(1, 1))->setHardness(1.5f);
 Block *Block::grass = (new BlockGrass(2))->setHardness(0.6f);
 Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
 Block *Block::cobblestone = (new Block(4, 16, Material::rock))->setHardness(2.0f);
@@ -51,6 +53,27 @@ Block *Block::leaves = (new BlockLeaves(18, 52))->setHardness(0.2f)->setLightOpa
 Block *Block::wood = (new BlockLog(17))->setHardness(2.0f);
 Block *Block::sapling = (new BlockSapling(6, 15))->setHardness(0.0f)->setLightValue(1);
 Block *Block::ladder = nullptr;
+Block *Block::planks = (new Block(5, 4, Material::wood))->setHardness(2.0f);
+Block *Block::chest = (new Block(54, 26, Material::wood))->setHardness(2.5f);
+Block *Block::workbench = (new BlockWorkbench(58))->setHardness(2.5f);
+Block *Block::stoneOvenIdle = (new Block(62, 45, Material::rock))->setHardness(3.5f);
+Block *Block::stairDouble = nullptr;
+Block *Block::stairSingle = nullptr;
+Block *Block::cobblestoneMossy = nullptr;
+Block *Block::oreIron = nullptr;
+Block *Block::blockSteel = nullptr;
+Block *Block::oreCoal = nullptr;
+Block *Block::blockGold = nullptr;
+Block *Block::oreGold = nullptr;
+Block *Block::oreDiamond = nullptr;
+Block *Block::blockDiamond = nullptr;
+Block *Block::ice = nullptr;
+Block *Block::bookshelf = nullptr;
+Block *Block::snow = nullptr;
+Block *Block::blockSnow = nullptr;
+Block *Block::blockClay = nullptr;
+Block *Block::oreRedstone = nullptr;
+Block *Block::oreRedstoneGlowing = nullptr;
 
 Block::Block(const int_t blockID, Material *material) : blockID(blockID), material(material), blockIndexInTexture(0) {
     blockTextures.fill(0);
@@ -220,6 +243,10 @@ void Block::onNeighborBlockChange(World &, int_t, int_t, int_t, int_t) {
 }
 
 void Block::onBlockClicked(World &, int_t, int_t, int_t, EntityPlayer &) {
+}
+
+bool Block::blockActivated(World &, int_t, int_t, int_t, EntityPlayer &) {
+    return false;
 }
 
 float Block::blockStrength(EntityPlayer &player) const {

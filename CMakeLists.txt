@@ -40,6 +40,8 @@ add_executable(MCPort
         Source/game/client/gui/GuiButton.h
         Source/game/client/gui/GuiContainer.cpp
         Source/game/client/gui/GuiContainer.h
+        Source/game/client/gui/GuiCrafting.cpp
+        Source/game/client/gui/GuiCrafting.h
         Source/game/client/gui/GuiControls.cpp
         Source/game/client/gui/GuiControls.h
         Source/game/client/gui/GuiDeleteWorld.cpp
@@ -164,6 +166,12 @@ add_executable(MCPort
         Source/game/inventory/CraftingInventoryCB.h
         Source/game/inventory/CraftingInventoryPlayerCB.cpp
         Source/game/inventory/CraftingInventoryPlayerCB.h
+        Source/game/inventory/CraftingInventoryWorkbenchCB.cpp
+        Source/game/inventory/CraftingInventoryWorkbenchCB.h
+        Source/game/inventory/CraftingManager.cpp
+        Source/game/inventory/CraftingManager.h
+        Source/game/inventory/CraftingRecipe.cpp
+        Source/game/inventory/CraftingRecipe.h
         Source/game/inventory/IInventory.h
         Source/game/inventory/InventoryCraftResult.cpp
         Source/game/inventory/InventoryCraftResult.h
@@ -171,14 +179,28 @@ add_executable(MCPort
         Source/game/inventory/InventoryCrafting.h
         Source/game/inventory/InventoryPlayer.cpp
         Source/game/inventory/InventoryPlayer.h
-        Source/game/item/Item.cpp
+        Source/game/inventory/RecipesCrafting.cpp
+        Source/game/inventory/RecipesCrafting.h
+        Source/game/inventory/RecipesTools.cpp
+        Source/game/inventory/RecipesTools.h
+        Source/game/inventory/RecipesWeapons.cpp
+        Source/game/inventory/RecipesWeapons.h
         Source/game/item/Item.cpp
         Source/game/item/Item.h
-        Source/game/item/Item.h
-        Source/game/item/ItemStack.cpp
+        Source/game/item/ItemAxe.cpp
+        Source/game/item/ItemAxe.h
+        Source/game/item/ItemHoe.cpp
+        Source/game/item/ItemHoe.h
+        Source/game/item/ItemPickaxe.cpp
+        Source/game/item/ItemPickaxe.h
+        Source/game/item/ItemSpade.cpp
+        Source/game/item/ItemSpade.h
         Source/game/item/ItemStack.cpp
         Source/game/item/ItemStack.h
-        Source/game/item/ItemStack.h
+        Source/game/item/ItemSword.cpp
+        Source/game/item/ItemSword.h
+        Source/game/item/ItemTool.cpp
+        Source/game/item/ItemTool.h
         Source/game/nbt/CompressedStreamTools.cpp
         Source/game/nbt/CompressedStreamTools.h
         Source/game/nbt/NBTBase.cpp
@@ -312,6 +334,8 @@ add_executable(MCPort
         Source/game/block/BlockSapling.h
         Source/game/block/BlockGrass.cpp
         Source/game/block/BlockGrass.h
+        Source/game/block/BlockWorkbench.cpp
+        Source/game/block/BlockWorkbench.h
         Source/game/entity/EntityCreature.h
         Source/game/entity/EntityCreature.cpp
         Source/game/entity/EntityAnimal.h
@@ -333,6 +357,8 @@ add_executable(MCPort
         Source/game/client/renderer/RenderLiving.cpp
         Source/game/client/renderer/RenderCow.h
         Source/game/client/renderer/RenderCow.cpp
+        Source/game/block/BlockStone.cpp
+        Source/game/block/BlockStone.h
 )
 
 if (APPLE)

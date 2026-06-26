@@ -4,7 +4,11 @@
 
 #include "EntityPlayerSP.h"
 
+#include "EntityLiving.h"
 #include "MovementInputFromOptions.h"
+#include "game/client/Minecraft.h"
+#include "game/client/gui/GuiCrafting.h"
+#include "game/item/ItemStack.h"
 #include "lwjgl/Keyboard.h"
 
 EntityPlayerSP::EntityPlayerSP(World &world, GameSettings &gameSettings) : EntityPlayer(world),
@@ -53,4 +57,28 @@ void EntityPlayerSP::resetPlayerKeyState() {
 
 void EntityPlayerSP::handleKeyPress(const int_t key, const bool pressed) {
     movementInput->checkKeyForMovementInput(key, pressed);
+}
+
+void EntityPlayerSP::displayWorkbenchGUI() {
+    if (mc != nullptr) {
+        mc->displayGuiScreen(std::make_shared<GuiCrafting>(inventory));
+    }
+}
+
+void EntityPlayerSP::attackEntity(Entity &entity) {
+    const int_t damage = inventory.getDamageVsEntity(&entity);
+    if (damage <= 0) {
+        return;
+    }
+
+    entity.attackEntityFrom(this, damage);
+
+    if (auto *living = dynamic_cast<EntityLiving *>(&entity)) {
+        if (ItemStack *stack = getCurrentEquippedItem()) {
+            stack->hitEntity(*living);
+            if (stack->stackSize <= 0) {
+                destroyCurrentEquippedItem();
+            }
+        }
+    }
 }

@@ -30,6 +30,7 @@ public:
     static Block *grass;
     static Block *dirt;
     static Block *cobblestone;
+    static Block *planks;
     static Block *sand;
     static Block *bedrock;
     static Block *gravel;
@@ -42,6 +43,26 @@ public:
     static Block *wood;
     static Block *sapling;
     static Block *ladder;
+    static Block *chest;
+    static Block *workbench;
+    static Block *stoneOvenIdle;
+    static Block *stairDouble;
+    static Block *stairSingle;
+    static Block *cobblestoneMossy;
+    static Block *oreIron;
+    static Block *blockSteel;
+    static Block *oreCoal;
+    static Block *blockGold;
+    static Block *oreGold;
+    static Block *oreDiamond;
+    static Block *blockDiamond;
+    static Block *ice;
+    static Block *bookshelf;
+    static Block *snow;
+    static Block *blockSnow;
+    static Block *blockClay;
+    static Block *oreRedstone;
+    static Block *oreRedstoneGlowing;
 
     int_t blockIndexInTexture;
     int_t blockID;
@@ -116,6 +137,8 @@ public:
     virtual void onNeighborBlockChange(World &world, int_t x, int_t y, int_t z, int_t neighborBlockId);
 
     virtual void onBlockClicked(World &world, int_t x, int_t y, int_t z, EntityPlayer &player);
+
+    virtual bool blockActivated(World &world, int_t x, int_t y, int_t z, EntityPlayer &player);
 
     virtual float blockStrength(EntityPlayer &player) const;
 

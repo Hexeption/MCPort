@@ -20,6 +20,42 @@ protected:
 public:
     static std::array<Item *, 32000> itemsList;
 
+    static Item *shovel;
+    static Item *pickaxeSteel;
+    static Item *axeSteel;
+    static Item *bow;
+    static Item *arrow;
+    static Item *diamond;
+    static Item *ingotIron;
+    static Item *ingotGold;
+    static Item *swordSteel;
+    static Item *swordWood;
+    static Item *shovelWood;
+    static Item *pickaxeWood;
+    static Item *axeWood;
+    static Item *swordStone;
+    static Item *shovelStone;
+    static Item *pickaxeStone;
+    static Item *axeStone;
+    static Item *swordDiamond;
+    static Item *shovelDiamond;
+    static Item *pickaxeDiamond;
+    static Item *axeDiamond;
+    static Item *stick;
+    static Item *swordGold;
+    static Item *shovelGold;
+    static Item *pickaxeGold;
+    static Item *axeGold;
+    static Item *silk;
+    static Item *feather;
+    static Item *hoeWood;
+    static Item *hoeStone;
+    static Item *hoeSteel;
+    static Item *hoeDiamond;
+    static Item *hoeGold;
+    static Item *seeds;
+    static Item *flint;
+
     const int_t shiftedIndex;
     int_t maxStackSize = 64;
     int_t maxDamage = 32;
@@ -32,7 +68,7 @@ protected:
 public:
     virtual ~Item() = default;
 
-    virtual Item &setIconIndex(int_t index);
+    virtual Item *setIconIndex(int_t index);
 
     virtual int_t getIconIndex(ItemStack *stack);
 
@@ -57,7 +93,7 @@ public:
 
     virtual void saddleEntity(ItemStack *stack, EntityLiving *entity);
 
-    virtual Item &setFull3D();
+    virtual Item *setFull3D();
 
     virtual bool isFull3D() const;
 };
