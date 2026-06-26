@@ -287,6 +287,14 @@ add_executable(MCPort
         Source/game/block/BlockLeavesBase.h
         Source/game/block/BlockLog.cpp
         Source/game/block/BlockLog.h
+        Source/game/block/BlockSand.cpp
+        Source/game/block/BlockSand.h
+        Source/game/block/BlockGravel.cpp
+        Source/game/block/BlockGravel.h
+        Source/game/entity/EntityFallingSand.cpp
+        Source/game/entity/EntityFallingSand.h
+        Source/game/client/renderer/RenderFallingSand.cpp
+        Source/game/client/renderer/RenderFallingSand.h
 )
 
 if (APPLE)

@@ -15,6 +15,8 @@
 #include "game/entity/EntityItem.h"
 #include "game/entity/EntityPlayer.h"
 #include "game/client/renderer/RenderEntity.h"
+#include "game/client/renderer/RenderFallingSand.h"
+#include "game/entity/EntityFallingSand.h"
 
 RenderManager RenderManager::instance;
 
@@ -25,6 +27,7 @@ double RenderManager::renderPosZ = 0.0;
 RenderManager::RenderManager() {
     entityRenderMap[typeid(Entity)] = std::make_unique<RenderEntity>();
     entityRenderMap[typeid(EntityItem)] = std::make_unique<RenderItem>();
+    entityRenderMap[typeid(EntityFallingSand)] = std::make_unique<RenderFallingSand>();
 
     for (auto &entry: entityRenderMap) {
         entry.second->setRenderManager(*this);

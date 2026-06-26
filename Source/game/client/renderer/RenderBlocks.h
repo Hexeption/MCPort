@@ -34,6 +34,8 @@ public:
 
     bool renderBlockFluids(Block *block, int_t x, int_t y, int_t z);
 
+    bool renderBlockFallingSand(Block *block, IBlockAccess &blockAccessIn, int_t x, int_t y, int_t z);
+
     void renderBlockAsItem(Block *block, float alpha);
 
     void renderBottomFace(Block *block, double x, double y, double z, int_t texture);

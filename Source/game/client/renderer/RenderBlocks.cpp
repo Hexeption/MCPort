@@ -151,6 +151,62 @@ void RenderBlocks::renderBlockAsItem(Block *block, const float alpha) {
     }
 }
 
+bool RenderBlocks::renderBlockFallingSand(Block *block, IBlockAccess &blockAccessIn, const int_t x, const int_t y,
+                                          const int_t z) {
+    float bottomShade = 0.5F;
+    float topShade = 1.0F;
+    float zSideShade = 0.8F;
+    float xSideShade = 0.6F;
+    Tessellator &tessellator = Tessellator::instance;
+    tessellator.startDrawingQuads();
+    float centerBrightness = block->getBlockBrightness(blockAccessIn, x, y, z);
+    float faceBrightness = block->getBlockBrightness(blockAccessIn, x, y - 1, z);
+    if (faceBrightness < centerBrightness) {
+        faceBrightness = centerBrightness;
+    }
+
+    tessellator.setColorOpaque_F(bottomShade * faceBrightness, bottomShade * faceBrightness,
+                                 bottomShade * faceBrightness);
+    renderBottomFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(0));
+    faceBrightness = block->getBlockBrightness(blockAccessIn, x, y + 1, z);
+    if (faceBrightness < centerBrightness) {
+        faceBrightness = centerBrightness;
+    }
+
+    tessellator.setColorOpaque_F(topShade * faceBrightness, topShade * faceBrightness, topShade * faceBrightness);
+    renderTopFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(1));
+    faceBrightness = block->getBlockBrightness(blockAccessIn, x, y, z - 1);
+    if (faceBrightness < centerBrightness) {
+        faceBrightness = centerBrightness;
+    }
+
+    tessellator.setColorOpaque_F(zSideShade * faceBrightness, zSideShade * faceBrightness, zSideShade * faceBrightness);
+    renderEastFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(2));
+    faceBrightness = block->getBlockBrightness(blockAccessIn, x, y, z + 1);
+    if (faceBrightness < centerBrightness) {
+        faceBrightness = centerBrightness;
+    }
+
+    tessellator.setColorOpaque_F(zSideShade * faceBrightness, zSideShade * faceBrightness, zSideShade * faceBrightness);
+    renderWestFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(3));
+    faceBrightness = block->getBlockBrightness(blockAccessIn, x - 1, y, z);
+    if (faceBrightness < centerBrightness) {
+        faceBrightness = centerBrightness;
+    }
+
+    tessellator.setColorOpaque_F(xSideShade * faceBrightness, xSideShade * faceBrightness, xSideShade * faceBrightness);
+    renderNorthFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(4));
+    faceBrightness = block->getBlockBrightness(blockAccessIn, x + 1, y, z);
+    if (faceBrightness < centerBrightness) {
+        faceBrightness = centerBrightness;
+    }
+
+    tessellator.setColorOpaque_F(xSideShade * faceBrightness, xSideShade * faceBrightness, xSideShade * faceBrightness);
+    renderSouthFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(5));
+    tessellator.draw();
+    return true;
+}
+
 bool RenderBlocks::renderBlockFluids(Block *block, const int_t x, const int_t y, const int_t z) {
     if (blockAccess == nullptr || block == nullptr) {
         return false;

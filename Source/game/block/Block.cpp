@@ -8,8 +8,10 @@
 #include "game/world/IBlockAccess.h"
 #include "game/world/World.h"
 #include "BlockFlowing.h"
+#include "BlockGravel.h"
 #include "BlockLeaves.h"
 #include "BlockLog.h"
+#include "BlockSand.h"
 #include "BlockStationary.h"
 #include "game/entity/EntityItem.h"
 #include "game/item/ItemStack.h"
@@ -35,9 +37,9 @@ Block *Block::stone = (new Block(1, 1, Material::rock))->setHardness(1.5f);
 Block *Block::grass = (new Block(2, 0, 2, 3, Material::grass))->setHardness(0.6f);
 Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
 Block *Block::cobblestone = (new Block(4, 16, Material::rock))->setHardness(2.0f);
-Block *Block::sand = (new Block(12, 18, Material::sand))->setHardness(0.5f);
+Block *Block::sand = (new BlockSand(12, 18))->setHardness(0.5f);
 Block *Block::bedrock = (new Block(7, 17, Material::rock))->setHardness(-1.0F);
-Block *Block::gravel = (new Block(13, 19, Material::sand))->setHardness(0.6F);
+Block *Block::gravel = (new BlockGravel(13, 19))->setHardness(0.6f);
 Block *Block::obsidian = (new Block(49, 37, Material::rock))->setHardness(10.0f);
 Block *Block::waterMoving = (new BlockFlowing(8, Material::water))->setHardness(100.0f);
 Block *Block::waterStill = (new BlockStationary(9, Material::water))->setHardness(100.0f);

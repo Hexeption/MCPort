@@ -61,6 +61,7 @@ public:
     int_t chunkCoordY = 0;
     int_t chunkCoordZ = 0;
     bool canTriggerWalking = true;
+    bool preventEntitySpawning = false;
 
     explicit Entity(World &world);
 

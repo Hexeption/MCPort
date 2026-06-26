@@ -1223,13 +1223,6 @@ std::unique_ptr<Chunk> World::loadChunkFromDisk(const int_t chunkX, const int_t 
         std::array<int_t, Chunk::width * Chunk::height * Chunk::depth> metadata =
                 byteArrayToIntArray<Chunk::width * Chunk::height * Chunk::depth>(level->getByteArray(u"Data"));
 
-        if (Block::leaves != nullptr) {
-            for (int_t i = 0; i < static_cast<int_t>(blocks.size()); ++i) {
-                if (blocks[i] == Block::leaves->blockID) {
-                    metadata[i] = 0;
-                }
-            }
-        }
         auto chunk = std::make_unique<Chunk>(const_cast<World &>(*this), blocks, metadata, chunkX, chunkZ);
         chunk->isTerrainPopulated = level->hasKey(u"TerrainPopulated") && level->getBoolean(u"TerrainPopulated");
         if (level->hasKey(u"SkyLight") && level->hasKey(u"BlockLight") && level->hasKey(u"HeightMap")) {
