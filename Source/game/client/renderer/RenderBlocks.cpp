@@ -49,6 +49,9 @@ bool RenderBlocks::renderBlockByRenderType(Block *block, const int_t x, const in
     if (renderType == 4) {
         return renderBlockFluids(block, x, y, z);
     }
+    if (renderType == 1) {
+        return renderBlockReed(block, x, y, z);
+    }
     return false;
 }
 
@@ -205,6 +208,49 @@ bool RenderBlocks::renderBlockFallingSand(Block *block, IBlockAccess &blockAcces
     renderSouthFace(block, -0.5, -0.5, -0.5, block->getBlockTextureFromSide(5));
     tessellator.draw();
     return true;
+}
+
+bool RenderBlocks::renderBlockReed(Block *block, int_t x, int_t y, int_t z) {
+    Tessellator &var5 = Tessellator::instance;
+    float var6 = block->getBlockBrightness(*blockAccess, x, y, z);
+    var5.setColorOpaque_F(var6, var6, var6);
+    renderCrossedSquares(*block, blockAccess->getBlockMetadata(x, y, z), (double) x, (double) y, (double) z);
+    return true;
+}
+
+void RenderBlocks::renderCrossedSquares(Block block, int meta, double x, double y, double z) {
+    Tessellator &var9 = Tessellator::instance;
+    int var10 = block.getBlockTextureFromSideAndMetadata(0, meta);
+    if (overrideBlockTexture >= 0) {
+        var10 = overrideBlockTexture;
+    }
+
+    int var11 = (var10 & 15) << 4;
+    int var12 = var10 & 240;
+    double var13 = (double) ((float) var11 / 256.0F);
+    double var15 = (double) (((float) var11 + 15.99F) / 256.0F);
+    double var17 = (double) ((float) var12 / 256.0F);
+    double var19 = (double) (((float) var12 + 15.99F) / 256.0F);
+    double var21 = x + 0.5 - (double) 0.45F;
+    double var23 = x + 0.5 + (double) 0.45F;
+    double var25 = z + 0.5 - (double) 0.45F;
+    double var27 = z + 0.5 + (double) 0.45F;
+    var9.addVertexWithUV(var21, y + 1.0, var25, var13, var17);
+    var9.addVertexWithUV(var21, y + 0.0, var25, var13, var19);
+    var9.addVertexWithUV(var23, y + 0.0, var27, var15, var19);
+    var9.addVertexWithUV(var23, y + 1.0, var27, var15, var17);
+    var9.addVertexWithUV(var23, y + 1.0, var27, var13, var17);
+    var9.addVertexWithUV(var23, y + 0.0, var27, var13, var19);
+    var9.addVertexWithUV(var21, y + 0.0, var25, var15, var19);
+    var9.addVertexWithUV(var21, y + 1.0, var25, var15, var17);
+    var9.addVertexWithUV(var21, y + 1.0, var27, var13, var17);
+    var9.addVertexWithUV(var21, y + 0.0, var27, var13, var19);
+    var9.addVertexWithUV(var23, y + 0.0, var25, var15, var19);
+    var9.addVertexWithUV(var23, y + 1.0, var25, var15, var17);
+    var9.addVertexWithUV(var23, y + 1.0, var25, var13, var17);
+    var9.addVertexWithUV(var23, y + 0.0, var25, var13, var19);
+    var9.addVertexWithUV(var21, y + 0.0, var27, var15, var19);
+    var9.addVertexWithUV(var21, y + 1.0, var27, var15, var17);
 }
 
 bool RenderBlocks::renderBlockFluids(Block *block, const int_t x, const int_t y, const int_t z) {

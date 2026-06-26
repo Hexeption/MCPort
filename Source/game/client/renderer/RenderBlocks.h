@@ -36,7 +36,11 @@ public:
 
     bool renderBlockFallingSand(Block *block, IBlockAccess &blockAccessIn, int_t x, int_t y, int_t z);
 
+    bool renderBlockReed(Block *block, int_t x, int_t y, int_t z);
+
     void renderBlockAsItem(Block *block, float alpha);
+
+    void renderCrossedSquares(Block block, int meta, double x, double y, double z);
 
     void renderBottomFace(Block *block, double x, double y, double z, int_t texture);
 

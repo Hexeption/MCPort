@@ -12,6 +12,7 @@
 #include "BlockLeaves.h"
 #include "BlockLog.h"
 #include "BlockSand.h"
+#include "BlockSapling.h"
 #include "BlockStationary.h"
 #include "game/entity/EntityItem.h"
 #include "game/item/ItemStack.h"
@@ -47,7 +48,7 @@ Block *Block::lavaMoving = (new BlockFlowing(10, Material::lava))->setHardness(0
 Block *Block::lavaStill = (new BlockStationary(11, Material::lava))->setHardness(100.0f);
 Block *Block::leaves = (new BlockLeaves(18, 52))->setHardness(0.2f)->setLightOpacity(1);
 Block *Block::wood = (new BlockLog(17))->setHardness(2.0f);
-Block *Block::sapling = (new Block(6, 15, Material::plants))->setHardness(0.0f)->setLightValue(1);
+Block *Block::sapling = (new BlockSapling(6, 15))->setHardness(0.0f)->setLightValue(1);
 
 Block::Block(const int_t blockID, Material *material) : blockID(blockID), material(material), blockIndexInTexture(0) {
     blockTextures.fill(0);
@@ -377,5 +378,9 @@ void Block::harvestBlock(World &world, int_t x, int_t y, int_t z, int_t metadata
 }
 
 bool Block::renderAsNormalBlock() {
+    return true;
+}
+
+bool Block::canBlockStay(World &world, int x, int y, int z) {
     return true;
 }

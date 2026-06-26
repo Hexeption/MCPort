@@ -132,6 +132,8 @@ public:
 
     virtual bool renderAsNormalBlock();
 
+    virtual bool canBlockStay(World &world, int x, int y, int z);
+
 private:
     std::array<int_t, 6> blockTextures{};
 
