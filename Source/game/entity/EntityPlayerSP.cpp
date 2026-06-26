@@ -66,6 +66,7 @@ void EntityPlayerSP::displayWorkbenchGUI() {
 }
 
 void EntityPlayerSP::attackEntity(Entity &entity) {
+    swingItem();
     const int_t damage = inventory.getDamageVsEntity(&entity);
     if (damage <= 0) {
         return;

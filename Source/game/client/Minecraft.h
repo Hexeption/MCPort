@@ -41,6 +41,7 @@ private:
     OpenGlCapsChecker glCapabilities;
     Timer timer = Timer(20.0f);
     int_t ticksRan = 0;
+    int_t mouseTicksRan = 0;
     int_t leftClickCounter = 0;
     long_t systemTime = System::currentTimeMillis();
     std::unique_ptr<File> minecraftDir;

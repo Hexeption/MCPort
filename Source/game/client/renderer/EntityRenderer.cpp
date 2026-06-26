@@ -22,6 +22,7 @@
 #include "game/client/player/PlayerController.h"
 #include "game/entity/EntityPlayerSP.h"
 #include "game/phys/Frustum.h"
+#include "game/phys/AxisAlignedBB.h"
 #include "game/util/Vec3D.h"
 #include "game/world/World.h"
 #include "lwjgl/Display.h"
@@ -301,13 +302,56 @@ void EntityRenderer::getMouseOver(const float partialTicks) {
     }
 
     const double reachDistance = mc.playerController != nullptr ? mc.playerController->getBlockReachDistance() : 3.0;
-    MovingObjectPosition hit = mc.thePlayer->rayTrace(reachDistance, partialTicks);
-    if (hit.hitVec == nullptr) {
+    MovingObjectPosition blockHit = mc.thePlayer->rayTrace(reachDistance, partialTicks);
+
+    std::unique_ptr<Vec3D> eyePos = mc.thePlayer->getPosition(partialTicks);
+    double entitySearchDist = reachDistance;
+    if (blockHit.hitVec != nullptr) {
+        entitySearchDist = blockHit.hitVec->distanceTo(*eyePos);
+    }
+    if (entitySearchDist > 3.0) entitySearchDist = 3.0;
+
+    std::unique_ptr<Vec3D> look = mc.thePlayer->getLookVec();
+    Vec3D rayEnd(
+        eyePos->xCoord + look->xCoord * entitySearchDist,
+        eyePos->yCoord + look->yCoord * entitySearchDist,
+        eyePos->zCoord + look->zCoord * entitySearchDist);
+
+    AxisAlignedBB searchBox = mc.thePlayer->boundingBox.addCoord(
+        look->xCoord * entitySearchDist,
+        look->yCoord * entitySearchDist,
+        look->zCoord * entitySearchDist).expand(1.0, 1.0, 1.0);
+
+    std::vector<Entity *> candidates = mc.theWorld->getEntitiesWithinAABBExcludingEntity(
+        *mc.thePlayer, searchBox);
+
+    pointedEntity = nullptr;
+    double closestDist = 0.0;
+    for (Entity *e : candidates) {
+        if (!e->canBeCollidedWith()) continue;
+        AxisAlignedBB expanded = e->boundingBox.expand(0.1, 0.1, 0.1);
+        std::unique_ptr<Vec3D> hit = expanded.calculateIntercept(*eyePos, rayEnd);
+        if (hit != nullptr) {
+            const double d = eyePos->distanceTo(*hit);
+            if (d < closestDist || closestDist == 0.0) {
+                pointedEntity = e;
+                closestDist = d;
+            }
+        }
+    }
+
+    if (blockHit.hitVec == nullptr && pointedEntity == nullptr) {
         mc.objectMouseOver = nullptr;
         return;
     }
 
-    mc.objectMouseOver = std::make_unique<MovingObjectPosition>(std::move(hit));
+    if (pointedEntity != nullptr && closestDist < entitySearchDist) {
+        mc.objectMouseOver = std::make_unique<MovingObjectPosition>(pointedEntity);
+    } else if (blockHit.hitVec != nullptr) {
+        mc.objectMouseOver = std::make_unique<MovingObjectPosition>(std::move(blockHit));
+    } else {
+        mc.objectMouseOver = nullptr;
+    }
 }
 
 void EntityRenderer::setupCameraTransform(const float partialTicks) {

@@ -9,15 +9,15 @@
 #define GL_RESCALE_NORMAL 0x803A
 #endif
 
-#include <iostream>
+#include <cmath>
 
 #include "game/block/Block.h"
 #include "game/block/Material.h"
 #include "game/client/MathHelper.h"
 #include "game/client/Minecraft.h"
-#include "game/client/renderer/RenderManager.h"
+#include "game/client/renderer/RenderHelper.h"
 #include "game/client/renderer/Tessellator.h"
-#include "game/entity/EntityPlayer.h"
+#include "game/entity/EntityPlayerSP.h"
 #include "game/item/ItemStack.h"
 #include "game/world/World.h"
 
@@ -136,7 +136,73 @@ void ItemRenderer::renderItem(ItemStack &stack) {
 }
 
 void ItemRenderer::renderItemInFirstPerson(const float partialTicks) {
-    (void) partialTicks;
+    static constexpr float PI = static_cast<float>(3.14159265358979323846);
+
+    const float ep = prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks;
+    EntityPlayerSP &player = *mc.thePlayer;
+
+    glPushMatrix();
+    glRotatef(player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * partialTicks,
+              1.0f, 0.0f, 0.0f);
+    glRotatef(player.prevRotationYaw + (player.rotationYaw - player.prevRotationYaw) * partialTicks,
+              0.0f, 1.0f, 0.0f);
+    RenderHelper::enableStandardItemLighting();
+    glPopMatrix();
+
+    const float brightness = mc.theWorld->getBrightness(
+        MathHelper::floor_double(player.posX),
+        MathHelper::floor_double(player.posY),
+        MathHelper::floor_double(player.posZ));
+    glColor4f(brightness, brightness, brightness, 1.0f);
+
+    if (itemToRender != nullptr) {
+        glPushMatrix();
+        constexpr float es = 0.8f;
+        const float swing = player.getSwingProgress(partialTicks);
+        const float swingY = MathHelper::sin(swing * PI);
+        const float swingZ = MathHelper::sin(MathHelper::sqrt_float(swing) * PI);
+        glTranslatef(-swingZ * 0.4f, MathHelper::sin(MathHelper::sqrt_float(swing) * PI * 2.0f) * 0.2f, -swingY * 0.2f);
+        glTranslatef(0.7f * es, -0.65f * es - (1.0f - ep) * 0.6f, -0.9f * es);
+        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+        glEnable(GL_RESCALE_NORMAL);
+        const float swing2 = player.getSwingProgress(partialTicks);
+        const float swingY2 = MathHelper::sin(swing2 * swing2 * PI);
+        const float swingZ2 = MathHelper::sin(MathHelper::sqrt_float(swing2) * PI);
+        glRotatef(-swingY2 * 20.0f, 0.0f, 1.0f, 0.0f);
+        glRotatef(-swingZ2 * 20.0f, 0.0f, 0.0f, 1.0f);
+        glRotatef(-swingZ2 * 80.0f, 1.0f, 0.0f, 0.0f);
+        glScalef(0.4f, 0.4f, 0.4f);
+        renderItem(*itemToRender);
+        glPopMatrix();
+    } else {
+        glPushMatrix();
+        constexpr float es = 0.8f;
+        const float swing = player.getSwingProgress(partialTicks);
+        const float swingY = MathHelper::sin(swing * PI);
+        const float swingZ = MathHelper::sin(MathHelper::sqrt_float(swing) * PI);
+        glTranslatef(-swingZ * 0.3f, MathHelper::sin(MathHelper::sqrt_float(swing) * PI * 2.0f) * 0.4f, -swingY * 0.4f);
+        glTranslatef(0.8f * es, -(12.0f / 16.0f) * es - (1.0f - ep) * 0.6f, -0.9f * es);
+        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+        glEnable(GL_RESCALE_NORMAL);
+        const float swing2 = player.getSwingProgress(partialTicks);
+        const float swingY2 = MathHelper::sin(swing2 * swing2 * PI);
+        const float swingZ2 = MathHelper::sin(MathHelper::sqrt_float(swing2) * PI);
+        glRotatef(swingZ2 * 70.0f, 0.0f, 1.0f, 0.0f);
+        glRotatef(-swingY2 * 20.0f, 0.0f, 0.0f, 1.0f);
+        glBindTexture(GL_TEXTURE_2D, mc.renderEngine->getTexture(player.getTexture()));
+        glTranslatef(-1.0f, 3.6f, 3.5f);
+        glRotatef(120.0f, 0.0f, 0.0f, 1.0f);
+        glRotatef(200.0f, 1.0f, 0.0f, 0.0f);
+        glRotatef(-135.0f, 0.0f, 1.0f, 0.0f);
+        glTranslatef(5.6f, 0.0f, 0.0f);
+        armModel.swingProgress = 0.0f;
+        armModel.setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f / 16.0f);
+        armModel.bipedRightArm.render(1.0f / 16.0f);
+        glPopMatrix();
+    }
+
+    glDisable(GL_RESCALE_NORMAL);
+    RenderHelper::disableStandardItemLighting();
 }
 
 void ItemRenderer::renderOverlays(const float partialTicks) {
@@ -152,7 +218,16 @@ void ItemRenderer::renderOverlays(const float partialTicks) {
 
 void ItemRenderer::updateEquippedItem() {
     prevEquippedProgress = equippedProgress;
-    equippedProgress = 1.0f;
+    ItemStack *current = mc.thePlayer->inventory.getCurrentItem();
+    constexpr float step = 0.4f;
+    float target = (current == itemToRender) ? 1.0f : 0.0f;
+    float delta = target - equippedProgress;
+    if (delta < -step) delta = -step;
+    if (delta > step) delta = step;
+    equippedProgress += delta;
+    if (equippedProgress < 0.1f) {
+        itemToRender = current;
+    }
 }
 
 void ItemRenderer::resetEquippedProgress() {

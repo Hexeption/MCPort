@@ -4,9 +4,12 @@
 
 #ifndef MCPORT_MOVINGOBJECTPOSITION_H
 #define MCPORT_MOVINGOBJECTPOSITION_H
-#include "game/entity/Entity.h"
+
+#include <memory>
+
 #include "game/util/Vec3D.h"
 
+class Entity;
 
 class MovingObjectPosition {
 public:
@@ -16,13 +19,13 @@ public:
     int blockZ{};
     int sideHit{};
     std::unique_ptr<Vec3D> hitVec;
-    std::unique_ptr<Entity> entityHit;
+    Entity *entityHit = nullptr;
 
     MovingObjectPosition() = default;
 
     MovingObjectPosition(int blockX, int blockY, int blockZ, int sideHit, std::unique_ptr<Vec3D> hitVec);
 
-    MovingObjectPosition(const Entity &entityHit);
+    explicit MovingObjectPosition(Entity *entityHit);
 };
 
 

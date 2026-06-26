@@ -480,6 +480,16 @@ void Minecraft::handleIngameInput() {
             displayGuiScreen(std::make_shared<GuiInventory>(thePlayer->inventory));
         }
 
+        if (pressed && key == lwjgl::Keyboard::KEY_O && thePlayer != nullptr) {
+            if (auto *inv = dynamic_cast<GuiInventory *>(currentScreen.get())) {
+                inv->toggleTMI();
+            } else if (currentScreen == nullptr) {
+                auto gui = std::make_shared<GuiInventory>(thePlayer->inventory);
+                gui->showTMI();
+                displayGuiScreen(std::move(gui));
+            }
+        }
+
         if (pressed && key == options->keyBindDrop.key && thePlayer != nullptr) {
             std::optional<ItemStack> dropped = thePlayer->inventory.decrStackSize(thePlayer->inventory.currentItem, 1);
             if (dropped.has_value()) {
@@ -505,6 +515,18 @@ void Minecraft::handleIngameInput() {
         const int_t button = lwjgl::Mouse::getEventButton();
         if (lwjgl::Mouse::getEventButtonState() && (button == 0 || button == 1)) {
             clickMouse(button);
+            mouseTicksRan = ticksRan;
+        }
+    }
+
+    if (currentScreen == nullptr && inGameHasFocus) {
+        if (lwjgl::Mouse::isButtonDown(0) && (ticksRan - mouseTicksRan) >= 5) {
+            clickMouse(0);
+            mouseTicksRan = ticksRan;
+        }
+        if (lwjgl::Mouse::isButtonDown(1) && (ticksRan - mouseTicksRan) >= 5) {
+            clickMouse(1);
+            mouseTicksRan = ticksRan;
         }
     }
 
@@ -557,6 +579,13 @@ void Minecraft::clickMouse(const int_t button) {
     if (objectMouseOver == nullptr) {
         if (button == 0) {
             leftClickCounter = 10;
+        }
+        return;
+    }
+
+    if (objectMouseOver->typeOfHit == 1 && objectMouseOver->entityHit != nullptr) {
+        if (button == 0) {
+            thePlayer->attackEntity(*objectMouseOver->entityHit);
         }
         return;
     }

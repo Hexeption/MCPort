@@ -55,6 +55,7 @@ public:
     static Item *hoeGold;
     static Item *seeds;
     static Item *flint;
+    static Item *leather;
 
     const int_t shiftedIndex;
     int_t maxStackSize = 64;

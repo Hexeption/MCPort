@@ -4,6 +4,10 @@
 
 #include "AxisAlignedBB.h"
 
+#include <algorithm>
+
+#include "game/util/Vec3D.h"
+
 AxisAlignedBB::AxisAlignedBB(const double minX, const double minY, const double minZ, const double maxX,
                              const double maxY, const double maxZ)
     : minX(minX), minY(minY), minZ(minZ), maxX(maxX), maxY(maxY), maxZ(maxZ) {
@@ -139,4 +143,31 @@ AxisAlignedBB &AxisAlignedBB::offset(const double x, const double y, const doubl
 
 AxisAlignedBB AxisAlignedBB::copy() const {
     return AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+}
+
+std::unique_ptr<Vec3D> AxisAlignedBB::calculateIntercept(const Vec3D &start, const Vec3D &end) const {
+    const double dx = end.xCoord - start.xCoord;
+    const double dy = end.yCoord - start.yCoord;
+    const double dz = end.zCoord - start.zCoord;
+
+    double tMin = 0.0, tMax = 1.0;
+
+    auto clip = [&](double s, double e, double lo, double hi) -> bool {
+        if (s == e) return s >= lo && s <= hi;
+        double t0 = (lo - s) / (e - s);
+        double t1 = (hi - s) / (e - s);
+        if (t0 > t1) std::swap(t0, t1);
+        tMin = std::max(tMin, t0);
+        tMax = std::min(tMax, t1);
+        return tMin <= tMax;
+    };
+
+    if (!clip(start.xCoord, end.xCoord, minX, maxX)) return nullptr;
+    if (!clip(start.yCoord, end.yCoord, minY, maxY)) return nullptr;
+    if (!clip(start.zCoord, end.zCoord, minZ, maxZ)) return nullptr;
+
+    return std::make_unique<Vec3D>(
+        start.xCoord + dx * tMin,
+        start.yCoord + dy * tMin,
+        start.zCoord + dz * tMin);
 }

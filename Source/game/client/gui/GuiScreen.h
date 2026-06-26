@@ -45,7 +45,7 @@ public:
 
     void handleInput();
 
-    void handleMouseInput();
+    virtual void handleMouseInput();
 
     void handleKeyboardInput();
 

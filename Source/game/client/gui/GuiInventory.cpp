@@ -13,6 +13,12 @@
 #include "game/inventory/InventoryCraftResult.h"
 #include "game/inventory/InventoryCrafting.h"
 #include "game/inventory/InventoryPlayer.h"
+#include "lwjgl/Keyboard.h"
+#include "lwjgl/Mouse.h"
+
+void GuiInventory::initGui() {
+    tmi.init(mc);
+}
 
 GuiInventory::GuiInventory(InventoryPlayer &inventory) : playerInventory(&inventory) {
     allowUserInput = true;
@@ -51,9 +57,33 @@ void GuiInventory::drawScreen(const int_t mouseX, const int_t mouseY, const floa
     GuiContainer::drawScreen(mouseX, mouseY, partialTicks);
     xSize_lo = static_cast<float>(mouseX);
     ySize_lo = static_cast<float>(mouseY);
+
+    if (tmi.visible && mc != nullptr) {
+        tmi.draw(*fontRenderer, *mc->renderEngine, mouseX, mouseY,
+                 tmiPanelX(), height);
+    }
+}
+
+void GuiInventory::handleMouseInput() {
+    if (tmi.visible) {
+        const int_t wheel = lwjgl::Mouse::getEventDWheel();
+        if (wheel != 0) tmi.changePage(wheel);
+    }
+    GuiScreen::handleMouseInput();
+}
+
+void GuiInventory::mouseClicked(const int_t mouseX, const int_t mouseY, const int_t mouseButton) {
+    if (tmi.visible && tmi.mouseClicked(mouseX, mouseY, mouseButton, tmiPanelX())) {
+        return;
+    }
+    GuiContainer::mouseClicked(mouseX, mouseY, mouseButton);
 }
 
 void GuiInventory::keyTyped(const char_t ch, const int_t key) {
+    if (key == lwjgl::Keyboard::KEY_O) {
+        tmi.toggle();
+        return;
+    }
     GuiContainer::keyTyped(ch, key);
 }
 

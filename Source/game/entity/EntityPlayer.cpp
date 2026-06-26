@@ -32,6 +32,17 @@ void EntityPlayer::preparePlayerToSpawn() {
 }
 
 void EntityPlayer::onLivingUpdate() {
+    if (isSwinging) {
+        ++swingProgressInt;
+        if (swingProgressInt == 6) {
+            swingProgressInt = 0;
+            isSwinging = false;
+        }
+    } else {
+        swingProgressInt = 0;
+    }
+    swingProgress = static_cast<float>(swingProgressInt) / 6.0f;
+
     inventory.decrementAnimations();
     prevCameraYaw = cameraYaw;
     prevCameraPitch = cameraPitch;

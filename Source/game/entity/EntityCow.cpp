@@ -6,6 +6,7 @@
 
 #include "game/item/ItemStack.h"
 #include "game/entity/EntityPlayer.h"
+#include "game/item/Item.h"
 #include "game/nbt/NBTTagCompound.h"
 #include "game/world/World.h"
 
@@ -35,4 +36,4 @@ jstring EntityCow::getLivingSound() const { return u"mob.cow"; }
 jstring EntityCow::getHurtSound() const { return u"mob.cowhurt"; }
 jstring EntityCow::getDeathSound() const { return u"mob.cowhurt"; }
 float EntityCow::getSoundVolume() const { return 0.4f; }
-int_t EntityCow::getDropItemId() const { return 334; }
+int_t EntityCow::getDropItemId() const { return 78; }

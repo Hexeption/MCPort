@@ -11,6 +11,7 @@
 #include "game/phys/AxisAlignedBB.h"
 #include "game/phys/MovingObjectPosition.h"
 #include "java/Type.h"
+#include "java/Random.h"
 
 class Random;
 class Entity;

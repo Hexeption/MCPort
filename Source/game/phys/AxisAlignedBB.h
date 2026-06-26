@@ -5,6 +5,10 @@
 #ifndef MCPORT_AXISALIGNEDBB_H
 #define MCPORT_AXISALIGNEDBB_H
 
+#include <memory>
+
+class Vec3D;
+
 class AxisAlignedBB {
 public:
     double minX = 0.0;
@@ -42,6 +46,9 @@ public:
     AxisAlignedBB &offset(double x, double y, double z);
 
     AxisAlignedBB copy() const;
+
+    // Returns the hit point along the ray [start→end], or nullptr if no intersection.
+    std::unique_ptr<Vec3D> calculateIntercept(const Vec3D &start, const Vec3D &end) const;
 };
 
 #endif //MCPORT_AXISALIGNEDBB_H

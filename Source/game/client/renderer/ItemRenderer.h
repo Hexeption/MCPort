@@ -7,6 +7,7 @@
 
 
 #include "game/client/renderer/RenderBlocks.h"
+#include "game/client/renderer/model/ModelBiped.h"
 
 class Minecraft;
 class ItemStack;
@@ -18,6 +19,7 @@ private:
     float equippedProgress = 0.0f;
     float prevEquippedProgress = 0.0f;
     RenderBlocks renderBlocksInstance;
+    ModelBiped armModel;
 
     void renderInsideOfBlock(float partialTicks, int_t texture);
 
