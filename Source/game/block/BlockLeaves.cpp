@@ -30,7 +30,7 @@ void BlockLeaves::onNeighborBlockChange(World &world, int_t x, int_t y, int_t z,
 void BlockLeaves::updateConnectedLeaves(World &world, int_t x, int_t y, int_t z, int_t strength) {
     if (world.getBlockId(x, y, z) == blockID) {
         const int_t metadata = world.getBlockMetadata(x, y, z);
-        if (metadata != 0 && metadata == strength - 1) {
+        if (metadata <= 1 || metadata == strength - 1) {
             updateCurrentLeaves(world, x, y, z);
         }
     }
@@ -46,6 +46,7 @@ void BlockLeaves::updateCurrentLeaves(World &world, int_t x, int_t y, int_t z) {
         }
 
         strength = getConnectionStrength(world, x, y - 1, z, strength);
+        strength = getConnectionStrength(world, x, y + 1, z, strength);
         strength = getConnectionStrength(world, x, y, z - 1, strength);
         strength = getConnectionStrength(world, x, y, z + 1, strength);
         strength = getConnectionStrength(world, x - 1, y, z, strength);
