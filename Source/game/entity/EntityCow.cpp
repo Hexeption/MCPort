@@ -36,4 +36,4 @@ jstring EntityCow::getLivingSound() const { return u"mob.cow"; }
 jstring EntityCow::getHurtSound() const { return u"mob.cowhurt"; }
 jstring EntityCow::getDeathSound() const { return u"mob.cowhurt"; }
 float EntityCow::getSoundVolume() const { return 0.4f; }
-int_t EntityCow::getDropItemId() const { return 78; }
+int_t EntityCow::getDropItemId() const { return Item::leather->shiftedIndex; }
