@@ -66,6 +66,7 @@ public:
     int_t blockIndexInTexture;
     int_t blockID;
     Material *material;
+    jstring blockName;
     double minX = 0.0;
     double minY = 0.0;
     double minZ = 0.0;
@@ -82,6 +83,8 @@ public:
     Block(int_t blockID, int_t blockIndexInTexture, Material *material);
 
     Block(int_t blockID, int_t topTexture, int_t bottomTexture, int_t sideTexture, Material *material);
+
+    Block *setBlockName(jstring name);
 
     Block *setLightOpacity(int_t opacity);
 

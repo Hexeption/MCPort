@@ -37,26 +37,26 @@ std::array<int_t, 256> Block::lightOpacity = [] {
 std::array<int_t, 256> Block::lightValue = {};
 std::array<bool, 256> Block::tickOnLoad = {};
 std::array<bool, 256> Block::opaqueCubeLookup = {};
-Block *Block::stone = (new BlockStone(1, 1))->setHardness(1.5f);
-Block *Block::grass = (new BlockGrass(2))->setHardness(0.6f);
-Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f);
-Block *Block::cobblestone = (new Block(4, 16, Material::rock))->setHardness(2.0f);
-Block *Block::sand = (new BlockSand(12, 18))->setHardness(0.5f);
-Block *Block::bedrock = (new Block(7, 17, Material::rock))->setHardness(-1.0F);
-Block *Block::gravel = (new BlockGravel(13, 19))->setHardness(0.6f);
-Block *Block::obsidian = (new Block(49, 37, Material::rock))->setHardness(10.0f);
-Block *Block::waterMoving = (new BlockFlowing(8, Material::water))->setHardness(100.0f);
-Block *Block::waterStill = (new BlockStationary(9, Material::water))->setHardness(100.0f);
-Block *Block::lavaMoving = (new BlockFlowing(10, Material::lava))->setHardness(0.0f);
-Block *Block::lavaStill = (new BlockStationary(11, Material::lava))->setHardness(100.0f);
-Block *Block::leaves = (new BlockLeaves(18, 52))->setHardness(0.2f)->setLightOpacity(1);
-Block *Block::wood = (new BlockLog(17))->setHardness(2.0f);
-Block *Block::sapling = (new BlockSapling(6, 15))->setHardness(0.0f)->setLightValue(1);
+Block *Block::stone = (new BlockStone(1, 1))->setHardness(1.5f)->setBlockName(u"Stone");
+Block *Block::grass = (new BlockGrass(2))->setHardness(0.6f)->setBlockName(u"Grass");
+Block *Block::dirt = (new Block(3, 2, Material::grass))->setHardness(0.5f)->setBlockName(u"Dirt");
+Block *Block::cobblestone = (new Block(4, 16, Material::rock))->setHardness(2.0f)->setBlockName(u"Cobblestone");
+Block *Block::sand = (new BlockSand(12, 18))->setHardness(0.5f)->setBlockName(u"Sand");
+Block *Block::bedrock = (new Block(7, 17, Material::rock))->setHardness(-1.0F)->setBlockName(u"Bedrock");
+Block *Block::gravel = (new BlockGravel(13, 19))->setHardness(0.6f)->setBlockName(u"Gravel");
+Block *Block::obsidian = (new Block(49, 37, Material::rock))->setHardness(10.0f)->setBlockName(u"Obsidian");
+Block *Block::waterMoving = (new BlockFlowing(8, Material::water))->setHardness(100.0f)->setBlockName(u"Water");
+Block *Block::waterStill = (new BlockStationary(9, Material::water))->setHardness(100.0f)->setBlockName(u"Water (Still)");
+Block *Block::lavaMoving = (new BlockFlowing(10, Material::lava))->setHardness(0.0f)->setBlockName(u"Lava");
+Block *Block::lavaStill = (new BlockStationary(11, Material::lava))->setHardness(100.0f)->setBlockName(u"Lava (Still)");
+Block *Block::leaves = (new BlockLeaves(18, 52))->setHardness(0.2f)->setLightOpacity(1)->setBlockName(u"Leaves");
+Block *Block::wood = (new BlockLog(17))->setHardness(2.0f)->setBlockName(u"Wood");
+Block *Block::sapling = (new BlockSapling(6, 15))->setHardness(0.0f)->setLightValue(1)->setBlockName(u"Sapling");
 Block *Block::ladder = nullptr;
-Block *Block::planks = (new Block(5, 4, Material::wood))->setHardness(2.0f);
-Block *Block::chest = (new Block(54, 26, Material::wood))->setHardness(2.5f);
-Block *Block::workbench = (new BlockWorkbench(58))->setHardness(2.5f);
-Block *Block::stoneOvenIdle = (new Block(62, 45, Material::rock))->setHardness(3.5f);
+Block *Block::planks = (new Block(5, 4, Material::wood))->setHardness(2.0f)->setBlockName(u"Wooden Planks");
+Block *Block::chest = (new Block(54, 26, Material::wood))->setHardness(2.5f)->setBlockName(u"Chest");
+Block *Block::workbench = (new BlockWorkbench(58))->setHardness(2.5f)->setBlockName(u"Workbench");
+Block *Block::stoneOvenIdle = (new Block(62, 45, Material::rock))->setHardness(3.5f)->setBlockName(u"Furnace");
 Block *Block::stairDouble = nullptr;
 Block *Block::stairSingle = nullptr;
 Block *Block::cobblestoneMossy = nullptr;
@@ -101,6 +101,11 @@ Block::Block(const int_t blockID, const int_t topTexture, const int_t bottomText
              Material *material) : Block(blockID, sideTexture, material) {
     blockTextures[0] = bottomTexture;
     blockTextures[1] = topTexture;
+}
+
+Block *Block::setBlockName(jstring name) {
+    blockName = std::move(name);
+    return this;
 }
 
 Block *Block::setLightOpacity(int_t opacity) {

@@ -5,12 +5,15 @@
 #include "GuiContainer.h"
 
 #include <algorithm>
+#include <string>
 
 #include "slot/SlotInventory.h"
+#include "game/block/Block.h"
 #include "game/client/Minecraft.h"
 #include "game/client/renderer/RenderHelper.h"
 #include "game/client/renderer/RenderItem.h"
 #include "game/entity/EntityPlayer.h"
+#include "game/item/Item.h"
 #include "game/item/ItemStack.h"
 #include "game/inventory/InventoryPlayer.h"
 #include "lwjgl/Keyboard.h"
@@ -42,6 +45,42 @@ void GuiContainer::drawSlotInventory(SlotInventory &slot) {
     itemRenderer.renderItemOverlayIntoGUI(*fontRenderer, *mc->renderEngine, stack, slot.xDisplayPosition,
                                           slot.yDisplayPosition);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glPopAttrib();
+}
+
+void GuiContainer::drawItemTooltip(const int_t mouseX, const int_t mouseY, const ItemStack &stack) {
+    if (fontRenderer == nullptr) return;
+
+    jstring name;
+    if (stack.itemID > 0 && stack.itemID < 256) {
+        Block *block = Block::blocksList[stack.itemID];
+        name = (block != nullptr && !block->blockName.empty()) ? block->blockName : u"Block";
+    } else if (stack.itemID >= 256 && stack.itemID < static_cast<int_t>(Item::itemsList.size())) {
+        Item *item = Item::itemsList[stack.itemID];
+        name = (item != nullptr && !item->itemName.empty()) ? item->itemName : u"Item";
+    } else {
+        name = u"Unknown";
+    }
+
+    const std::string idNum = std::to_string(stack.itemID);
+    const jstring idStr = u"ID: " + jstring(idNum.begin(), idNum.end());
+
+    const int_t nameW = fontRenderer->getStringWidth(name);
+    const int_t idW = fontRenderer->getStringWidth(idStr);
+    const int_t boxW = std::max(nameW, idW) + 8;
+    const int_t boxH = 22;
+
+    int_t tx = mouseX + 12;
+    int_t ty = mouseY - 4;
+    if (tx + boxW > width) tx = mouseX - boxW - 4;
+    if (ty + boxH > height) ty = height - boxH;
+
+    glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    drawGradientRect(tx - 3, ty - 3, tx + boxW + 3, ty + boxH + 3, 0xC0000000, 0xC0000000);
+    fontRenderer->drawStringWithShadow(name, tx, ty, 0xFFFFFF);
+    fontRenderer->drawStringWithShadow(idStr, tx, ty + 12, 0xAAAAAA);
     glPopAttrib();
 }
 
@@ -107,6 +146,14 @@ void GuiContainer::drawScreen(const int_t mouseX, const int_t mouseY, const floa
     glPopMatrix();
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glPopAttrib();
+
+    SlotInventory *hovered = getSlotAtPosition(mouseX, mouseY);
+    if (hovered != nullptr) {
+        ItemStack *stack = hovered->getStack();
+        if (stack != nullptr) {
+            drawItemTooltip(mouseX, mouseY, *stack);
+        }
+    }
 }
 
 void GuiContainer::mouseClicked(const int_t mouseX, const int_t mouseY, const int_t mouseButton) {

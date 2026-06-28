@@ -62,12 +62,15 @@ public:
     int_t maxDamage = 32;
     int_t iconIndex = 0;
     bool bFull3D = false;
+    jstring itemName;
 
 protected:
     explicit Item(int_t id);
 
 public:
     virtual ~Item() = default;
+
+    Item *setItemName(jstring name);
 
     virtual Item *setIconIndex(int_t index);
 

@@ -27,6 +27,8 @@ protected:
 
     SlotInventory *getSlotAtPosition(int_t mouseX, int_t mouseY);
 
+    void drawItemTooltip(int_t mouseX, int_t mouseY, const ItemStack &stack);
+
     void keyTyped(char_t ch, int_t key) override;
 
 public:
