@@ -7,8 +7,6 @@
 
 #include "Block.h"
 
-class World;
-
 class BlockSand : public Block {
 public:
     static bool fallInstantly;

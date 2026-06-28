@@ -9,7 +9,7 @@
 
 #include "game/util/Vec3D.h"
 
-class Entity;
+#include "game/entity/Entity.h"
 
 class MovingObjectPosition {
 public:

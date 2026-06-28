@@ -12,7 +12,7 @@
 #include "GuiScreen.h"
 #include "java/Random.h"
 
-class LogoEffectRandomizer;
+#include "LogoEffectRandomizer.h"
 
 class GuiMainMenu : public GuiScreen {
 private:

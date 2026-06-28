@@ -10,13 +10,9 @@
 #include "game/client/renderer/RenderBlocks.h"
 #include "java/Random.h"
 
-class Entity;
-class EntityItem;
-class FontRenderer;
-class ItemStack;
-class RenderEngine;
-class Tessellator;
-class AxisAlignedBB;
+#include "game/entity/EntityItem.h"
+#include "game/client/renderer/RenderEngine.h"
+#include "game/client/renderer/Tessellator.h"
 
 class RenderItem : public Render {
 private:

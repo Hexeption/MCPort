@@ -12,9 +12,10 @@
 #include "game/client/renderer/ItemRenderer.h"
 #include "game/phys/Frustum.h"
 
-class Material;
 class Minecraft;
-class Entity;
+
+#include "game/block/Material.h"
+#include "game/entity/Entity.h"
 
 class EntityRenderer {
 private:

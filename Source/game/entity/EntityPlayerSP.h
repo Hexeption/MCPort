@@ -10,7 +10,8 @@
 #include "EntityPlayer.h"
 #include "MovementInput.h"
 
-class GameSettings;
+#include "game/client/options/GameSettings.h"
+
 class Minecraft;
 
 class EntityPlayerSP : public EntityPlayer {

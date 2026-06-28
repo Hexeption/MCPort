@@ -10,9 +10,7 @@
 #include "Gui.h"
 #include "game/client/renderer/RenderItem.h"
 
-class FontRenderer;
-class Minecraft;
-class RenderEngine;
+#include "game/client/Minecraft.h"
 
 class GuiTMI final : public Gui {
 public:

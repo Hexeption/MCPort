@@ -11,7 +11,6 @@
 #include "GuiTMI.h"
 #include "game/inventory/CraftingInventoryPlayerCB.h"
 
-class InventoryPlayer;
 
 class GuiInventory final : public GuiContainer {
 private:

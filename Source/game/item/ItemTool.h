@@ -8,7 +8,6 @@
 #include <vector>
 #include "Item.h"
 
-class Block;
 
 class ItemTool : public Item {
 private:

@@ -11,7 +11,8 @@
 #include "java/File.h"
 #include "java/Type.h"
 
-class NBTTagCompound;
+#include "game/nbt/NBTTagCompound.h"
+
 class World;
 
 class ChunkLoader {

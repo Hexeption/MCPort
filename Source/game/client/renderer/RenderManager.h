@@ -13,15 +13,15 @@
 #include "java/Type.h"
 #include "game/client/renderer/ItemRenderer.h"
 
-class Entity;
-class EntityItem;
-class EntityPlayer;
-class FontRenderer;
-class GameSettings;
-class Render;
-class RenderEngine;
-class RenderEntity;
-class World;
+#include "game/entity/Entity.h"
+#include "game/entity/EntityItem.h"
+#include "game/entity/EntityPlayer.h"
+#include "game/client/renderer/FontRenderer.h"
+#include "game/client/options/GameSettings.h"
+#include "game/client/renderer/Render.h"
+#include "game/client/renderer/RenderEngine.h"
+#include "game/client/renderer/RenderEntity.h"
+#include "game/world/World.h"
 
 class RenderManager {
 private:

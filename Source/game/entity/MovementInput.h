@@ -7,7 +7,7 @@
 
 #include "java/Type.h"
 
-class EntityPlayer;
+#include "game/entity/EntityPlayer.h"
 
 class MovementInput {
 public:

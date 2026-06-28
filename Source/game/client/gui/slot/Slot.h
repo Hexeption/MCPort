@@ -9,8 +9,8 @@
 
 #include "java/Type.h"
 
-class IInventory;
-class ItemStack;
+#include "game/inventory/IInventory.h"
+#include "game/item/ItemStack.h"
 
 class Slot {
 public:

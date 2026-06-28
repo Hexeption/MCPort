@@ -10,7 +10,6 @@
 #include "game/client/renderer/model/ModelBiped.h"
 
 class Minecraft;
-class ItemStack;
 
 class ItemRenderer {
 private:

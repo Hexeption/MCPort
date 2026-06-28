@@ -10,8 +10,9 @@
 #include "java/String.h"
 #include "java/Type.h"
 
-class Entity;
-class FontRenderer;
+#include "game/entity/Entity.h"
+#include "game/client/renderer/FontRenderer.h"
+
 class RenderManager;
 
 class Render {

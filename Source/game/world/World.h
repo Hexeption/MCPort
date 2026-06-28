@@ -25,11 +25,9 @@
 #include "java/Random.h"
 #include "java/Type.h"
 
-class Entity;
-class EntityPlayer;
-class PathEntity;
+#include "game/entity/EntityPlayer.h"
+#include "game/world/PathEntity.h"
 class RenderGlobal;
-class ChunkProviderLoadOrGenerate;
 
 class World : public IBlockAccess {
 public:

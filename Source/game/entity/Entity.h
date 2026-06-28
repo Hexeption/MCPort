@@ -7,17 +7,17 @@
 
 #include <memory>
 
+#include "game/block/Material.h"
+#include "game/nbt/NBTTagCompound.h"
 #include "game/phys/AxisAlignedBB.h"
+#include "game/util/Vec3D.h"
 #include "java/Random.h"
 #include "java/String.h"
 #include "java/Type.h"
 
 class World;
-class Material;
-class Vec3D;
 class EntityItem;
 class EntityPlayer;
-class NBTTagCompound;
 
 class Entity {
 public:

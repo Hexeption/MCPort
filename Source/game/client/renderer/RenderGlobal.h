@@ -15,16 +15,17 @@
 #include "RenderList.h"
 
 class Block;
-class AxisAlignedBB;
-class EntityPlayer;
 class Minecraft;
-class MovingObjectPosition;
-class ICamera;
-class Vec3D;
-class RenderBlocks;
-class RenderEngine;
 class World;
 class WorldRenderer;
+
+#include "game/entity/EntityPlayer.h"
+#include "game/phys/AxisAlignedBB.h"
+#include "game/phys/ICamera.h"
+#include "game/phys/MovingObjectPosition.h"
+#include "game/util/Vec3D.h"
+#include "game/client/renderer/RenderBlocks.h"
+#include "game/client/renderer/RenderEngine.h"
 
 class RenderGlobal : public IWorldAccess {
 private:

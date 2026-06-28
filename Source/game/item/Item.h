@@ -6,12 +6,12 @@
 #define MCPORT_ITEM_H
 #include "java/Random.h"
 
-class Block;
-class World;
-class Entity;
-class EntityLiving;
-class EntityPlayer;
-class ItemStack;
+#include "game/block/Block.h"
+#include "game/entity/Entity.h"
+#include "game/entity/EntityLiving.h"
+#include "game/entity/EntityPlayer.h"
+#include "game/item/ItemStack.h"
+#include "game/world/World.h"
 
 class Item {
 protected:

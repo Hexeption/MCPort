@@ -7,7 +7,7 @@
 #include "Gui.h"
 #include "game/client/Minecraft.h"
 
-class RenderItem;
+#include "game/client/renderer/RenderItem.h"
 
 class GuiIngame : public Gui {
 private:

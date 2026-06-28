@@ -5,7 +5,7 @@
 #ifndef MCPORT_ICAMERA_H
 #define MCPORT_ICAMERA_H
 
-class AxisAlignedBB;
+#include "game/phys/AxisAlignedBB.h"
 
 class ICamera {
 public:

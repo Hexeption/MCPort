@@ -7,11 +7,9 @@
 
 
 #include "game/entity/Entity.h"
+#include "game/entity/EntityLiving.h"
 #include "game/item/ItemStack.h"
-
-class EntityPlayer;
-class EntityLiving;
-class NBTTagCompound;
+#include "game/nbt/NBTTagCompound.h"
 
 class EntityItem : public Entity {
 private:

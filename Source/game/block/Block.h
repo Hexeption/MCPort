@@ -8,17 +8,15 @@
 #include <array>
 
 #include "Material.h"
+#include "game/entity/Entity.h"
+#include "game/entity/EntityPlayer.h"
 #include "game/phys/AxisAlignedBB.h"
 #include "game/phys/MovingObjectPosition.h"
+#include "game/util/Vec3D.h"
+#include "game/world/IBlockAccess.h"
+#include "game/world/World.h"
 #include "java/Type.h"
 #include "java/Random.h"
-
-class Random;
-class Entity;
-class EntityPlayer;
-class World;
-class IBlockAccess;
-class Vec3D;
 
 class Block {
 public:

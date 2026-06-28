@@ -9,7 +9,7 @@
 
 #include "MovementInput.h"
 
-class GameSettings;
+#include "game/client/options/GameSettings.h"
 
 class MovementInputFromOptions : public MovementInput {
 public:

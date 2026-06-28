@@ -7,8 +7,7 @@
 
 #include "ICamera.h"
 
-class ClippingHelper;
-class AxisAlignedBB;
+#include "game/phys/ClippingHelper.h"
 
 class Frustum : public ICamera {
 private:

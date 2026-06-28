@@ -7,9 +7,10 @@
 
 #include "java/Type.h"
 
-class EntityPlayer;
 class Minecraft;
-class World;
+
+#include "game/entity/EntityPlayer.h"
+#include "game/world/World.h"
 
 class PlayerController {
 protected:

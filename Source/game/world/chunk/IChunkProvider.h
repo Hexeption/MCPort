@@ -7,7 +7,7 @@
 
 #include "java/Type.h"
 
-class Chunk;
+#include "game/world/chunk/Chunk.h"
 
 class IChunkProvider {
 public:

@@ -10,7 +10,6 @@
 #include "GuiContainer.h"
 #include "game/inventory/CraftingInventoryWorkbenchCB.h"
 
-class InventoryPlayer;
 
 class GuiCrafting final : public GuiContainer {
 private:

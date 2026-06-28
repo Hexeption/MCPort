@@ -10,9 +10,9 @@
 #include "java/String.h"
 #include "java/Type.h"
 
-class Entity;
-class NBTTagCompound;
-class World;
+#include "game/entity/Entity.h"
+#include "game/nbt/NBTTagCompound.h"
+#include "game/world/World.h"
 
 class EntityList {
 public:

@@ -11,7 +11,6 @@
 #include "Gui.h"
 #include "GuiButton.h"
 
-class FontRenderer;
 class Minecraft;
 
 class GuiScreen : public Gui, public std::enable_shared_from_this<GuiScreen> {

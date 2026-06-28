@@ -14,7 +14,6 @@
 #include "java/Random.h"
 #include "java/Type.h"
 
-class Chunk;
 class World;
 
 class ChunkProviderGenerate : public IChunkProvider {

@@ -8,7 +8,7 @@
 #include "java/String.h"
 #include "java/Type.h"
 
-class FontRenderer;
+#include "game/client/renderer/FontRenderer.h"
 
 class Gui {
 protected:

@@ -7,8 +7,8 @@
 
 #include "CraftingInventoryCB.h"
 
-class InventoryCraftResult;
-class InventoryCrafting;
+#include "InventoryCraftResult.h"
+#include "InventoryCrafting.h"
 
 class CraftingInventoryWorkbenchCB final : public CraftingInventoryCB {
 public:

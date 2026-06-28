@@ -12,9 +12,9 @@
 
 #include "java/Type.h"
 
-class Entity;
-class EntityLiving;
-class World;
+#include "game/entity/Entity.h"
+#include "game/entity/EntityLiving.h"
+#include "game/world/World.h"
 
 struct ChunkPosition {
     int_t x;

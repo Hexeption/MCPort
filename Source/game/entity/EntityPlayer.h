@@ -9,11 +9,9 @@
 #include "java/Type.h"
 #include "game/inventory/InventoryPlayer.h"
 
-class Block;
-class Entity;
-class EntityItem;
-class ItemStack;
-class NBTTagCompound;
+#include "game/block/Block.h"
+#include "game/entity/EntityItem.h"
+#include "game/nbt/NBTTagCompound.h"
 
 class EntityPlayer : public EntityLiving {
 public:

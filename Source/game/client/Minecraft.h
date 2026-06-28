@@ -31,8 +31,9 @@ enum EnumOS {
     MACOS,
 };
 
-class EntityRenderer;
-class PlayerController;
+#include "renderer/EntityRenderer.h"
+#include "player/PlayerController.h"
+
 class GuiIngame;
 
 class Minecraft {

@@ -7,7 +7,7 @@
 
 #include "RenderLiving.h"
 
-class EntityCow;
+#include "game/entity/EntityCow.h"
 
 class RenderCow : public RenderLiving {
 public:

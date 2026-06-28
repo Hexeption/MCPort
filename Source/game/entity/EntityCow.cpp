@@ -4,9 +4,9 @@
 
 #include "EntityCow.h"
 
-#include "game/item/ItemStack.h"
 #include "game/entity/EntityPlayer.h"
 #include "game/item/Item.h"
+#include "game/item/ItemStack.h"
 #include "game/nbt/NBTTagCompound.h"
 #include "game/world/World.h"
 

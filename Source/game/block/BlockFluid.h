@@ -7,9 +7,6 @@
 
 #include "Block.h"
 
-class Entity;
-class Vec3D;
-
 class BlockFluid : public Block {
 public:
     BlockFluid(int_t blockID, Material *material);

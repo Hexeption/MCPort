@@ -13,8 +13,8 @@
 #include "java/String.h"
 #include "java/Type.h"
 
-class GameSettings;
-class RenderEngine;
+#include "game/client/options/GameSettings.h"
+#include "game/client/renderer/RenderEngine.h"
 
 class FontRenderer {
 public:

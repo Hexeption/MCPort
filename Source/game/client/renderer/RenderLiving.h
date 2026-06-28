@@ -8,7 +8,7 @@
 #include "Render.h"
 #include "game/client/renderer/model/ModelBase.h"
 
-class EntityLiving;
+#include "game/entity/EntityLiving.h"
 
 class RenderLiving : public Render {
 public:

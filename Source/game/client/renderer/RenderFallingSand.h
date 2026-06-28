@@ -8,7 +8,7 @@
 #include "Render.h"
 #include "RenderBlocks.h"
 
-class EntityFallingSand;
+#include "game/entity/EntityFallingSand.h"
 
 class RenderFallingSand : public Render {
 private:

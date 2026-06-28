@@ -7,7 +7,7 @@
 
 #include "EntityCreature.h"
 
-class NBTTagCompound;
+#include "game/nbt/NBTTagCompound.h"
 
 class EntityAnimal : public EntityCreature {
 public:

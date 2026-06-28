@@ -11,7 +11,7 @@
 
 #include "IInventory.h"
 
-class CraftingInventoryCB;
+#include "CraftingInventoryCB.h"
 
 class InventoryCrafting final : public IInventory {
 private:

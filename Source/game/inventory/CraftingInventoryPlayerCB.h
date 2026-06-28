@@ -10,10 +10,8 @@
 
 #include "CraftingInventoryCB.h"
 
-class InventoryCraftResult;
-class InventoryCrafting;
-class ItemStack;
-class EntityPlayer;
+#include "InventoryCraftResult.h"
+#include "InventoryCrafting.h"
 
 class CraftingInventoryPlayerCB final : public CraftingInventoryCB {
 public:

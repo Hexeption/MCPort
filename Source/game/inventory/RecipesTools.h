@@ -5,7 +5,7 @@
 #ifndef MCPORT_RECIPESTOOLS_H
 #define MCPORT_RECIPESTOOLS_H
 
-class CraftingManager;
+#include "CraftingManager.h"
 
 class RecipesTools {
 public:

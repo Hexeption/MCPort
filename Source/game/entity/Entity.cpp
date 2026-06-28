@@ -13,6 +13,7 @@
 #include "game/client/MathHelper.h"
 #include "game/entity/EntityItem.h"
 #include "game/entity/EntityList.h"
+#include "game/entity/EntityPlayer.h"
 #include "game/item/ItemStack.h"
 #include "game/nbt/NBTTagCompound.h"
 #include "game/nbt/NBTTagDouble.h"

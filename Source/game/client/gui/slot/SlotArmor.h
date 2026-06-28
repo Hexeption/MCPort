@@ -7,7 +7,7 @@
 
 #include "SlotInventory.h"
 
-class GuiInventory;
+#include "game/client/gui/GuiInventory.h"
 
 class SlotArmor final : public SlotInventory {
 private:

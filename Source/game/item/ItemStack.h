@@ -8,12 +8,13 @@
 
 #include "java/Type.h"
 
+#include "game/entity/Entity.h"
+#include "game/entity/EntityLiving.h"
+#include "game/nbt/NBTTagCompound.h"
+
 class Block;
-class Entity;
-class EntityLiving;
 class EntityPlayer;
 class Item;
-class NBTTagCompound;
 class World;
 
 class ItemStack final {

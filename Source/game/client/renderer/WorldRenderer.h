@@ -11,10 +11,10 @@
 #include "game/phys/AxisAlignedBB.h"
 #include "java/Type.h"
 
-class RenderBlocks;
-class Entity;
-class ICamera;
-class World;
+#include "game/client/renderer/RenderBlocks.h"
+#include "game/entity/Entity.h"
+#include "game/phys/ICamera.h"
+#include "game/world/World.h"
 
 class WorldRenderer {
 public:

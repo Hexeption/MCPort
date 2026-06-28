@@ -7,8 +7,8 @@
 
 #include <memory>
 
-class Entity;
-class Vec3D;
+#include "game/entity/Entity.h"
+#include "game/util/Vec3D.h"
 
 class PathEntity {
 private:

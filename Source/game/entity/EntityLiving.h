@@ -10,7 +10,7 @@
 #include "java/String.h"
 #include "java/Type.h"
 
-class NBTTagCompound;
+#include "game/nbt/NBTTagCompound.h"
 
 class EntityLiving : public Entity {
 public:

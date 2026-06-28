@@ -8,7 +8,7 @@
 #include "game/world/IBlockAccess.h"
 #include "java/Type.h"
 
-class World;
+#include "game/world/World.h"
 
 class ChunkCache : public IBlockAccess {
 public:

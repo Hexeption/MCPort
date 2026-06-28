@@ -42,6 +42,8 @@ add_executable(MCPort
         Source/game/client/gui/GuiContainer.h
         Source/game/client/gui/GuiCrafting.cpp
         Source/game/client/gui/GuiCrafting.h
+        Source/game/client/gui/GuiTMI.cpp
+        Source/game/client/gui/GuiTMI.h
         Source/game/client/gui/GuiControls.cpp
         Source/game/client/gui/GuiControls.h
         Source/game/client/gui/GuiDeleteWorld.cpp
@@ -353,6 +355,8 @@ add_executable(MCPort
         Source/game/client/renderer/model/ModelQuadraped.cpp
         Source/game/client/renderer/model/ModelCow.h
         Source/game/client/renderer/model/ModelCow.cpp
+        Source/game/client/renderer/model/ModelBiped.h
+        Source/game/client/renderer/model/ModelBiped.cpp
         Source/game/client/renderer/RenderLiving.h
         Source/game/client/renderer/RenderLiving.cpp
         Source/game/client/renderer/RenderCow.h

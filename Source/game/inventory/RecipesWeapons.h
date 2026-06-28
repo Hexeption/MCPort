@@ -5,7 +5,7 @@
 #ifndef MCPORT_RECIPESWEAPONS_H
 #define MCPORT_RECIPESWEAPONS_H
 
-class CraftingManager;
+#include "CraftingManager.h"
 
 class RecipesWeapons {
 public:

@@ -14,9 +14,9 @@
 #include "java/String.h"
 #include "java/Type.h"
 
-class GameSettings;
-class TextureFX;
-class ThreadDownloadImageData;
+#include "game/client/options/GameSettings.h"
+#include "game/client/renderer/TextureFX.h"
+#include "game/client/renderer/ThreadDownloadImageData.h"
 
 class RenderEngine {
 public:

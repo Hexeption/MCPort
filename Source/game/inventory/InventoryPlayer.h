@@ -11,10 +11,11 @@
 #include "IInventory.h"
 #include "game/item/ItemStack.h"
 
+#include "game/entity/Entity.h"
+#include "game/nbt/NBTTagList.h"
+
 class Block;
-class Entity;
 class EntityPlayer;
-class NBTTagList;
 
 class InventoryPlayer : public IInventory {
 private:

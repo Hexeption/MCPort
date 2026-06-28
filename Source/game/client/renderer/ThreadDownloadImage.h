@@ -10,7 +10,7 @@
 #include "ImageBuffer.h"
 #include "java/String.h"
 
-class ThreadDownloadImageData;
+#include "game/client/renderer/ThreadDownloadImageData.h"
 
 class ThreadDownloadImage {
 public:

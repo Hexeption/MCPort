@@ -5,8 +5,8 @@
 #ifndef MCPORT_CRAFTINGINVENTORYCB_H
 #define MCPORT_CRAFTINGINVENTORYCB_H
 
-class EntityPlayer;
-class IInventory;
+#include "game/entity/EntityPlayer.h"
+#include "IInventory.h"
 
 class CraftingInventoryCB {
 public:

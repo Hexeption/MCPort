@@ -7,7 +7,6 @@
 
 #include "Render.h"
 
-class Entity;
 
 class RenderEntity : public Render {
 public:

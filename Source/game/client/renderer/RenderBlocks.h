@@ -7,9 +7,9 @@
 
 #include "java/Type.h"
 
-class Block;
-class IBlockAccess;
-class Material;
+#include "game/block/Block.h"
+#include "game/world/IBlockAccess.h"
+#include "game/block/Material.h"
 
 class RenderBlocks {
 private:

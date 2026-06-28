@@ -9,7 +9,6 @@
 
 #include "GuiScreen.h"
 
-class GameSettings;
 
 class GuiOptions : public GuiScreen {
 private:
